@@ -1,0 +1,6 @@
+framework module CalendarWrapper {
+  umbrella header "CalendarWrapper-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -6,6 +6,7 @@
 //  Copyright (c) 2019 Dusan Terzic. All rights reserved.
 //
 
+
 @import UIKit;
 
 @interface GCWAppDelegate : UIResponder <UIApplicationDelegate>

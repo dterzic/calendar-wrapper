@@ -7,12 +7,12 @@
 //
 
 #import "GCWAppDelegate.h"
+#import <GoogleSignIn/GoogleSignIn.h>
 
 @implementation GCWAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
     return YES;
 }
 
@@ -41,6 +41,14 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+- (BOOL)application:(UIApplication *)app
+            openURL:(NSURL *)url
+            options:(NSDictionary<NSString *, id> *)options {
+    return [[GIDSignIn sharedInstance] handleURL:url
+                               sourceApplication:options[UIApplicationOpenURLOptionsSourceApplicationKey]
+                                      annotation:options[UIApplicationOpenURLOptionsAnnotationKey]];
 }
 
 @end
