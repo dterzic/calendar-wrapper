@@ -23,13 +23,13 @@ Pod::Spec.new do |s|
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Dusan Terzic' => 'dterzic@gmail.com' }
-  s.source           = { :git => 'https://github.com/Dusan Terzic/CalendarWrapper.git', :tag => s.version.to_s }
+  s.source           = { :git => 'git@github.com:dterzic/calendar-wrapper.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '8.0'
 
   s.source_files = 'CalendarWrapper/Classes/**/*'
-  
+
   # s.resource_bundles = {
   #   'CalendarWrapper' => ['CalendarWrapper/Assets/*.png']
   # }
