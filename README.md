@@ -1,6 +1,5 @@
 # CalendarWrapper
 
-[![CI Status](https://img.shields.io/travis/Dusan Terzic/CalendarWrapper.svg?style=flat)](https://travis-ci.org/Dusan Terzic/CalendarWrapper)
 [![Version](https://img.shields.io/cocoapods/v/CalendarWrapper.svg?style=flat)](https://cocoapods.org/pods/CalendarWrapper)
 [![License](https://img.shields.io/cocoapods/l/CalendarWrapper.svg?style=flat)](https://cocoapods.org/pods/CalendarWrapper)
 [![Platform](https://img.shields.io/cocoapods/p/CalendarWrapper.svg?style=flat)](https://cocoapods.org/pods/CalendarWrapper)
