@@ -19,11 +19,11 @@ Pod::Spec.new do |s|
 
   s.description      = "Simplifying the google sign-in process and calendar api implementation. Please check the example app for more details."
 
-  s.homepage         = 'https://github.com/Dusan Terzic/CalendarWrapper'
+  s.homepage         = 'https://github.com/dterzic/calendar-wrapper'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Dusan Terzic' => 'dterzic@gmail.com' }
-  s.source           = { :git => 'git@github.com:dterzic/calendar-wrapper.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/dterzic/calendar-wrapper.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '8.0'
