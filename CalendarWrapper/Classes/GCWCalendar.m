@@ -2,7 +2,7 @@
 
 @implementation GCWCalendar
 
-- (instancetype)initWithClientId:(NSString *)clientId {
+- (instancetype)initWithClientId:(NSString *)clientId delegate:(id<GCWCalendarDelegate>)delegate {
     self = [super init];
 
     if (self) {
@@ -13,6 +13,7 @@
         [GIDSignIn sharedInstance].clientID = clientId;
         [GIDSignIn sharedInstance].delegate = self;
 
+        self.delegate = delegate;
         [self silentSignin];
     }
     return self;

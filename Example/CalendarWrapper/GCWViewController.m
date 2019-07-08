@@ -36,8 +36,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID];
-    self.calendar.delegate = self;
+    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID delegate:self];
     GIDSignIn.sharedInstance.uiDelegate = self;
 }
 

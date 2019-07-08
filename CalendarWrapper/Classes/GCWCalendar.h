@@ -20,7 +20,7 @@
 @property (nonatomic, weak) id<GCWCalendarDelegate> delegate;
 @property(nonatomic) GTLRCalendarService *calendarService;
 
-- (instancetype)initWithClientId:(NSString *)clientId;
+- (instancetype)initWithClientId:(NSString *)clientId delegate:(id<GCWCalendarDelegate>)delegate;
 
 + (GTLRCalendar_Event *)createEventWithTitle:(NSString *)title
                                     location:(NSString *)location
