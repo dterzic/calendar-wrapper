@@ -18,7 +18,8 @@
 @interface GCWCalendar : NSObject <GIDSignInDelegate>
 
 @property (nonatomic, weak) id<GCWCalendarDelegate> delegate;
-@property(nonatomic) GTLRCalendarService *calendarService;
+@property (nonatomic) GTLRCalendarService *calendarService;
+@property (nonatomic, readonly) BOOL isAuthenticated;
 
 - (instancetype)initWithClientId:(NSString *)clientId delegate:(id<GCWCalendarDelegate>)delegate;
 

@@ -64,9 +64,7 @@
 }
 
 - (BOOL)silentSignin {
-    [[GIDSignIn sharedInstance] setScopes:@[@"https://www.googleapis.com/auth/calendar"]];
-
-    if ([GIDSignIn sharedInstance].hasAuthInKeychain) {
+    if (self.isAuthenticated) {
         [[GIDSignIn sharedInstance] signInSilently];
         return true;
     } else {
@@ -75,6 +73,11 @@
         }
         return false;
     }
+}
+
+- (BOOL)isAuthenticated {
+    [[GIDSignIn sharedInstance] setScopes:@[@"https://www.googleapis.com/auth/calendar"]];
+    return GIDSignIn.sharedInstance.hasAuthInKeychain;
 }
 
 - (void)loadCalendarList:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure {
