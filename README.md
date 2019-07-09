@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/cocoapods/l/CalendarWrapper.svg?style=flat)](https://cocoapods.org/pods/CalendarWrapper)
 [![Platform](https://img.shields.io/cocoapods/p/CalendarWrapper.svg?style=flat)](https://cocoapods.org/pods/CalendarWrapper)
 
+Simplifying the google sign-in process and calendar api implementation. Please check the example app for more details.
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.

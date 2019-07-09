@@ -28,6 +28,7 @@
                                  description:(NSString *)description
                                         date:(NSDate *)date
                                     duration:(NSInteger)duration;
+- (BOOL)silentSignin;
 
 - (void)loadCalendarList:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure;
 
