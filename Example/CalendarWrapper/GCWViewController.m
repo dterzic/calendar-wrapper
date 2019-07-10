@@ -142,7 +142,6 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 }
 
 - (void)calendar:(GCWCalendar *)calendar didDisconnectWithUser:(GIDGoogleUser *)user withError:(NSError *)error {
-    [self showLogin];
     if (error) {
         [self showAlertWithTitle:@"Error" description:error.localizedDescription];
     } else {
