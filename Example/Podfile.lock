@@ -1,5 +1,5 @@
 PODS:
-  - CalendarWrapper (0.1.0):
+  - CalendarWrapper (0.1.4):
     - GoogleAPIClientForREST/Calendar (~> 1.3)
     - GoogleSignIn
   - GoogleAPIClientForREST/Calendar (1.3.8):
@@ -40,7 +40,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CalendarWrapper: 3354554f1df86f8259d4afae59250a1e3a95d0eb
+  CalendarWrapper: 4a5bbef5a540841f12af670fcbbd08919b3cb6ae
   GoogleAPIClientForREST: 5447a194eae517986cafe6421a5330b80b820591
   GoogleSignIn: 7ff245e1a7b26d379099d3243a562f5747e23d39
   GoogleToolboxForMac: ff31605b7d66400dcec09bed5861689aebadda4d
