@@ -98,6 +98,31 @@
     }];
 }
 
+- (void)getEventsListForCalendar:(NSString *)calendarId
+                       startDate:(NSDate *)startDate
+                         endDate:(NSDate *)endDate
+                         success:(void (^)(NSDictionary *))success
+                         failure:(void (^)(NSError *))failure {
+    GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendarId];
+    query.maxResults = 10;
+    query.singleEvents = true;
+    query.timeMin = [GTLRDateTime dateTimeWithDate:startDate];
+    query.timeMax = [GTLRDateTime dateTimeWithDate:endDate];
+    query.orderBy = kGTLRCalendarOrderByStartTime;
+    [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            NSMutableDictionary *events = [NSMutableDictionary dictionary];
+            GTLRCalendar_Events *list = object;
+            [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                events[obj.identifier] = obj.summary;
+            }];
+            success(events.copy);
+        }
+    }];
+}
+
 - (void)addEvent:(GTLRCalendar_Event *)event
       toCalendar:(NSString *)calendarId
          success:(void (^)(NSString *))success

@@ -32,6 +32,12 @@
 
 - (void)loadCalendarList:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure;
 
+- (void)getEventsListForCalendar:(NSString *)calendarId
+                       startDate:(NSDate *)startDate
+                         endDate:(NSDate *)endDate
+                         success:(void (^)(NSDictionary *))success
+                         failure:(void (^)(NSError *))failure;
+
 - (void)addEvent:(GTLRCalendar_Event *)event
       toCalendar:(NSString *)calendarId
          success:(void (^)(NSString *))success

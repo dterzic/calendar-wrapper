@@ -11,7 +11,7 @@
 
 static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f8jmcogucg1t.apps.googleusercontent.com";
 
-@interface GCWViewController () <GCWCalendarDelegate, GIDSignInUIDelegate>
+@interface GCWViewController () <GCWCalendarDelegate, GIDSignInUIDelegate, UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *defaultCalendarLabel;
 @property (weak, nonatomic) IBOutlet GIDSignInButton *signInButton;
@@ -19,11 +19,13 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 @property (weak, nonatomic) IBOutlet UIButton *addButton;
 @property (weak, nonatomic) IBOutlet UIButton *deleteButton;
 @property (weak, nonatomic) IBOutlet UIButton *logoutButton;
+@property (weak, nonatomic) IBOutlet UITableView *eventsTable;
 
 @property (nonatomic) GCWCalendar *calendar;
 @property (nonatomic, copy) NSDictionary *calendars;
 @property (nonatomic, readonly) NSString *defaultCalendarId;
 @property (nonatomic, copy) NSString *calendarEventId;
+@property (nonatomic, copy) NSDictionary *events;
 
 @end
 
@@ -64,6 +66,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     self.addButton.hidden = true;
     self.deleteButton.hidden = true;
     self.logoutButton.hidden = true;
+    self.eventsTable.hidden = true;
 }
 
 - (void)hideLogin {
@@ -74,6 +77,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
         self.addButton.hidden = false;
         self.deleteButton.hidden = false;
         self.logoutButton.hidden = false;
+        self.eventsTable.hidden = false;
 
         self.defaultCalendarLabel.text = self.calendars[self.defaultCalendarId];
     } else {
@@ -82,7 +86,23 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
         self.addButton.hidden = true;
         self.deleteButton.hidden = true;
         self.logoutButton.hidden = true;
+        self.eventsTable.hidden = true;
     }
+}
+
+- (void)loadEvents {
+    __weak GCWViewController *weakSelf = self;
+    [self.calendar getEventsListForCalendar:self.defaultCalendarId
+                                  startDate:[NSDate date]
+                                    endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600] success:^(NSDictionary *events) {
+        self.events = events;
+        [_eventsTable reloadData];
+    } failure:^(NSError *error) {
+        if (error.code == 1001) {
+            [weakSelf showLogin];
+        }
+        [weakSelf showAlertWithTitle:@"Error" description:error.localizedDescription];
+    }];
 }
 
 - (void)loadCalendarList {
@@ -90,6 +110,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     [self.calendar loadCalendarList:^(NSDictionary *calendars) {
         self.calendars = calendars;
         [self hideLogin];
+        [self loadEvents];
     } failure:^(NSError *error) {
         if (error.code == 1001) {
             [weakSelf showLogin];
@@ -114,6 +135,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     __weak GCWViewController *weakSelf = self;
     [self.calendar addEvent:event toCalendar:self.defaultCalendarId success:^(NSString *eventId) {
         weakSelf.calendarEventId = eventId;
+        [weakSelf loadEvents];
         [weakSelf showAlertWithTitle:@"Info" description:@"Calendar event added!"];
     } failure:^(NSError *error) {
         if (error.code == 1001) {
@@ -126,6 +148,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 - (IBAction)deleteEventClicked:(id)sender {
     __weak GCWViewController *weakSelf = self;
     [self.calendar deleteEvent:self.calendarEventId fromCalendar:self.defaultCalendarId success:^{
+        [weakSelf loadEvents];
         [weakSelf showAlertWithTitle:@"Info" description:@"Calendar event deleted!"];
     } failure:^(NSError *error) {
         if (error.code == 1001) {
@@ -160,6 +183,25 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (void)calendarLoginRequired:(GCWCalendar *)calendar {
     [self showLogin];
+}
+
+// UITableView
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.events.allValues.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *cellIdentifier = @"cellIdentifier";
+
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    if(cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+    }
+    cell.textLabel.text = _events.allValues[indexPath.row];
+    cell.backgroundColor = (indexPath.row % 2) ? UIColor.whiteColor : UIColor.lightGrayColor;
+
+    return cell;
 }
 
 @end
