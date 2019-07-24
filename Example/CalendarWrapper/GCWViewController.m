@@ -198,7 +198,9 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     if(cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
-    cell.textLabel.text = _events.allValues[indexPath.row];
+    GTLRCalendar_Event *event = _events.allValues[indexPath.row];
+    cell.textLabel.numberOfLines = 2;
+    cell.textLabel.text = [NSString stringWithFormat:@"%@\n%@", event.summary, event.location];
     cell.backgroundColor = (indexPath.row % 2) ? UIColor.whiteColor : UIColor.lightGrayColor;
 
     return cell;

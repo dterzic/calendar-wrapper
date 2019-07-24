@@ -116,7 +116,7 @@
             NSMutableDictionary *events = [NSMutableDictionary dictionary];
             GTLRCalendar_Events *list = object;
             [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                events[obj.identifier] = obj.summary;
+                events[obj.identifier] = obj;
             }];
             success(events.copy);
         }
