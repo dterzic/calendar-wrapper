@@ -65,7 +65,10 @@
 
 - (BOOL)silentSignin {
     if (self.isAuthenticated) {
-        [[GIDSignIn sharedInstance] signInSilently];
+        GIDSignIn *signIn = [GIDSignIn sharedInstance];
+        if ([signIn hasPreviousSignIn]) {
+            [signIn restorePreviousSignIn];
+        }
         return true;
     } else {
         if ([self.delegate respondsToSelector:@selector(calendarLoginRequired:)]) {
@@ -77,7 +80,7 @@
 
 - (BOOL)isAuthenticated {
     [[GIDSignIn sharedInstance] setScopes:@[@"https://www.googleapis.com/auth/calendar"]];
-    return GIDSignIn.sharedInstance.hasAuthInKeychain;
+    return GIDSignIn.sharedInstance.hasPreviousSignIn;
 }
 
 - (void)loadCalendarList:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure {

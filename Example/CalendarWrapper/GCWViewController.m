@@ -11,7 +11,7 @@
 
 static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f8jmcogucg1t.apps.googleusercontent.com";
 
-@interface GCWViewController () <GCWCalendarDelegate, GIDSignInUIDelegate, UITableViewDelegate>
+@interface GCWViewController () <GCWCalendarDelegate, UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *defaultCalendarLabel;
 @property (weak, nonatomic) IBOutlet GIDSignInButton *signInButton;
@@ -39,7 +39,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     [super viewDidLoad];
 
     self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID delegate:self];
-    GIDSignIn.sharedInstance.uiDelegate = self;
+    GIDSignIn.sharedInstance.presentingViewController = self;
 }
 
 - (void)didReceiveMemoryWarning {
