@@ -94,7 +94,7 @@
             NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
             GTLRCalendar_CalendarList *list = object;
             [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_CalendarListEntry * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                calendars[obj.identifier] = obj.summary;
+                calendars[obj.identifier] = obj;
             }];
             success(calendars.copy);
         }
@@ -104,10 +104,13 @@
 - (void)getEventsListForCalendar:(NSString *)calendarId
                        startDate:(NSDate *)startDate
                          endDate:(NSDate *)endDate
+                      maxResults:(NSUInteger)maxResults
                          success:(void (^)(NSDictionary *))success
                          failure:(void (^)(NSError *))failure {
     GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendarId];
-    query.maxResults = 10;
+    if (maxResults > 0) {
+        query.maxResults = maxResults;
+    }
     query.singleEvents = true;
     query.timeMin = [GTLRDateTime dateTimeWithDate:startDate];
     query.timeMax = [GTLRDateTime dateTimeWithDate:endDate];

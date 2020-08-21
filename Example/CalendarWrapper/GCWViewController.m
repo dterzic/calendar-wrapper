@@ -31,8 +31,21 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 @implementation GCWViewController
 
++ (UIColor *)colorWithHex:(NSString *)hex {
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hex];
+    scanner.scanLocation = 1;
+    [scanner scanHexInt:&rgbValue];
+    return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
+}
+
 - (NSString *)defaultCalendarId {
     return self.calendars.allKeys[0];
+}
+
+- (UIColor *)defaultCalendarBackgroundColor {
+    GTLRCalendar_CalendarListEntry *calendar = self.calendars[self.defaultCalendarId];
+    return [GCWViewController colorWithHex:calendar.backgroundColor];
 }
 
 - (void)viewDidLoad {
@@ -79,7 +92,8 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
         self.logoutButton.hidden = false;
         self.eventsTable.hidden = false;
 
-        self.defaultCalendarLabel.text = self.calendars[self.defaultCalendarId];
+        GTLRCalendar_CalendarListEntry *calendar = self.calendars[self.defaultCalendarId];
+        self.defaultCalendarLabel.text = calendar.summary;
     } else {
         self.defaultCalendarLabel.hidden = true;
         self.loadButton.hidden = false;
@@ -94,7 +108,9 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     __weak GCWViewController *weakSelf = self;
     [self.calendar getEventsListForCalendar:self.defaultCalendarId
                                   startDate:[NSDate date]
-                                    endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600] success:^(NSDictionary *events) {
+                                    endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
+                                 maxResults:0
+                                    success:^(NSDictionary *events) {
         self.events = events;
         [_eventsTable reloadData];
     } failure:^(NSError *error) {
@@ -201,6 +217,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     GTLRCalendar_Event *event = _events.allValues[indexPath.row];
     cell.textLabel.numberOfLines = 2;
     cell.textLabel.text = [NSString stringWithFormat:@"%@\n%@", event.summary, event.location];
+    cell.textLabel.textColor = [self defaultCalendarBackgroundColor];
     cell.backgroundColor = (indexPath.row % 2) ? UIColor.whiteColor : UIColor.lightGrayColor;
 
     return cell;

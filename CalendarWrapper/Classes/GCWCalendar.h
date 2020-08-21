@@ -35,6 +35,7 @@
 - (void)getEventsListForCalendar:(NSString *)calendarId
                        startDate:(NSDate *)startDate
                          endDate:(NSDate *)endDate
+                         maxResults:(NSUInteger)maxResults
                          success:(void (^)(NSDictionary *))success
                          failure:(void (^)(NSError *))failure;
 
