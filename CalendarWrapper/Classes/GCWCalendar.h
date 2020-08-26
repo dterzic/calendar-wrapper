@@ -49,4 +49,9 @@
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure;
 
+- (void)updateEvent:(GTLRCalendar_Event *)event
+         inCalendar:(NSString *)calendarId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *))failure;
+
 @end

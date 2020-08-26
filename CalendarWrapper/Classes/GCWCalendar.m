@@ -161,7 +161,24 @@
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
                                          id nilObject,
                                          NSError *callbackError) {
-                         // Callback
+                         if (callbackError == nil) {
+                             success();
+                         } else {
+                             failure(callbackError);
+                         }
+                     }];
+}
+
+- (void)updateEvent:(GTLRCalendar_Event *)event
+         inCalendar:(NSString *)calendarId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *))failure {
+    GTLRCalendarQuery_EventsUpdate *query = [GTLRCalendarQuery_EventsUpdate queryWithObject:event calendarId:calendarId eventId:event.identifier];
+    self.calendarService.authorizer = [GIDSignIn sharedInstance].currentUser.authentication.fetcherAuthorizer;
+    [self.calendarService executeQuery:query
+                     completionHandler:^(GTLRServiceTicket *callbackTicket,
+                                         id nilObject,
+                                         NSError *callbackError) {
                          if (callbackError == nil) {
                              success();
                          } else {
