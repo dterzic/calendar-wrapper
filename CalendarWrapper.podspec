@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CalendarWrapper'
-  s.version          = '0.1.9'
-  s.summary          = 'Simple wrapper around the Google sign-in and calendar.'
+  s.version          = '0.2.0'
+  s.summary          = 'Simple wrapper around the Google sign-in and calendar API.'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -38,6 +38,7 @@ Pod::Spec.new do |s|
   s.frameworks = 'UIKit', 'Foundation', 'CoreGraphics'
   s.static_framework = true
 
-  s.dependency 'GoogleSignIn', '~> 5.0'
+  s.dependency 'AppAuth'
+  s.dependency 'GTMAppAuth'
   s.dependency 'GoogleAPIClientForREST/Calendar', '~> 1.3'
 end

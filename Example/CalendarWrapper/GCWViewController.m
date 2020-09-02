@@ -14,7 +14,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 @interface GCWViewController () <GCWCalendarDelegate, UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *defaultCalendarLabel;
-@property (weak, nonatomic) IBOutlet GIDSignInButton *signInButton;
+@property (weak, nonatomic) IBOutlet UIButton *signInButton;
 @property (weak, nonatomic) IBOutlet UIButton *loadButton;
 @property (weak, nonatomic) IBOutlet UIButton *addButton;
 @property (weak, nonatomic) IBOutlet UIButton *deleteButton;
@@ -23,6 +23,7 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 @property (nonatomic) GCWCalendar *calendar;
 @property (nonatomic, copy) NSDictionary *calendars;
+@property (nonatomic, readonly) GTMAppAuthFetcherAuthorization *defaultAuthorization;
 @property (nonatomic, readonly) NSString *defaultCalendarId;
 @property (nonatomic, copy) NSString *calendarEventId;
 @property (nonatomic, copy) NSDictionary *events;
@@ -39,6 +40,10 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }
 
+- (GTMAppAuthFetcherAuthorization *)defaultAuthorization {
+    return self.calendar.authorizations[0];
+}
+
 - (NSString *)defaultCalendarId {
     return self.calendars.allKeys[0];
 }
@@ -51,13 +56,35 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID delegate:self];
-    GIDSignIn.sharedInstance.presentingViewController = self;
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(appWillGoToBackground:)
+                                                 name:UIApplicationWillResignActiveNotification
+                                               object:[UIApplication sharedApplication]];
+
+    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID presentingViewController:self delegate:self];
+    [self.calendar loadAuthorizationsOnSuccess:^{
+        [self loadCalendarList];
+    } failure:^(NSError * error) {
+        [self.calendar doLoginOnSuccess:^{
+            [self hideLogin];
+        } failure:^(NSError * error) {
+            [self showLogin];
+            //[self showAlertWithTitle:@"Error" description:error.localizedDescription];
+        }];
+    }];
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+-(void)appWillGoToBackground:(NSNotification *)note {
+    [self.calendar saveAuthorizations];
 }
 
 - (void)showAlertWithTitle:(NSString *)title description:(NSString *)description {
@@ -106,11 +133,12 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (void)loadEvents {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar getEventsListForCalendar:self.defaultCalendarId
-                                  startDate:[NSDate date]
-                                    endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
-                                 maxResults:0
-                                    success:^(NSDictionary *events) {
+    [self.calendar getEventsListForAuthorization:self.defaultAuthorization
+                                    fromCalendar:self.defaultCalendarId
+                                       startDate:[NSDate date]
+                                         endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
+                                      maxResults:0
+                                         success:^(NSDictionary *events) {
         self.events = events;
         [_eventsTable reloadData];
     } failure:^(NSError *error) {
@@ -123,11 +151,11 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (void)loadCalendarList {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar loadCalendarList:^(NSDictionary *calendars) {
+    [self.calendar loadCalendarLists:^(NSDictionary * calendars) {
         self.calendars = calendars;
         [self hideLogin];
         [self loadEvents];
-    } failure:^(NSError *error) {
+    } failure:^(NSError * error) {
         if (error.code == 1001) {
             [weakSelf showLogin];
         }
@@ -149,7 +177,10 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
                                                       description:@"Test event"
                                                              date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
     __weak GCWViewController *weakSelf = self;
-    [self.calendar addEvent:event toCalendar:self.defaultCalendarId success:^(NSString *eventId) {
+    [self.calendar addEvent:event
+           forAuthorization:self.defaultAuthorization
+                 toCalendar:self.defaultCalendarId
+                    success:^(NSString *eventId) {
         weakSelf.calendarEventId = eventId;
         [weakSelf loadEvents];
         [weakSelf showAlertWithTitle:@"Info" description:@"Calendar event added!"];
@@ -163,7 +194,10 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (IBAction)deleteEventClicked:(id)sender {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar deleteEvent:self.calendarEventId fromCalendar:self.defaultCalendarId success:^{
+    [self.calendar deleteEvent:self.calendarEventId
+              forAuthorization:self.defaultAuthorization
+                  fromCalendar:self.defaultCalendarId
+                       success:^{
         [weakSelf loadEvents];
         [weakSelf showAlertWithTitle:@"Info" description:@"Calendar event deleted!"];
     } failure:^(NSError *error) {
@@ -176,25 +210,8 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (IBAction)logoutClicked:(id)sender {
     self.calendars = nil;
-    [GIDSignIn.sharedInstance signOut];
+    [self.calendar.authorizations removeObject:self.defaultAuthorization];
     [self showLogin];
-}
-
-- (void)calendar:(GCWCalendar *)calendar didDisconnectWithUser:(GIDGoogleUser *)user withError:(NSError *)error {
-    if (error) {
-        [self showAlertWithTitle:@"Error" description:error.localizedDescription];
-    } else {
-        [self showAlertWithTitle:@"Info" description:@"Logout succeeded"];
-    }
-}
-
-- (void)calendar:(GCWCalendar *)calendar didSignInForUser:(GIDGoogleUser *)user withError:(NSError *)error {
-    if (error) {
-        [self showLogin];
-        [self showAlertWithTitle:@"Error" description:error.localizedDescription];
-    } else {
-        [self hideLogin];
-    }
 }
 
 - (void)calendarLoginRequired:(GCWCalendar *)calendar {

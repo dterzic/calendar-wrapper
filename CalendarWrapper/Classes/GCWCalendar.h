@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
-#import <GoogleSignIn/GoogleSignIn.h>
+#import <AppAuth/AppAuth.h>
+#import <GTMAppAuth/GTMAppAuth.h>
 #import <GoogleAPIClientForREST/GTLRCalendar.h>
 
 @class GTLRCalendarService;
@@ -9,49 +10,63 @@
 
 @protocol GCWCalendarDelegate <NSObject>
 
-- (void)calendar:(GCWCalendar *)calendar didSignInForUser:(GIDGoogleUser *)user withError:(NSError *)error;
-- (void)calendar:(GCWCalendar *)calendar didDisconnectWithUser:(GIDGoogleUser *)user withError:(NSError *)error;
-- (void)calendarLoginRequired:(GCWCalendar *)calendar;
+- (void)calendarLoginRequired:(GCWCalendar *_Nullable)calendar;
 
 @end
 
-@interface GCWCalendar : NSObject <GIDSignInDelegate>
+@interface GCWCalendar : NSObject
 
-@property (nonatomic, weak) id<GCWCalendarDelegate> delegate;
-@property (nonatomic) GTLRCalendarService *calendarService;
-@property (nonatomic, readonly) BOOL isAuthenticated;
+@property (nonatomic, weak) id<GCWCalendarDelegate> _Nullable delegate;
+@property (nonatomic) GTLRCalendarService * _Nullable calendarService;
+@property (nonatomic, nullable) NSMutableArray<GTMAppAuthFetcherAuthorization *> *authorizations;
 
-- (instancetype)initWithClientId:(NSString *)clientId delegate:(id<GCWCalendarDelegate>)delegate;
+- (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
+                   presentingViewController:(UIViewController *_Nullable)viewController
+                                   delegate:(id<GCWCalendarDelegate>_Nullable)delegate;
 
-+ (GTLRCalendar_Event *)createEventWithTitle:(NSString *)title
-                                    location:(NSString *)location
-                                 description:(NSString *)description
-                                        date:(NSDate *)date
+- (void)doLoginOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (void)saveAuthorizations;
+
++ (GTLRCalendar_Event *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
+                                    location:(NSString *_Nullable)location
+                                 description:(NSString *_Nullable)description
+                                        date:(NSDate *_Nonnull)date
                                     duration:(NSInteger)duration;
-- (BOOL)silentSignin;
 
-- (void)loadCalendarList:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure;
 
-- (void)getEventsListForCalendar:(NSString *)calendarId
-                       startDate:(NSDate *)startDate
-                         endDate:(NSDate *)endDate
-                         maxResults:(NSUInteger)maxResults
-                         success:(void (^)(NSDictionary *))success
-                         failure:(void (^)(NSError *))failure;
+- (void)loadCalendarLists:(void (^_Nullable)(NSDictionary *_Nonnull))success
+                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)addEvent:(GTLRCalendar_Event *)event
-      toCalendar:(NSString *)calendarId
-         success:(void (^)(NSString *))success
-         failure:(void (^)(NSError *))failure;
+- (void)loadCalendarListForAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+                                 success:(void (^_Nullable)(NSDictionary *_Nonnull))success
+                                 failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)deleteEvent:(NSString *)eventId
-       fromCalendar:(NSString *)calendarId
-            success:(void (^)(void))success
-            failure:(void (^)(NSError *))failure;
+- (void)getEventsListForAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+                         fromCalendar:(NSString *_Nonnull)calendarId
+                            startDate:(NSDate *_Nonnull)startDate
+                              endDate:(NSDate *_Nonnull)endDate
+                           maxResults:(NSUInteger)maxResults
+                              success:(void (^_Nullable)(NSDictionary *_Nonnull))success
+                              failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)updateEvent:(GTLRCalendar_Event *)event
-         inCalendar:(NSString *)calendarId
-            success:(void (^)(void))success
-            failure:(void (^)(NSError *))failure;
+- (void)addEvent:(GTLRCalendar_Event *_Nonnull)event
+forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+      toCalendar:(NSString *_Nonnull)calendarId
+         success:(void (^_Nullable)(NSString *_Nonnull))success
+         failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)deleteEvent:(NSString *_Nonnull)eventId
+   forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+       fromCalendar:(NSString *_Nonnull)calendarId
+            success:(void (^_Nullable)(void))success
+            failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)updateEvent:(GTLRCalendar_Event *_Nonnull)event
+   forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+         inCalendar:(NSString *_Nonnull)calendarId
+            success:(void (^_Nullable)(void))success
+            failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 @end
