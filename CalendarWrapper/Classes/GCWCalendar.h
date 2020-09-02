@@ -43,28 +43,24 @@
                                  success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)getEventsListForAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
-                         fromCalendar:(NSString *_Nonnull)calendarId
-                            startDate:(NSDate *_Nonnull)startDate
-                              endDate:(NSDate *_Nonnull)endDate
-                           maxResults:(NSUInteger)maxResults
-                              success:(void (^_Nullable)(NSDictionary *_Nonnull))success
-                              failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)getEventsListForCalendar:(NSString *_Nonnull)calendarId
+                       startDate:(NSDate *_Nonnull)startDate
+                         endDate:(NSDate *_Nonnull)endDate
+                      maxResults:(NSUInteger)maxResults
+                         success:(void (^_Nullable)(NSDictionary *_Nonnull))success
+                         failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)addEvent:(GTLRCalendar_Event *_Nonnull)event
-forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
       toCalendar:(NSString *_Nonnull)calendarId
          success:(void (^_Nullable)(NSString *_Nonnull))success
          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)deleteEvent:(NSString *_Nonnull)eventId
-   forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
        fromCalendar:(NSString *_Nonnull)calendarId
             success:(void (^_Nullable)(void))success
             failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)updateEvent:(GTLRCalendar_Event *_Nonnull)event
-   forAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
          inCalendar:(NSString *_Nonnull)calendarId
             success:(void (^_Nullable)(void))success
             failure:(void (^_Nullable)(NSError *_Nonnull))failure;

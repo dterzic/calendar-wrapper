@@ -133,12 +133,11 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 
 - (void)loadEvents {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar getEventsListForAuthorization:self.defaultAuthorization
-                                    fromCalendar:self.defaultCalendarId
-                                       startDate:[NSDate date]
-                                         endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
-                                      maxResults:0
-                                         success:^(NSDictionary *events) {
+    [self.calendar getEventsListForCalendar:self.defaultCalendarId
+                                  startDate:[NSDate date]
+                                    endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
+                                 maxResults:0
+                                    success:^(NSDictionary *events) {
         self.events = events;
         [_eventsTable reloadData];
     } failure:^(NSError *error) {
@@ -178,7 +177,6 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
                                                              date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
     __weak GCWViewController *weakSelf = self;
     [self.calendar addEvent:event
-           forAuthorization:self.defaultAuthorization
                  toCalendar:self.defaultCalendarId
                     success:^(NSString *eventId) {
         weakSelf.calendarEventId = eventId;
@@ -195,7 +193,6 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 - (IBAction)deleteEventClicked:(id)sender {
     __weak GCWViewController *weakSelf = self;
     [self.calendar deleteEvent:self.calendarEventId
-              forAuthorization:self.defaultAuthorization
                   fromCalendar:self.defaultCalendarId
                        success:^{
         [weakSelf loadEvents];

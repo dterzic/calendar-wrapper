@@ -15,6 +15,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
+@property (nonatomic) NSMutableDictionary *calendarUsers;
 
 @end
 
@@ -162,6 +163,18 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     return [NSString stringWithFormat:@"%@_%@", kCalendarWrapperAuthorizerKey, userID];
 }
 
+- (GTMAppAuthFetcherAuthorization *)getAuthorizationForCalendar:(NSString *)calendarId {
+    __block GTMAppAuthFetcherAuthorization *calendarAuthorization = nil;
+    NSString *userId = self.calendarUsers[calendarId];
+    [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (authorization.userID == userId) {
+            calendarAuthorization = authorization;
+            *stop = YES;
+        }
+    }];
+    return calendarAuthorization;
+}
+
 - (void)checkIfAuthorizationIsValid:(GTMAppAuthFetcherAuthorization *)authorization
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *))failure {
@@ -227,10 +240,12 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 
 - (void)loadCalendarLists:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure {
     NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
+    self.calendarUsers = [NSMutableDictionary dictionary];
     [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
         [self loadCalendarListForAuthorization:authorization success:^(NSDictionary *accountCalendars) {
             [accountCalendars enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [calendars setValue:obj forKey:key];
+                [self.calendarUsers setValue:authorization.userID forKey:key];
             }];
             success(calendars);
         } failure:^(NSError *error) {
@@ -260,14 +275,21 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     }];
 }
 
-- (void)getEventsListForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
-                         fromCalendar:(NSString *)calendarId
-                            startDate:(NSDate *)startDate
-                              endDate:(NSDate *)endDate
-                           maxResults:(NSUInteger)maxResults
-                              success:(void (^)(NSDictionary *))success
-                              failure:(void (^)(NSError *))failure {
-    
+- (void)getEventsListForCalendar:(NSString *)calendarId
+                       startDate:(NSDate *)startDate
+                         endDate:(NSDate *)endDate
+                      maxResults:(NSUInteger)maxResults
+                         success:(void (^)(NSDictionary *))success
+                         failure:(void (^)(NSError *))failure {
+
+    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([GCWCalendar createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization;
+
     GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendarId];
     if (maxResults > 0) {
         query.maxResults = maxResults;
@@ -291,10 +313,17 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 }
 
 - (void)addEvent:(GTLRCalendar_Event *)event
-forAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
       toCalendar:(NSString *)calendarId
          success:(void (^)(NSString *))success
          failure:(void (^)(NSError *))failure {
+
+    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([GCWCalendar createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization;
 
     GTLRCalendarQuery_EventsInsert *query = [GTLRCalendarQuery_EventsInsert queryWithObject:event calendarId:calendarId];
     self.calendarService.authorizer = authorization;
@@ -311,10 +340,17 @@ forAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
 }
 
 - (void)deleteEvent:(NSString *)eventId
-   forAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
        fromCalendar:(NSString *)calendarId
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {
+
+    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([GCWCalendar createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization;
 
     GTLRCalendarQuery_EventsDelete *query = [GTLRCalendarQuery_EventsDelete
                                              queryWithCalendarId:calendarId
@@ -333,10 +369,18 @@ forAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
 }
 
 - (void)updateEvent:(GTLRCalendar_Event *)event
-   forAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
          inCalendar:(NSString *)calendarId
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {
+
+    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([GCWCalendar createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization;
+
     GTLRCalendarQuery_EventsUpdate *query = [GTLRCalendarQuery_EventsUpdate queryWithObject:event calendarId:calendarId eventId:event.identifier];
     self.calendarService.authorizer = authorization;
     [self.calendarService executeQuery:query

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CalendarWrapper'
-  s.version          = '0.2.1'
+  s.version          = '0.2.2'
   s.summary          = 'Simple wrapper around the Google sign-in and calendar API.'
 
 # This description is used to generate tags and improve search results.
