@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CalendarWrapper'
-  s.version          = '0.2.0'
+  s.version          = '0.2.1'
   s.summary          = 'Simple wrapper around the Google sign-in and calendar API.'
 
 # This description is used to generate tags and improve search results.
@@ -40,5 +40,6 @@ Pod::Spec.new do |s|
 
   s.dependency 'AppAuth'
   s.dependency 'GTMAppAuth'
+  s.dependency 'GTMSessionFetcher'
   s.dependency 'GoogleAPIClientForREST/Calendar', '~> 1.3'
 end

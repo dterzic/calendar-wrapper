@@ -1,7 +1,7 @@
 #import "GCWCalendar.h"
 #import <AppAuth/AppAuth.h>
 #import <GTMAppAuth/GTMAppAuth.h>
-#import <GTMSessionFetcherService.h>
+#import <GTMSessionFetcher/GTMSessionFetcherService.h>
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
