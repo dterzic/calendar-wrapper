@@ -14,7 +14,6 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
-@property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
 
 @end

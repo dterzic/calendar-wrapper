@@ -19,6 +19,7 @@
 @property (nonatomic, weak) id<GCWCalendarDelegate> _Nullable delegate;
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
 @property (nonatomic, nullable) NSMutableArray<GTMAppAuthFetcherAuthorization *> *authorizations;
+@property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
                    presentingViewController:(UIViewController *_Nullable)viewController
