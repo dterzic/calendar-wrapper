@@ -109,8 +109,6 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
             return;
         }
 
-        NSLog(@"EmailHelper: Got configuration: %@", configuration);
-
         // builds authentication request
         OIDAuthorizationRequest *request =
         [[OIDAuthorizationRequest alloc] initWithConfiguration:configuration
@@ -120,7 +118,6 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
                                                   responseType:OIDResponseTypeCode
                                           additionalParameters:nil];
         // performs authentication request
-        NSLog(@"EmailHelper: Initiating authorization request with scope: %@", request.scope);
         self.currentAuthorizationFlow =
         [OIDAuthState authStateByPresentingAuthorizationRequest:request
                                        presentingViewController:self.presentingViewController

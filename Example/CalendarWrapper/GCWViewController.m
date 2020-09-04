@@ -65,12 +65,13 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
     [self.calendar loadAuthorizationsOnSuccess:^{
         [self loadCalendarList];
     } failure:^(NSError * error) {
-        [self.calendar doLoginOnSuccess:^{
-            [self hideLogin];
-        } failure:^(NSError * error) {
-            [self showLogin];
-            //[self showAlertWithTitle:@"Error" description:error.localizedDescription];
-        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.calendar doLoginOnSuccess:^{
+                [self hideLogin];
+            } failure:^(NSError * error) {
+                [self showLogin];
+            }];
+        });
     }];
 }
 
@@ -208,7 +209,14 @@ static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f
 - (IBAction)logoutClicked:(id)sender {
     self.calendars = nil;
     [self.calendar.authorizations removeObject:self.defaultAuthorization];
-    [self showLogin];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self showLogin];
+        [self.calendar doLoginOnSuccess:^{
+            [self hideLogin];
+        } failure:^(NSError * error) {
+            [self showLogin];
+        }];
+    });
 }
 
 - (void)calendarLoginRequired:(GCWCalendar *)calendar {
