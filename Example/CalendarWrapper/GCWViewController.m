@@ -9,7 +9,7 @@
 #import "GCWViewController.h"
 #import "GCWCalendar.h"
 
-static NSString * _Nonnull const kClientID = @"48568066200-or08ed9efloks9ci5494f8jmcogucg1t.apps.googleusercontent.com";
+static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 
 @interface GCWViewController () <GCWCalendarDelegate, UITableViewDelegate>
 

@@ -5,7 +5,7 @@
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
-static NSString *const kRedirectURI = @"com.googleusercontent.apps.48568066200-or08ed9efloks9ci5494f8jmcogucg1t:/oauthredirect";
+static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l:/oauthredirect";
 static NSString *const kCalendarWrapperAuthorizerKey = @"googleOAuthCodingKeyForCalendarWrapper";
 static NSString *const kUserIDs = @"googleUserIDsKey";
 static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis.com/auth/calendar";
