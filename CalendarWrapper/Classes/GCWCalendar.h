@@ -37,10 +37,12 @@
                                     duration:(NSInteger)duration;
 
 
-- (void)loadCalendarLists:(void (^_Nullable)(NSDictionary *_Nonnull))success
-                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)loadCalendarListsForRole:(NSString *_Nonnull)accessRole
+                         success:(void (^_Nonnull)(NSDictionary *_Nonnull))success
+                         failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)loadCalendarListForAuthorization:(GTMAppAuthFetcherAuthorization *_Nonnull)authorization
+                                 accessRole:(NSString *_Nonnull)accessRole
                                  success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 

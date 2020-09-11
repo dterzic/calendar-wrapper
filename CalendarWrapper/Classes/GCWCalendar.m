@@ -234,11 +234,13 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     return [NSError errorWithDomain:@"com.calendar-wrapper" code:code userInfo:userInfo];
 }
 
-- (void)loadCalendarLists:(void (^)(NSDictionary *))success failure:(void (^)(NSError *))failure {
+- (void)loadCalendarListsForRole:(NSString *)accessRole
+                         success:(void (^)(NSDictionary *))success
+                         failure:(void (^)(NSError *))failure {
     NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
     self.calendarUsers = [NSMutableDictionary dictionary];
     [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
-        [self loadCalendarListForAuthorization:authorization success:^(NSDictionary *accountCalendars) {
+        [self loadCalendarListForAuthorization:authorization accessRole:accessRole success:^(NSDictionary *accountCalendars) {
             [accountCalendars enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [calendars setValue:obj forKey:key];
                 [self.calendarUsers setValue:authorization.userID forKey:key];
@@ -252,11 +254,12 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 }
 
 - (void)loadCalendarListForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
+                              accessRole:(NSString *)accessRole
                                  success:(void (^)(NSDictionary *))success
                                  failure:(void (^)(NSError *))failure {
     self.calendarService.authorizer = authorization;
     GTLRCalendarQuery_CalendarListList *query = [GTLRCalendarQuery_CalendarListList query];
-    query.minAccessRole = kGTLRCalendarMinAccessRoleOwner;
+    query.minAccessRole = accessRole;
     [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
         if (callbackError) {
             failure(callbackError);

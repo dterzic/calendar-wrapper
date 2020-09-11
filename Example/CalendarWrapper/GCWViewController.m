@@ -151,7 +151,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
 
 - (void)loadCalendarList {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar loadCalendarLists:^(NSDictionary * calendars) {
+    [self.calendar loadCalendarListsForRole:kGTLRCalendarMinAccessRoleOwner success:^(NSDictionary * calendars) {
         self.calendars = calendars;
         [self hideLogin];
         [self loadEvents];
