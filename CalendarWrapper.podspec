@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CalendarWrapper'
-  s.version          = '0.2.5'
-  s.summary          = 'Simple wrapper around the Google sign-in and calendar API.'
+  s.version          = '0.2.6'
+  s.summary          = 'Simple wrapper around the Google AppAuth and calendar API.'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 #   * Write the description between the DESC delimiters below.
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
-  s.description      = "Simplifying the google sign-in process and calendar api implementation. Please check the example app for more details."
+  s.description      = "Simplifying the Google AppAuth process and calendar api implementation. Please check the example app for more details."
 
   s.homepage         = 'https://github.com/dterzic/calendar-wrapper'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'

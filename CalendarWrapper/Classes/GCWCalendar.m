@@ -37,6 +37,10 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     return self;
 }
 
+- (NSString *)encodedUserInfoFor:(NSError *)error {
+    return [[NSString alloc] initWithData:error.userInfo[@"data"] encoding:NSUTF8StringEncoding];
+}
+
 - (void)loadAuthorizationsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
     self.authorizations = [NSMutableArray array];
     NSArray *userIDs = [[NSUserDefaults standardUserDefaults] arrayForKey:kUserIDs];
@@ -68,11 +72,11 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
             } failure:^(NSError *error) {
                 // OIDOAuthTokenErrorDomain indicates an issue with the authorization.
                 if ([error.domain isEqual:OIDOAuthTokenErrorDomain]) {
-                    NSLog(@"EmailHelper: Authorization error during token refresh, cleared state. %@", error);
+                    NSLog(@"CalendarWrapper: Authorization error during token refresh, cleared state. %@", [self encodedUserInfoFor:error]);
                     [self removeAuthorization:authorization fromKeychain:[self getKeychainKeyForAuthorization:authorization]];
                 } else {
                     // Other errors are assumed transient.
-                    NSLog(@"EmailHelper: Transient error during token refresh. %@", error);
+                    NSLog(@"CalendarWrapper: Transient error during token refresh. %@", [self encodedUserInfoFor:error]);
                     [self saveAuthorization:authorization toKeychain:keychainKey];
                 }
                 validationCompleted();
@@ -97,12 +101,12 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     NSURL *issuer = [NSURL URLWithString:kIssuerURI];
     NSURL *redirectURI = [NSURL URLWithString:kRedirectURI];
 
-    NSLog(@"EmailHelper: Fetching configuration for issuer: %@", issuer);
+    NSLog(@"CalendarWrapper: Fetching configuration for issuer: %@", issuer);
 
     // discovers endpoints
     [OIDAuthorizationService discoverServiceConfigurationForIssuer:issuer completion:^(OIDServiceConfiguration *_Nullable configuration, NSError *_Nullable error) {
         if (!configuration) {
-            NSLog(@"EmailHelper: Error retrieving discovery document: %@", [error localizedDescription]);
+            NSLog(@"CalendarWrapper: Error retrieving discovery document: %@", [self encodedUserInfoFor:error]);
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error);
             });
@@ -113,7 +117,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
         OIDAuthorizationRequest *request =
         [[OIDAuthorizationRequest alloc] initWithConfiguration:configuration
                                                       clientId:self.clientId
-                                                        scopes:@[OIDScopeOpenID, OIDScopeProfile, kOIDAuthorizationCalendarScope,  @"https://mail.google.com/"]
+                                                        scopes:@[OIDScopeOpenID, OIDScopeProfile, kOIDAuthorizationCalendarScope]
                                                    redirectURL:redirectURI
                                                   responseType:OIDResponseTypeCode
                                           additionalParameters:nil];
@@ -128,7 +132,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 
                 dispatch_async(dispatch_get_main_queue(), success);
             } else {
-                NSLog(@"EmailHelper: Authorization error: %@", [error localizedDescription]);
+                NSLog(@"CalendarWrapper: Authorization error: %@", [self encodedUserInfoFor:error]);
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
                 });
