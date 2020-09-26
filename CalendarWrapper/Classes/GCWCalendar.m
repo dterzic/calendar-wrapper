@@ -218,9 +218,11 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 
     newEvent.start = [GTLRCalendar_EventDateTime object];
     newEvent.start.dateTime = startDateTime;
+    newEvent.start.timeZone = [NSCalendar currentCalendar].timeZone.name;
 
     newEvent.end = [GTLRCalendar_EventDateTime object];
     newEvent.end.dateTime = endDateTime;
+    newEvent.end.timeZone = [NSCalendar currentCalendar].timeZone.name;
 
     GTLRCalendar_EventReminder *reminder = [GTLRCalendar_EventReminder object];
     reminder.minutes = @10;
