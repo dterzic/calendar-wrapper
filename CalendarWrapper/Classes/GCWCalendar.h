@@ -46,6 +46,11 @@
                                  success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
+- (void)getEventForCalendar:(NSString *_Nonnull)calendarId
+                    eventId:(NSString *_Nonnull)eventId
+                    success:(void (^_Nullable)(GTLRCalendar_Event *_Nonnull))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
 - (void)getEventsListForCalendar:(NSString *_Nonnull)calendarId
                        startDate:(NSDate *_Nonnull)startDate
                          endDate:(NSDate *_Nonnull)endDate

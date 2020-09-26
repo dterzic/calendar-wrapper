@@ -278,6 +278,30 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     }];
 }
 
+- (void)getEventForCalendar:(NSString *)calendarId
+                    eventId:(NSString *)eventId
+                    success:(void (^)(GTLRCalendar_Event *))success
+                    failure:(void (^)(NSError *))failure {
+
+    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([GCWCalendar createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization;
+
+    GTLRCalendarQuery_EventsGet *query = [GTLRCalendarQuery_EventsGet queryWithCalendarId:calendarId eventId:eventId];
+    [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            GTLRCalendar_Event *event = object;
+            success(event);
+        }
+    }];
+}
+
 - (void)getEventsListForCalendar:(NSString *)calendarId
                        startDate:(NSDate *)startDate
                          endDate:(NSDate *)endDate
