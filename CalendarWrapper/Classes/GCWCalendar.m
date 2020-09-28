@@ -1,7 +1,10 @@
 #import "GCWCalendar.h"
+
 #import <AppAuth/AppAuth.h>
 #import <GTMAppAuth/GTMAppAuth.h>
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
+#import "GCWCalendarEntry.h"
+#import "GCWCalendarEvent.h"
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
@@ -194,11 +197,11 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     }];
 }
 
-+ (GTLRCalendar_Event *)createEventWithTitle:(NSString *)title
-                                    location:(NSString *)location
-                                 description:(NSString *)description
-                                        date:(NSDate *)date
-                                    duration:(NSInteger)duration {
++ (GCWCalendarEvent *)createEventWithTitle:(NSString *)title
+                                  location:(NSString *)location
+                               description:(NSString *)description
+                                      date:(NSDate *)date
+                                  duration:(NSInteger)duration {
     // Make a new event, and show it to the user to edit
     GTLRCalendar_Event *newEvent = [GTLRCalendar_Event object];
 
@@ -232,7 +235,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     newEvent.reminders.overrides = @[ reminder ];
     newEvent.reminders.useDefault = @NO;
 
-    return newEvent;
+    return [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:newEvent];
 }
 
 + (NSError *)createErrorWithCode:(NSInteger)code description:(NSString *)description {
@@ -282,7 +285,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 
 - (void)getEventForCalendar:(NSString *)calendarId
                     eventId:(NSString *)eventId
-                    success:(void (^)(GTLRCalendar_Event *))success
+                    success:(void (^)(GCWCalendarEvent *))success
                     failure:(void (^)(NSError *))failure {
 
     GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
@@ -298,7 +301,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
         if (callbackError) {
             failure(callbackError);
         } else {
-            GTLRCalendar_Event *event = object;
+            GCWCalendarEvent *event = object;
             success(event);
         }
     }];
@@ -334,14 +337,15 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
             NSMutableDictionary *events = [NSMutableDictionary dictionary];
             GTLRCalendar_Events *list = object;
             [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                events[obj.identifier] = obj;
+                GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                events[event.identifier] = event;
             }];
             success(events.copy);
         }
     }];
 }
 
-- (void)addEvent:(GTLRCalendar_Event *)event
+- (void)addEvent:(GCWCalendarEvent *)event
       toCalendar:(NSString *)calendarId
          success:(void (^)(NSString *))success
          failure:(void (^)(NSError *))failure {
@@ -358,14 +362,15 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     self.calendarService.authorizer = authorization;
     [self.calendarService executeQuery:query
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
-                                         GTLRCalendar_Event *event,
+                                         GTLRCalendar_Event *obj,
                                          NSError *callbackError) {
-                         if (callbackError == nil) {
-                             success(event.identifier);
-                         } else {
-                             failure(callbackError);
-                         }
-                     }];
+        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+        if (callbackError == nil) {
+            success(event.identifier);
+        } else {
+            failure(callbackError);
+        }
+    }];
 }
 
 - (void)deleteEvent:(NSString *)eventId
@@ -397,7 +402,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
                      }];
 }
 
-- (void)updateEvent:(GTLRCalendar_Event *)event
+- (void)updateEvent:(GCWCalendarEvent *)event
          inCalendar:(NSString *)calendarId
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {

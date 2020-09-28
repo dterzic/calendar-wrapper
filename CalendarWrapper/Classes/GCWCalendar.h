@@ -4,8 +4,7 @@
 #import <GoogleAPIClientForREST/GTLRCalendar.h>
 
 @class GTLRCalendarService;
-@class GTLRCalendar_Event;
-
+@class GCWCalendarEvent;
 @class GCWCalendar;
 
 @protocol GCWCalendarDelegate <NSObject>
@@ -30,12 +29,11 @@
 - (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 - (void)saveAuthorizations;
 
-+ (GTLRCalendar_Event *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
-                                    location:(NSString *_Nullable)location
-                                 description:(NSString *_Nullable)description
-                                        date:(NSDate *_Nonnull)date
-                                    duration:(NSInteger)duration;
-
++ (GCWCalendarEvent *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
+                                           location:(NSString *_Nullable)location
+                                        description:(NSString *_Nullable)description
+                                               date:(NSDate *_Nonnull)date
+                                           duration:(NSInteger)duration;
 
 - (void)loadCalendarListsForRole:(NSString *_Nonnull)accessRole
                          success:(void (^_Nonnull)(NSDictionary *_Nonnull))success
@@ -48,7 +46,7 @@
 
 - (void)getEventForCalendar:(NSString *_Nonnull)calendarId
                     eventId:(NSString *_Nonnull)eventId
-                    success:(void (^_Nullable)(GTLRCalendar_Event *_Nonnull))success
+                    success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
                     failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)getEventsListForCalendar:(NSString *_Nonnull)calendarId
@@ -58,7 +56,7 @@
                          success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)addEvent:(GTLRCalendar_Event *_Nonnull)event
+- (void)addEvent:(GCWCalendarEvent *_Nonnull)event
       toCalendar:(NSString *_Nonnull)calendarId
          success:(void (^_Nullable)(NSString *_Nonnull))success
          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
@@ -68,7 +66,7 @@
             success:(void (^_Nullable)(void))success
             failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)updateEvent:(GTLRCalendar_Event *_Nonnull)event
+- (void)updateEvent:(GCWCalendarEvent *_Nonnull)event
          inCalendar:(NSString *_Nonnull)calendarId
             success:(void (^_Nullable)(void))success
             failure:(void (^_Nullable)(NSError *_Nonnull))failure;

@@ -172,10 +172,10 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
         [self loadCalendarList];
         return;
     }
-    GTLRCalendar_Event *event = [GCWCalendar createEventWithTitle:@"Event title"
-                                                         location:@"Infinite Loop, Cupertino, CA 95014, USA"
-                                                      description:@"Test event"
-                                                             date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
+    GCWCalendarEvent *event = [GCWCalendar createEventWithTitle:@"Event title"
+                                                       location:@"Infinite Loop, Cupertino, CA 95014, USA"
+                                                    description:@"Test event"
+                                                           date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
     __weak GCWViewController *weakSelf = self;
     [self.calendar addEvent:event
                  toCalendar:self.defaultCalendarId

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CalendarWrapper'
-  s.version          = '0.2.9'
+  s.version          = '0.3'
   s.summary          = 'Simple wrapper around the Google AppAuth and calendar API.'
 
 # This description is used to generate tags and improve search results.
