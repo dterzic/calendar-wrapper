@@ -8,6 +8,7 @@
 
 #import "GCWViewController.h"
 #import "GCWCalendar.h"
+#import "GCWCalendarEvent.h"
 
 static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 
@@ -236,7 +237,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
     if(cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
-    GTLRCalendar_Event *event = _events.allValues[indexPath.row];
+    GCWCalendarEvent *event = _events.allValues[indexPath.row];
     cell.textLabel.numberOfLines = 2;
     cell.textLabel.text = [NSString stringWithFormat:@"%@\n%@", event.summary, event.location];
     cell.textLabel.textColor = [self defaultCalendarBackgroundColor];
