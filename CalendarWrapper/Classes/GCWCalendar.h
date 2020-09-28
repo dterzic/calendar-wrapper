@@ -5,29 +5,23 @@
 
 @class GTLRCalendarService;
 @class GCWCalendarEvent;
-@class GCWCalendar;
-
-@protocol GCWCalendarDelegate <NSObject>
-
-- (void)calendarLoginRequired:(GCWCalendar *_Nullable)calendar;
-
-@end
+@class GCWCalendarEntry;
 
 @interface GCWCalendar : NSObject
 
-@property (nonatomic, weak) id<GCWCalendarDelegate> _Nullable delegate;
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
 @property (nonatomic, nullable) NSMutableArray<GTMAppAuthFetcherAuthorization *> *authorizations;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
+@property (nonatomic) NSDictionary * _Nullable calendarEntries;
+@property (nonatomic) NSArray * _Nullable calendarEvents;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
-                   presentingViewController:(UIViewController *_Nullable)viewController
-                                   delegate:(id<GCWCalendarDelegate>_Nullable)delegate;
+                   presentingViewController:(UIViewController *_Nullable)viewController;
 
 - (void)doLoginOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
-- (void)saveAuthorizations;
+- (void)saveState;
 
 + (GCWCalendarEvent *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
                                            location:(NSString *_Nullable)location

@@ -3,8 +3,12 @@
 #import <AppAuth/AppAuth.h>
 #import <GTMAppAuth/GTMAppAuth.h>
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
+
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
+
+#import "NSDictionary+GCWCalendar.h"
+#import "NSArray+GCWCalendarEvent.h"
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
@@ -12,6 +16,8 @@ static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-
 static NSString *const kCalendarWrapperAuthorizerKey = @"googleOAuthCodingKeyForCalendarWrapper";
 static NSString *const kUserIDs = @"googleUserIDsKey";
 static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis.com/auth/calendar";
+static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
+static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 
 @interface GCWCalendar ()
 
@@ -24,8 +30,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 @implementation GCWCalendar
 
 - (instancetype)initWithClientId:(NSString *)clientId
-        presentingViewController:(UIViewController *)viewController
-                        delegate:(id<GCWCalendarDelegate>)delegate {
+        presentingViewController:(UIViewController *)viewController {
     self = [super init];
 
     if (self) {
@@ -33,9 +38,17 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
         _calendarService.shouldFetchNextPages = true;
         _calendarService.retryEnabled = true;
 
+        NSDictionary *entriesArchive = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarEntriesKey];
+        if (entriesArchive) {
+            _calendarEntries = [NSDictionary unarchiveCalendarEntriesFrom:entriesArchive];
+        }
+        NSArray *eventsArchive = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarEventsKey];
+        if (eventsArchive) {
+            _calendarEvents = [NSArray unarchiveCalendarEventsFrom:eventsArchive];
+        }
+
         self.clientId = clientId;
         self.presentingViewController = viewController;
-        self.delegate = delegate;
     }
     return self;
 }
@@ -90,13 +103,16 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
     }];
 }
 
-- (void)saveAuthorizations {
+- (void)saveState {
     NSMutableArray *userIDs = [NSMutableArray array];
     [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
         [userIDs addObject: authorization.userID];
     }];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:userIDs forKey:kUserIDs];
+    [defaults setObject:[self.calendarEvents archiveCalendarEvents] forKey:kCalendarEventsKey];
+    [defaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
+
     [defaults synchronize];
 }
 

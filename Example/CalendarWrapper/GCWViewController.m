@@ -12,7 +12,7 @@
 
 static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 
-@interface GCWViewController () <GCWCalendarDelegate, UITableViewDelegate>
+@interface GCWViewController () <UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *defaultCalendarLabel;
 @property (weak, nonatomic) IBOutlet UIButton *signInButton;
@@ -62,7 +62,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
                                                  name:UIApplicationWillResignActiveNotification
                                                object:[UIApplication sharedApplication]];
 
-    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID presentingViewController:self delegate:self];
+    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID presentingViewController:self];
     [self.calendar loadAuthorizationsOnSuccess:^{
         [self loadCalendarList];
     } failure:^(NSError * error) {
@@ -86,7 +86,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
 }
 
 -(void)appWillGoToBackground:(NSNotification *)note {
-    [self.calendar saveAuthorizations];
+    [self.calendar saveState];
 }
 
 - (void)showAlertWithTitle:(NSString *)title description:(NSString *)description {
