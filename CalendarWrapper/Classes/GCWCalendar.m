@@ -264,18 +264,27 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
                          failure:(void (^)(NSError *))failure {
     NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
     self.calendarUsers = [NSMutableDictionary dictionary];
-    [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
+
+    __block NSUInteger authorizationIndex = 0;
+    for (GTMAppAuthFetcherAuthorization *authorization in self.authorizations) {
         [self loadCalendarListForAuthorization:authorization accessRole:accessRole success:^(NSDictionary *accountCalendars) {
             [accountCalendars enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-                [calendars setValue:obj forKey:key];
+                GCWCalendarEntry *accountCalendar = [[GCWCalendarEntry alloc] initWithCalendarListEntry:obj];
+                GCWCalendarEntry *cachedCalendar = self.calendarEntries[accountCalendar.identifier];
+                // Keep attribute value from cache
+                accountCalendar.hideEvents = cachedCalendar.hideEvents;
+                [calendars setValue:accountCalendar forKey:key];
                 [self.calendarUsers setValue:authorization.userID forKey:key];
             }];
-            success(calendars);
+            if (authorizationIndex == self.authorizations.count-1) {
+                success(calendars);
+            }
+            authorizationIndex++;
         } failure:^(NSError *error) {
             failure(error);
-            *stop = YES;
+            return;
         }];
-    }];
+    }
 }
 
 - (void)loadCalendarListForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
@@ -317,7 +326,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         if (callbackError) {
             failure(callbackError);
         } else {
-            GCWCalendarEvent *event = object;
+            GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:object];
             success(event);
         }
     }];
