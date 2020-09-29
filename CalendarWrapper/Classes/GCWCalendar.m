@@ -215,6 +215,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
 
 + (GCWCalendarEvent *)createEventWithTitle:(NSString *)title
                                   location:(NSString *)location
+                   attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
                                description:(NSString *)description
                                       date:(NSDate *)date
                                   duration:(NSInteger)duration {
@@ -250,6 +251,14 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     newEvent.reminders = [GTLRCalendar_Event_Reminders object];
     newEvent.reminders.overrides = @[ reminder ];
     newEvent.reminders.useDefault = @NO;
+
+    NSMutableArray *attendees = [NSMutableArray array];
+    for(NSString *email in attendeesEmailAddresses) {
+        GTLRCalendar_EventAttendee *attendee = [[GTLRCalendar_EventAttendee alloc] init];
+        attendee.email = email;
+        [attendees addObject:attendee];
+    }
+    newEvent.attendees = attendees;
 
     return [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:newEvent];
 }

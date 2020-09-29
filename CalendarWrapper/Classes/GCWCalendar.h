@@ -25,6 +25,7 @@
 
 + (GCWCalendarEvent *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
                                            location:(NSString *_Nullable)location
+                            attendeesEmailAddresses:(NSArray<NSString *> *_Nullable)attendeesEmailAddresses
                                         description:(NSString *_Nullable)description
                                                date:(NSDate *_Nonnull)date
                                            duration:(NSInteger)duration;

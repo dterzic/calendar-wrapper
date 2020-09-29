@@ -175,6 +175,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
     }
     GCWCalendarEvent *event = [GCWCalendar createEventWithTitle:@"Event title"
                                                        location:@"Infinite Loop, Cupertino, CA 95014, USA"
+                                        attendeesEmailAddresses:nil
                                                     description:@"Test event"
                                                            date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
     __weak GCWViewController *weakSelf = self;
