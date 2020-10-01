@@ -20,6 +20,7 @@
             GCWCalendarEvent *event = [[self class] objectWithJSON:json];
             event.calendarId = [coder decodeObjectForKey:@"GCWCalendarEventId"];
             event.color = [coder decodeObjectForKey:@"GCWCalendarEventColor"];
+            event.isImportant = [coder decodeBoolForKey:@"GCWCalendarEventImportanceFlag"];
             return event;
         }
     }
@@ -30,6 +31,7 @@
     [coder encodeObject:[self JSONString] forKey:@"GCWCalendarEventJSON"];
     [coder encodeObject:self.calendarId forKey:@"GCWCalendarEventId"];
     [coder encodeObject:self.color forKey:@"GCWCalendarEventColor"];
+    [coder encodeBool:self.isImportant forKey:@"GCWCalendarEventImportanceFlag"];
 }
 
 - (instancetype)initWithGTLCalendarEvent:(GTLRCalendar_Event *)event {

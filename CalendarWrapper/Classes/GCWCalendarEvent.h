@@ -29,6 +29,8 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic, readonly) GTLRCalendar_EventAttendee *selfAsAttendee;
 @property (nonatomic, readonly) GCWCalendarEventResponseStatus responseStatus;
 
+@property (nonatomic) BOOL isImportant;
+
 @end
 
 NS_ASSUME_NONNULL_END
