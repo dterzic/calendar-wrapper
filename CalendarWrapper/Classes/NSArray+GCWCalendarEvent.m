@@ -26,4 +26,16 @@
     return archiveArray;
 }
 
+- (GCWCalendarEvent *)eventWithId:(NSString *)eventId forCalendar:(NSString *)calendarId {
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"identifier == %@ && calendarId == %@", eventId, calendarId];
+    NSArray *filteredArray = [self filteredArrayUsingPredicate:predicate];
+
+    NSAssert((filteredArray.count <= 1), @"Calendar event not unique!");
+
+    if (filteredArray.count) {
+        return filteredArray[0];
+    }
+    return nil;
+}
+
 @end

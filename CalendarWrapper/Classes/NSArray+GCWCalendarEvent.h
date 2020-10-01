@@ -8,5 +8,6 @@
 
 + (NSArray *)unarchiveCalendarEventsFrom:(NSArray *)archive;
 - (NSArray *)archiveCalendarEvents;
+- (GCWCalendarEvent *)eventWithId:(NSString *)eventId forCalendar:(NSString *)calendarId;
 
 @end
