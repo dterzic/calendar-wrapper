@@ -46,7 +46,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         if (eventsArchive) {
             _calendarEvents = [NSArray unarchiveCalendarEventsFrom:eventsArchive];
         }
-        NSLog(@"LOADED: %lu calendars and %lu events.", self.calendarEntries.count, self.calendarEvents.count);
+        NSLog(@"LOADED: %lu calendars and %lu events.", (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
 
         self.clientId = clientId;
         self.presentingViewController = viewController;
@@ -117,7 +117,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
 
     [defaults synchronize];
 
-    NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", userIDs.count, self.calendarEntries.count, self.calendarEvents.count);
+    NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", (unsigned long)userIDs.count, (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
 }
 
 - (void)doLoginOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
