@@ -114,7 +114,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     }];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:userIDs forKey:kUserIDs];
-    [defaults setObject:[self.calendarEvents archiveCalendarEvents] forKey:kCalendarEventsKey];
+    [defaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
     [defaults synchronize];
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
