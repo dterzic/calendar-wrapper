@@ -42,7 +42,9 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         if (entriesArchive) {
             _calendarEntries = [NSDictionary unarchiveCalendarEntriesFrom:entriesArchive];
         }
-        NSArray *eventsArchive = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarEventsKey];
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
+        NSArray *eventsArchive = [NSArray arrayWithContentsOfFile:filePath];
         if (eventsArchive) {
             _calendarEvents = [NSArray unarchiveCalendarEventsFrom:eventsArchive];
         }
@@ -113,9 +115,12 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:userIDs forKey:kUserIDs];
     [defaults setObject:[self.calendarEvents archiveCalendarEvents] forKey:kCalendarEventsKey];
-    [defaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
-
     [defaults synchronize];
+
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
+    NSArray *archive = [self.calendarEvents archiveCalendarEvents];
+    [archive writeToFile:filePath atomically:YES];
 
     NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", (unsigned long)userIDs.count, (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
 }
