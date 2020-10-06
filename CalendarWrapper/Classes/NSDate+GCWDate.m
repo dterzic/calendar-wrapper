@@ -11,6 +11,10 @@
     return [calendar dateByAddingComponents:dateComponents toDate:[NSDate date] options:NSCalendarMatchStrictly];
 }
 
++ (NSDate *)dateFromNumberOfDaysSinceNow:(NSInteger)days {
+    return [[NSDate date] dateByAddingTimeInterval:(days * 86400)];
+}
+
 - (NSDate *)dayOnly {
     NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay
                                                                    fromDate:self];

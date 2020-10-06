@@ -14,6 +14,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarDayType) {
 @property (nonatomic, readonly) BOOL isInCurrentYear;
 
 + (NSDate *)dateFromNumberOfMonthSinceNow:(NSInteger)month;
++ (NSDate *)dateFromNumberOfDaysSinceNow:(NSInteger)days;
 - (BOOL)inSameDayAsDate:(NSDate *)date;
 
 @end
