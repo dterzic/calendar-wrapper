@@ -28,6 +28,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic, readonly) NSTimeInterval timeIntervalSinceEpochTime;
 @property (nonatomic, readonly) GTLRCalendar_EventAttendee *selfAsAttendee;
 @property (nonatomic, readonly) GCWCalendarEventResponseStatus responseStatus;
+@property (nonatomic, readonly) NSString *videoConferenceURI;
 
 @property (nonatomic) BOOL isImportant;
 

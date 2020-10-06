@@ -125,4 +125,16 @@
     return self.summary.matchIconName;
 }
 
+
+- (NSString *)videoConferenceURI {
+    if (self.conferenceData.entryPoints.count > 0) {
+        for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+            if ([entryPoint.entryPointType isEqualToString:@"video"]) {
+                return entryPoint.uri;
+            }
+        }
+    }
+    return nil;
+}
+
 @end
