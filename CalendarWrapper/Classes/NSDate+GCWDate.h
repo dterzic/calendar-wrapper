@@ -15,6 +15,9 @@ typedef NS_ENUM(NSInteger, GCWCalendarDayType) {
 
 + (NSDate *)dateFromNumberOfMonthSinceNow:(NSInteger)month;
 + (NSDate *)dateFromNumberOfDaysSinceNow:(NSInteger)days;
+
 - (BOOL)inSameDayAsDate:(NSDate *)date;
+- (NSDate *)dateFromNumberOfMonth:(NSInteger)month;
+- (NSDate *)dateFromNumberOfDays:(NSInteger)days;
 
 @end

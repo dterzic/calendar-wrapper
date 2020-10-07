@@ -18,11 +18,11 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic) UIColor *color;
 @property (nonatomic) NSString *calendarId;
 @property (nonatomic, readonly) NSString *iconName;
-@property (nonatomic, readonly) NSDate *startDate;
+@property (nonatomic) NSDate *startDate;
 @property (nonatomic, readonly) NSString *startDateIfInNext30MinutesString;
 @property (nonatomic, readonly) NSDate *startDateDayOnly;
 @property (nonatomic, readonly) NSString *startTimeString;
-@property (nonatomic, readonly) NSDate *endDate;
+@property (nonatomic) NSDate *endDate;
 @property (nonatomic, readonly) NSString *endTimeString;
 @property (nonatomic, readonly) NSString *durationString;
 @property (nonatomic, readonly) NSTimeInterval timeIntervalSinceEpochTime;

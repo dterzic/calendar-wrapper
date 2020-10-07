@@ -74,6 +74,14 @@
     return self.start.dateTime.date ? : self.start.date.date;
 }
 
+- (void)setStartDate:(NSDate *)startDate {
+    // Include an offset minutes that tells Google Calendar that these datesa
+    // are for the local time zone.
+    NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
+
+    self.start.dateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
+}
+
 - (NSString *)startDateIfInNext30MinutesString {
     NSInteger timeIntervalSinceNowInMinute = [self.startDate timeIntervalSinceNow] / 60;
     if (timeIntervalSinceNowInMinute >= 0 && timeIntervalSinceNowInMinute < 30 && [self.startDate timeIntervalSinceNow] > 0) {
@@ -89,6 +97,14 @@
 
 - (NSDate *)endDate {
     return self.end.dateTime.date ? : self.end.date.date;
+}
+
+- (void)setEndDate:(NSDate *)endDate {
+    // Include an offset minutes that tells Google Calendar that these datesa
+    // are for the local time zone.
+    NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
+
+    self.end.dateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
 }
 
 - (NSString *)endTimeString {

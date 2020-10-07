@@ -15,6 +15,17 @@
     return [[NSDate date] dateByAddingTimeInterval:(days * 86400)];
 }
 
+- (NSDate *)dateFromNumberOfMonth:(NSInteger)month {
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    NSDateComponents *dateComponents = [NSDateComponents new];
+    dateComponents.month = month;
+    return [calendar dateByAddingComponents:dateComponents toDate:self options:NSCalendarMatchStrictly];
+}
+
+- (NSDate *)dateFromNumberOfDays:(NSInteger)days {
+    return [self dateByAddingTimeInterval:(days * 86400)];
+}
+
 - (NSDate *)dayOnly {
     NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay
                                                                    fromDate:self];
