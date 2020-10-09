@@ -19,6 +19,8 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 
+static NSInteger const kAllDayDuration = 24 * 60;
+
 @interface GCWCalendar ()
 
 @property (nonatomic) NSString *clientId;
@@ -242,15 +244,24 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     // are for the local time zone.
     NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
 
-    GTLRDateTime *startDateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
-    GTLRDateTime *endDateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
-
     newEvent.start = [GTLRCalendar_EventDateTime object];
-    newEvent.start.dateTime = startDateTime;
+    if (duration == kAllDayDuration) {
+        GTLRDateTime *startDateTime = [GTLRDateTime dateTimeForAllDayWithDate:startDate];
+        newEvent.start.date = startDateTime;
+    } else {
+        GTLRDateTime *startDateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
+        newEvent.start.dateTime = startDateTime;
+    }
     newEvent.start.timeZone = [NSCalendar currentCalendar].timeZone.name;
 
     newEvent.end = [GTLRCalendar_EventDateTime object];
-    newEvent.end.dateTime = endDateTime;
+    if (duration == kAllDayDuration) {
+        GTLRDateTime *endDateTime = [GTLRDateTime dateTimeForAllDayWithDate:endDate];
+        newEvent.end.date = endDateTime;
+    } else {
+        GTLRDateTime *endDateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
+        newEvent.end.dateTime = endDateTime;
+    }
     newEvent.end.timeZone = [NSCalendar currentCalendar].timeZone.name;
 
     GTLRCalendar_EventReminder *reminder = [GTLRCalendar_EventReminder object];
