@@ -78,8 +78,17 @@
     // Include an offset minutes that tells Google Calendar that these datesa
     // are for the local time zone.
     NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
+    NSTimeInterval durationInMinutes = [self.end.dateTime.date timeIntervalSinceDate:startDate] / 60;
 
-    self.start.dateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
+    if (durationInMinutes ==  kAllDayDuration) {
+        self.start.date = [GTLRDateTime dateTimeForAllDayWithDate:startDate];
+        self.start.dateTime = nil;
+        self.end.date = [GTLRDateTime dateTimeForAllDayWithDate:self.end.dateTime.date];
+        self.end.dateTime = nil;
+    } else {
+        self.start.date = nil;
+        self.start.dateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
+    }
     self.start.timeZone = [NSCalendar currentCalendar].timeZone.name;
 }
 
@@ -104,8 +113,17 @@
     // Include an offset minutes that tells Google Calendar that these datesa
     // are for the local time zone.
     NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
+    NSTimeInterval durationInMinutes = [endDate timeIntervalSinceDate:self.start.dateTime.date] / 60;
 
-    self.end.dateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
+    if (durationInMinutes ==  kAllDayDuration) {
+        self.start.date = [GTLRDateTime dateTimeForAllDayWithDate:self.start.dateTime.date];
+        self.start.dateTime = nil;
+        self.end.date = [GTLRDateTime dateTimeForAllDayWithDate:endDate];
+        self.end.dateTime = nil;
+    } else {
+        self.end.date = nil;
+        self.end.dateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
+    }
     self.end.timeZone = [NSCalendar currentCalendar].timeZone.name;
 }
 

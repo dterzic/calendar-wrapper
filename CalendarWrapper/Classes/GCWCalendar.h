@@ -30,6 +30,8 @@
                                                date:(NSDate *_Nonnull)date
                                            duration:(NSInteger)duration;
 
++ (GCWCalendarEvent *)cloneEvent:(GCWCalendarEvent *)event;
+
 - (void)loadCalendarListsForRole:(NSString *_Nonnull)accessRole
                          success:(void (^_Nonnull)(NSDictionary *_Nonnull))success
                          failure:(void (^_Nonnull)(NSError *_Nonnull))failure;

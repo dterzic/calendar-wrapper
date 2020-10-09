@@ -19,8 +19,6 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 
-static NSInteger const kAllDayDuration = 24 * 60;
-
 @interface GCWCalendar ()
 
 @property (nonatomic) NSString *clientId;
@@ -281,6 +279,17 @@ static NSInteger const kAllDayDuration = 24 * 60;
     newEvent.attendees = attendees;
 
     return [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:newEvent];
+}
+
++ (GCWCalendarEvent *)cloneEvent:(GCWCalendarEvent *)event {
+    GCWCalendarEvent *clone = [[GCWCalendarEvent alloc] init];
+    clone.calendarId = [event.calendarId copy];
+    clone.start = [event.start copy];
+    clone.end = [event.end copy];
+    clone.summary = [event.summary copy];
+    clone.location = [event.location copy];
+
+    return clone;
 }
 
 + (NSError *)createErrorWithCode:(NSInteger)code description:(NSString *)description {

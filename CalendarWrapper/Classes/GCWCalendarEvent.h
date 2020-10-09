@@ -1,6 +1,8 @@
 #import <UIKit/UIKit.h>
 #import "GCWCalendar.h"
 
+static NSInteger const kAllDayDuration = 24 * 60;
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
