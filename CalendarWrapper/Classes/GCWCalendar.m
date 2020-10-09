@@ -365,6 +365,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
             failure(callbackError);
         } else {
             GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:object];
+            event.calendarId = calendarId;
             success(event);
         }
     }];
