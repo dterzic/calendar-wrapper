@@ -80,6 +80,7 @@
     NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
 
     self.start.dateTime = [GTLRDateTime dateTimeWithDate:startDate offsetMinutes:offsetMinutes];
+    self.start.timeZone = [NSCalendar currentCalendar].timeZone.name;
 }
 
 - (NSString *)startDateIfInNext30MinutesString {
@@ -105,6 +106,7 @@
     NSInteger offsetMinutes = [NSTimeZone localTimeZone].secondsFromGMT / 60;
 
     self.end.dateTime = [GTLRDateTime dateTimeWithDate:endDate offsetMinutes:offsetMinutes];
+    self.end.timeZone = [NSCalendar currentCalendar].timeZone.name;
 }
 
 - (NSString *)endTimeString {
