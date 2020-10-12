@@ -74,6 +74,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
 }
 
 - (void)loadAuthorizationsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    self.userAccounts = [NSMutableDictionary dictionary];
     self.authorizations = [NSMutableArray array];
     NSArray *userIDs = [[NSUserDefaults standardUserDefaults] arrayForKey:kUserIDs];
 
