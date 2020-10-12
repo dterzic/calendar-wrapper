@@ -56,6 +56,19 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     return self;
 }
 
+- (NSDictionary <NSString *, NSArray<GCWCalendarEntry *> *> *)accountEntries {
+    NSMutableDictionary *accountEntries = [NSMutableDictionary dictionary];
+    for (NSString *userID in self.userAccounts) {
+        [accountEntries setValue:[NSMutableArray array] forKey:userID];
+    }
+    for (GCWCalendarEntry *entry in self.calendarEntries.allValues) {
+        GTMAppAuthFetcherAuthorization *calendarAuthorization = [self getAuthorizationForCalendar:entry.identifier];
+        NSMutableArray *entries = [accountEntries valueForKey:calendarAuthorization.userID];
+        [entries addObject:entry];
+    }
+    return [accountEntries copy];
+}
+
 - (NSString *)encodedUserInfoFor:(NSError *)error {
     return [[NSString alloc] initWithData:error.userInfo[@"data"] encoding:NSUTF8StringEncoding];
 }
@@ -84,7 +97,11 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         GTMAppAuthFetcherAuthorization* authorization = [self getAuthorizationFromKeychain:keychainKey];
 
         if (authorization.canAuthorize) {
-            [self checkIfAuthorizationIsValid:authorization success:^{
+            [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
+                NSString *userName = [userInfo valueForKey:@"name"];
+                if (userName && ![self.userAccounts valueForKey:userID]) {
+                    [self.userAccounts setValue:userName forKey:userID];
+                }
                 [self saveAuthorization:authorization toKeychain:keychainKey];
                 validationCompleted();
 
@@ -203,12 +220,11 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     return calendarAuthorization;
 }
 
-- (void)checkIfAuthorizationIsValid:(GTMAppAuthFetcherAuthorization *)authorization
-                            success:(void (^)(void))success
-                            failure:(void (^)(NSError *))failure {
-    // Creates a GTMSessionFetcherService with the authorization.
-    // Normally you would save this service object and re-use it for all REST API calls.
+- (void)getUserInfoForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
+                                      success:(void (^)(NSDictionary *))success
+                                      failure:(void (^)(NSError *))failure {
     GTMSessionFetcherService *fetcherService = [[GTMSessionFetcherService alloc] init];
+    fetcherService.authorizer = authorization;
     NSURL *userinfoEndpoint = [NSURL URLWithString:kUserInfoURI];
     GTMSessionFetcher *fetcher = [fetcherService fetcherWithURL:userinfoEndpoint];
 
@@ -216,7 +232,12 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         if (error) {
             failure(error);
         } else {
-            success();
+            NSError *jsonError = nil;
+            NSDictionary *userInfo = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+            if (jsonError) {
+                failure(jsonError);
+            }
+            success(userInfo);
         }
         return;
     }];

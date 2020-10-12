@@ -14,6 +14,8 @@
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
 @property (nonatomic) NSArray * _Nullable calendarEvents;
+@property (nonatomic) NSDictionary * _Nullable userAccounts;
+@property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
                    presentingViewController:(UIViewController *_Nullable)viewController;
