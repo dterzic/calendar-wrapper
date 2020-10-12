@@ -175,7 +175,14 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
             if (authState) {
                 GTMAppAuthFetcherAuthorization *authorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
                 [self saveAuthorization:authorization toKeychain:[self getKeychainKeyForAuthorization:authorization]];
-
+                [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
+                    NSString *userName = [userInfo valueForKey:@"name"];
+                    if (userName && ![self.userAccounts valueForKey:authorization.userID]) {
+                        [self.userAccounts setValue:userName forKey:authorization.userID];
+                    }
+                } failure:^(NSError *error) {
+                    NSLog(@"CalendarWrapper: User info error: %@", [self encodedUserInfoFor:error]);
+                }];
                 dispatch_async(dispatch_get_main_queue(), success);
             } else {
                 NSLog(@"CalendarWrapper: Authorization error: %@", [self encodedUserInfoFor:error]);
