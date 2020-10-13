@@ -173,4 +173,37 @@
     return nil;
 }
 
+- (BOOL)hasAttendeeWithEmail:(NSString *)email {
+    BOOL found = NO;
+    for (GTLRCalendar_EventAttendee *attendee in self.attendees) {
+        if ([attendee.email isEqualToString:email]) {
+            found = YES;
+            break;
+        }
+    }
+    return found;
+}
+
+- (NSArray *)attendeesEmailAddresses {
+    NSMutableArray *attendeeEmails = [NSMutableArray array];
+    for(GTLRCalendar_EventAttendee *attendee in self.attendees) {
+        if (attendee.email.length) {
+            [attendeeEmails addObject:attendee.email];
+        }
+    }
+    return attendeeEmails;
+}
+
+- (void)setAttendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses {
+    NSMutableArray *attendees = [NSMutableArray arrayWithArray:self.attendees];
+    for (NSString *email in attendeesEmailAddresses) {
+        if (![self hasAttendeeWithEmail:email]) {
+            GTLRCalendar_EventAttendee *attendee = [[GTLRCalendar_EventAttendee alloc] init];
+            attendee.email = email;
+            [attendees addObject:attendee];
+        }
+    }
+    self.attendees = attendees;
+}
+
 @end
