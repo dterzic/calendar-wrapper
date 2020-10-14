@@ -57,6 +57,10 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     return self;
 }
 
+- (NSString *)getCalendarOwner:(NSString *)calendarId {
+    return self.calendarUsers[calendarId];
+}
+
 - (NSDictionary <NSString *, NSArray<GCWCalendarEntry *> *> *)accountEntries {
     NSMutableDictionary *accountEntries = [NSMutableDictionary dictionary];
     for (NSString *userID in self.userAccounts.allKeys) {
@@ -183,12 +187,13 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
                         GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
                         [self.userAccounts setValue:account forKey:authorization.userID];
                     }
+                    dispatch_async(dispatch_get_main_queue(), success);
                 } failure:^(NSError *error) {
-                    NSLog(@"CalendarWrapper: User info error: %@", [self encodedUserInfoFor:error]);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
                 }];
-                dispatch_async(dispatch_get_main_queue(), success);
             } else {
-                NSLog(@"CalendarWrapper: Authorization error: %@", [self encodedUserInfoFor:error]);
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
                 });
