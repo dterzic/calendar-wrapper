@@ -6,6 +6,7 @@
 
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
+#import "GCWUserAccount.h"
 
 #import "NSDictionary+GCWCalendar.h"
 #import "NSArray+GCWCalendarEvent.h"
@@ -58,7 +59,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
 
 - (NSDictionary <NSString *, NSArray<GCWCalendarEntry *> *> *)accountEntries {
     NSMutableDictionary *accountEntries = [NSMutableDictionary dictionary];
-    for (NSString *userID in self.userAccounts) {
+    for (NSString *userID in self.userAccounts.allKeys) {
         [accountEntries setValue:[NSMutableArray array] forKey:userID];
     }
     for (GCWCalendarEntry *entry in self.calendarEntries.allValues) {
@@ -101,7 +102,8 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
             [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                 NSString *userName = [userInfo valueForKey:@"name"];
                 if (userName && ![self.userAccounts valueForKey:userID]) {
-                    [self.userAccounts setValue:userName forKey:userID];
+                    GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
+                    [self.userAccounts setValue:account forKey:userID];
                 }
                 [self saveAuthorization:authorization toKeychain:keychainKey];
                 validationCompleted();
@@ -178,7 +180,8 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
                 [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                     NSString *userName = [userInfo valueForKey:@"name"];
                     if (userName && ![self.userAccounts valueForKey:authorization.userID]) {
-                        [self.userAccounts setValue:userName forKey:authorization.userID];
+                        GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
+                        [self.userAccounts setValue:account forKey:authorization.userID];
                     }
                 } failure:^(NSError *error) {
                     NSLog(@"CalendarWrapper: User info error: %@", [self encodedUserInfoFor:error]);
@@ -342,6 +345,14 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
                 accountCalendar.hideEvents = cachedCalendar.hideEvents;
                 [calendars setValue:accountCalendar forKey:key];
                 [self.calendarUsers setValue:authorization.userID forKey:key];
+
+                // Set primary email address to user account
+                if (accountCalendar.primary.boolValue) {
+                    GCWUserAccount *account = self.userAccounts[authorization.userID];
+                    if (account) {
+                        account.email = accountCalendar.identifier;
+                    }
+                }
             }];
             if (authorizationIndex == self.authorizations.count-1) {
                 success(calendars);
