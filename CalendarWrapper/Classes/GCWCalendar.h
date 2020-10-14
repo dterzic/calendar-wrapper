@@ -20,9 +20,12 @@
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
                    presentingViewController:(UIViewController *_Nullable)viewController;
 
+- (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
+
 - (void)doLoginOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
 - (void)saveState;
 
 + (GCWCalendarEvent *_Nullable)createEventWithTitle:(NSString *_Nonnull)title
