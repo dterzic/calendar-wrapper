@@ -13,7 +13,7 @@
 @property (nonatomic, nullable) NSMutableArray<GTMAppAuthFetcherAuthorization *> *authorizations;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
-@property (nonatomic) NSArray * _Nullable calendarEvents;
+@property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 
@@ -52,6 +52,11 @@
                       maxResults:(NSUInteger)maxResults
                          success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)syncEventsFrom:(NSDate *_Nonnull)startDate
+                    to:(NSDate *_Nonnull)endDate
+               success:(void (^_Nullable)(void))success
+               failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)addEvent:(GCWCalendarEvent *_Nonnull)event
       toCalendar:(NSString *_Nonnull)calendarId

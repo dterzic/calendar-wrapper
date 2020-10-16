@@ -9,7 +9,8 @@
 #import "GCWUserAccount.h"
 
 #import "NSDictionary+GCWCalendar.h"
-#import "NSArray+GCWCalendarEvent.h"
+#import "NSDictionary+GCWCalendarEvent.h"
+#import "UIColor+MNTColor.h"
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
@@ -19,12 +20,14 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
 static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis.com/auth/calendar";
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
+static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTokensKey";
 
 @interface GCWCalendar ()
 
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
+@property (nonatomic) NSMutableDictionary *calendarSyncTokens;
 
 @end
 
@@ -47,7 +50,15 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
         NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
         NSArray *eventsArchive = [NSArray arrayWithContentsOfFile:filePath];
         if (eventsArchive) {
-            _calendarEvents = [NSArray unarchiveCalendarEventsFrom:eventsArchive];
+            _calendarEvents = [NSMutableDictionary dictionaryWithDictionary:[NSDictionary unarchiveCalendarEventsFrom:eventsArchive]];
+        } else {
+            _calendarEvents = [NSMutableDictionary dictionary];
+        }
+        NSDictionary *calendarSyncTokens = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarSyncTokensKey];
+        if (calendarSyncTokens) {
+            self.calendarSyncTokens = [NSMutableDictionary dictionaryWithDictionary:calendarSyncTokens];
+        } else {
+            self.calendarSyncTokens = [NSMutableDictionary dictionary];
         }
         NSLog(@"LOADED: %lu calendars and %lu events.", (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
 
@@ -138,6 +149,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     }];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:userIDs forKey:kUserIDs];
+    [defaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
     [defaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
     [defaults synchronize];
 
@@ -343,23 +355,9 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
     __block NSUInteger authorizationIndex = 0;
     for (GTMAppAuthFetcherAuthorization *authorization in self.authorizations) {
         [self loadCalendarListForAuthorization:authorization accessRole:accessRole success:^(NSDictionary *accountCalendars) {
-            [accountCalendars enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-                GCWCalendarEntry *accountCalendar = [[GCWCalendarEntry alloc] initWithCalendarListEntry:obj];
-                GCWCalendarEntry *cachedCalendar = self.calendarEntries[accountCalendar.identifier];
-                // Keep attribute value from cache
-                accountCalendar.hideEvents = cachedCalendar.hideEvents;
-                [calendars setValue:accountCalendar forKey:key];
-                [self.calendarUsers setValue:authorization.userID forKey:key];
-
-                // Set primary email address to user account
-                if (accountCalendar.primary.boolValue) {
-                    GCWUserAccount *account = self.userAccounts[authorization.userID];
-                    if (account) {
-                        account.email = accountCalendar.identifier;
-                    }
-                }
-            }];
+            [calendars addEntriesFromDictionary:accountCalendars];
             if (authorizationIndex == self.authorizations.count-1) {
+                self.calendarEntries = [calendars copy];
                 success(calendars);
             }
             authorizationIndex++;
@@ -384,7 +382,23 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
             NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
             GTLRCalendar_CalendarList *list = object;
             [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_CalendarListEntry * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                calendars[obj.identifier] = obj;
+                GCWCalendarEntry *calendar = [[GCWCalendarEntry alloc] initWithCalendarListEntry:obj];
+                GCWCalendarEntry *cachedCalendar = self.calendarEntries[calendar.identifier];
+                // Keep attribute value from cache
+                if (cachedCalendar) {
+                    calendar.hideEvents = cachedCalendar.hideEvents;
+                }
+                calendars[obj.identifier] = calendar;
+
+                [self.calendarUsers setValue:authorization.userID forKey:calendar.identifier];
+
+                // Set primary email address to user account
+                if (calendar.primary.boolValue) {
+                    GCWUserAccount *account = self.userAccounts[authorization.userID];
+                    if (account) {
+                        account.email = calendar.identifier;
+                    }
+                }
             }];
             success(calendars.copy);
         }
@@ -452,6 +466,58 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
             success(events.copy);
         }
     }];
+}
+
+- (void)syncEventsFrom:(NSDate *)startDate to:(NSDate *)endDate success:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    __block NSUInteger calendarIndex = 0;
+    for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
+        GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+        if (!authorization) {
+            failure([GCWCalendar createErrorWithCode:-10002
+                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            return;
+        }
+        self.calendarService.authorizer = authorization;
+
+        GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendar.identifier];
+        query.maxResults = 2500;
+        query.singleEvents = true;
+        query.syncToken = self.calendarSyncTokens[calendar.identifier];
+        [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+            if (callbackError) {
+                if (callbackError.code == 410) {
+                    // In case token expire, remove it from cache
+                    [self.calendarSyncTokens removeObjectForKey:calendar.identifier];
+                }
+                failure(callbackError);
+            } else {
+                GTLRCalendar_Events *list = object;
+                [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                    if (![obj.status isEqualToString:@"cancelled"]) {
+                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+
+                        if ([startDate compare:event.startDate] == NSOrderedAscending &&
+                            [endDate compare:event.endDate] == NSOrderedDescending) {
+                            event.calendarId = calendar.identifier;
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
+
+                            // Keep attributes from cached object
+                            GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+                            if (cachedEvent) {
+                                event.isImportant = cachedEvent.isImportant;
+                            }
+                            self.calendarEvents[event.identifier] = event;
+                        }
+                    }
+                }];
+                self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
+                if (calendarIndex == self.calendarEntries.count-1) {
+                    success();
+                }
+                calendarIndex++;
+            }
+        }];
+    }
 }
 
 - (void)addEvent:(GCWCalendarEvent *)event
