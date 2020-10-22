@@ -101,7 +101,13 @@ static NSUInteger daysInFuture = 45;
     NSDate *startDate = [NSDate dateFromNumberOfDaysSinceNow:daysInPast];
     NSDate *endDate = [NSDate dateFromNumberOfDaysSinceNow:daysInFuture];
 
-    [self.calendar syncEventsFrom:startDate to:endDate success:^{
+    __weak GCWCalendarService *weakSelf = self;
+    [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *events) {
+        for (GCWCalendarEvent *event in events) {
+            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
+                [weakSelf.delegate calendarServiceDidSyncEvent:event];
+            }
+        }
         success();
     } failure:^(NSError *error) {
         failure(error);
@@ -134,8 +140,8 @@ static NSUInteger daysInFuture = 45;
         newEvent.identifier = eventId;
         newEvent.calendarId = calendarId;
 
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidAddEvent:)]) {
-            [weakSelf.delegate calendarServiceDidAddEvent:newEvent];
+        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
+            [weakSelf.delegate calendarServiceDidCreateEvent:newEvent];
         }
         success(eventId);
     } failure:^(NSError *error) {
@@ -167,8 +173,8 @@ static NSUInteger daysInFuture = 45;
         newEvent.identifier = eventId;
         newEvent.calendarId = calendarId;
 
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidAddEvent:)]) {
-            [weakSelf.delegate calendarServiceDidAddEvent:newEvent];
+        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
+            [weakSelf.delegate calendarServiceDidCreateEvent:newEvent];
         }
         success(eventId);
     } failure:^(NSError *error) {

@@ -468,7 +468,11 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     }];
 }
 
-- (void)syncEventsFrom:(NSDate *)startDate to:(NSDate *)endDate success:(void (^)(void))success failure:(void (^)(NSError *))failure {
+- (void)syncEventsFrom:(NSDate *)startDate
+                    to:(NSDate *)endDate
+               success:(void (^)(NSDictionary *))success
+               failure:(void (^)(NSError *))failure {
+    NSMutableDictionary *events = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
@@ -507,12 +511,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                                 event.isImportant = cachedEvent.isImportant;
                             }
                             self.calendarEvents[event.identifier] = event;
+                            events[event.identifier] = event;
                         }
                     }
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success();
+                    success(events);
                 }
                 calendarIndex++;
             }

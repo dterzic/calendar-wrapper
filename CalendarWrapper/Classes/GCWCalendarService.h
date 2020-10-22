@@ -8,10 +8,10 @@
 
 @optional
 
-- (void)calendarServiceDidLoadEvent:(GCWCalendarEvent *)event;
-- (void)calendarServiceDidAddEvent:(GCWCalendarEvent *)event;
+- (void)calendarServiceDidCreateEvent:(GCWCalendarEvent *)event;
 - (void)calendarServiceDidUpdateEvent:(GCWCalendarEvent *)event;
 - (void)calendarServiceDidDeleteEvent:(NSString *)eventId forCalendar:(NSString *)calendarId;
+- (void)calendarServiceDidSyncEvent:(GCWCalendarEvent *)event;
 
 @end
 

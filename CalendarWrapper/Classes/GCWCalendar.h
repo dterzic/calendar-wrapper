@@ -55,7 +55,7 @@
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate
-               success:(void (^_Nullable)(void))success
+               success:(void (^_Nullable)(NSDictionary *_Nonnull))success
                failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)addEvent:(GCWCalendarEvent *_Nonnull)event
