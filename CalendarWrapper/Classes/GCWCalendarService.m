@@ -103,7 +103,7 @@ static NSUInteger daysInFuture = 45;
 
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *events) {
-        for (GCWCalendarEvent *event in events) {
+        for (GCWCalendarEvent *event in events.allValues) {
             if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
                 [weakSelf.delegate calendarServiceDidSyncEvent:event];
             }
