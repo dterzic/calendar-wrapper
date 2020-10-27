@@ -24,7 +24,9 @@ static NSUInteger daysInFuture = 45;
     self = [super init];
     if (self) {
         self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID
-                                            presentingViewController:presentingViewController];
+                                            presentingViewController:presentingViewController
+                                         authorizationManager:nil
+                                                 userDefaults:nil];
         self.delegate = delegate;
     }
     return self;

@@ -9,6 +9,8 @@
 #import "GCWViewController.h"
 #import "GCWCalendar.h"
 #import "GCWCalendarEvent.h"
+#import "GCWCalendarAuthorizationManager.h"
+#import "GCWCalendarAuthorization.h"
 
 static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 
@@ -24,7 +26,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
 
 @property (nonatomic) GCWCalendar *calendar;
 @property (nonatomic, copy) NSDictionary *calendars;
-@property (nonatomic, readonly) GTMAppAuthFetcherAuthorization *defaultAuthorization;
+@property (nonatomic, readonly) GCWCalendarAuthorization *defaultAuthorization;
 @property (nonatomic, readonly) NSString *defaultCalendarId;
 @property (nonatomic, copy) NSString *calendarEventId;
 @property (nonatomic, copy) NSDictionary *events;
@@ -41,8 +43,8 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }
 
-- (GTMAppAuthFetcherAuthorization *)defaultAuthorization {
-    return self.calendar.authorizations[0];
+- (GCWCalendarAuthorization *)defaultAuthorization {
+    return [self.calendar.authorizationManager defaultAuthorization];
 }
 
 - (NSString *)defaultCalendarId {
@@ -62,7 +64,11 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
                                                  name:UIApplicationWillResignActiveNotification
                                                object:[UIApplication sharedApplication]];
 
-    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID presentingViewController:self];
+    self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID
+                                 presentingViewController:self
+                                     authorizationManager:nil
+                                             userDefaults:nil];
+    
     [self.calendar loadAuthorizationsOnSuccess:^{
         [self loadCalendarList];
     } failure:^(NSError * error) {
@@ -210,7 +216,8 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
 
 - (IBAction)logoutClicked:(id)sender {
     self.calendars = nil;
-    [self.calendar.authorizations removeObject:self.defaultAuthorization];
+    NSString *keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:self.defaultAuthorization];
+    [self.calendar.authorizationManager removeAuthorization:self.defaultAuthorization fromKeychain:keychainKey];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self showLogin];
         [self.calendar doLoginOnSuccess:^{

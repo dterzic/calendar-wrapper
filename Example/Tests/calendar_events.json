@@ -1,0 +1,189 @@
+{
+    "kind": "calendar#events",
+    "etag": "\"p324fl97kvqseo0g\"",
+    "summary": "dterzictest@gmail.com",
+    "updated": "2020-10-16T11:19:02.133Z",
+    "timeZone": "Europe/Belgrade",
+    "accessRole": "owner",
+    "defaultReminders": [{
+        "method": "popup",
+        "minutes": 30
+    }],
+    "nextSyncToken": "CIj6pPT-uOwCEIj6pPT-uOwCGAU=",
+    "items": [{
+        "kind": "calendar#event",
+        "etag": "\"3203312234284000\"",
+        "id": "rf5rjkvish258gos9peag4un9k",
+        "status": "confirmed",
+        "htmlLink": "https://www.google.com/calendar/event?eid=cmY1cmprdmlzaDI1OGdvczlwZWFnNHVuOWsgZHRlcnppY3Rlc3RAbQ",
+        "created": "2020-10-02T16:26:46.000Z",
+        "updated": "2020-10-02T16:28:37.142Z",
+        "summary": "Test meeting",
+        "creator": {
+            "email": "dterzic@gmail.com"
+        },
+        "organizer": {
+            "email": "rgordc83ks79c83gbp5i5da5c4@group.calendar.google.com",
+            "displayName": "Test calendar"
+        },
+        "start": {
+            "dateTime": "2020-10-02T19:00:00+02:00"
+        },
+        "end": {
+            "dateTime": "2020-10-02T19:30:00+02:00"
+        },
+        "iCalUID": "rf5rjkvish258gos9peag4un9k@google.com",
+        "sequence": 0,
+        "attendees": [{
+            "email": "dterzictest@gmail.com",
+            "self": true,
+            "responseStatus": "declined"
+        }],
+        "reminders": {
+            "useDefault": true
+        }
+    }, {
+        "kind": "calendar#event",
+        "etag": "\"3205173680144000\"",
+        "id": "hhkqpuklk6fsvudol6lcddjfr0",
+        "status": "confirmed",
+        "htmlLink": "https://www.google.com/calendar/event?eid=aGhrcXB1a2xrNmZzdnVkb2w2bGNkZGpmcjAgZHRlcnppY3Rlc3RAbQ",
+        "created": "2020-10-06T12:59:18.000Z",
+        "updated": "2020-10-13T11:00:40.072Z",
+        "summary": "Test buffer",
+        "creator": {
+            "email": "dterzic@gmail.com"
+        },
+        "organizer": {
+            "email": "rgordc83ks79c83gbp5i5da5c4@group.calendar.google.com",
+            "displayName": "Test calendar"
+        },
+        "start": {
+            "dateTime": "2020-10-09T19:10:00+02:00",
+            "timeZone": "Europe/Belgrade"
+        },
+        "end": {
+            "dateTime": "2020-10-09T19:40:00+02:00",
+            "timeZone": "Europe/Belgrade"
+        },
+        "iCalUID": "hhkqpuklk6fsvudol6lcddjfr0@google.com",
+        "sequence": 12,
+        "attendees": [{
+            "email": "dterzictest@gmail.com",
+            "self": true,
+            "optional": true,
+            "responseStatus": "needsAction"
+        }],
+        "hangoutLink": "https://meet.google.com/wey-tzny-enm",
+        "conferenceData": {
+            "entryPoints": [{
+                "entryPointType": "video",
+                "uri": "https://meet.google.com/wey-tzny-enm",
+                "label": "meet.google.com/wey-tzny-enm"
+            }],
+            "conferenceSolution": {
+                "key": {
+                    "type": "hangoutsMeet"
+                },
+                "name": "Google Meet",
+                "iconUri": "https://lh5.googleusercontent.com/proxy/bWvYBOb7O03a7HK5iKNEAPoUNPEXH1CHZjuOkiqxHx8OtyVn9sZ6Ktl8hfqBNQUUbCDg6T2unnsHx7RSkCyhrKgHcdoosAW8POQJm_ZEvZU9ZfAE7mZIBGr_tDlF8Z_rSzXcjTffVXg3M46v"
+            },
+            "conferenceId": "wey-tzny-enm",
+            "signature": "AGkP/s1dagYGzYyTqojeJTvrgGA/"
+        },
+        "reminders": {
+            "useDefault": true
+        }
+    }, {
+        "kind": "calendar#event",
+        "etag": "\"3207601782404000\"",
+        "id": "73eti8mgidnpt8nu2bk3i496na",
+        "status": "confirmed",
+        "htmlLink": "https://www.google.com/calendar/event?eid=NzNldGk4bWdpZG5wdDhudTJiazNpNDk2bmEgZHRlcnppY3Rlc3RAbQ",
+        "created": "2020-10-27T12:14:28.000Z",
+        "updated": "2020-10-27T12:14:51.202Z",
+        "summary": "Test meeting 2",
+        "location": "Београд, Србија",
+        "creator": {
+            "email": "dterzictest@gmail.com",
+            "self": true
+        },
+        "organizer": {
+            "email": "dterzictest@gmail.com",
+            "self": true
+        },
+        "start": {
+            "dateTime": "2020-10-27T15:30:00+01:00"
+        },
+        "end": {
+            "dateTime": "2020-10-27T16:30:00+01:00"
+        },
+        "iCalUID": "73eti8mgidnpt8nu2bk3i496na@google.com",
+        "sequence": 0,
+        "attendees": [{
+            "email": "dterzic@gmail.com",
+            "responseStatus": "needsAction"
+        }, {
+            "email": "dterzictest@gmail.com",
+            "organizer": true,
+            "self": true,
+            "responseStatus": "accepted"
+        }],
+        "hangoutLink": "https://meet.google.com/hpr-bwei-rqc",
+        "conferenceData": {
+            "entryPoints": [{
+                "entryPointType": "video",
+                "uri": "https://meet.google.com/hpr-bwei-rqc",
+                "label": "meet.google.com/hpr-bwei-rqc"
+            }],
+            "conferenceSolution": {
+                "key": {
+                    "type": "hangoutsMeet"
+                },
+                "name": "Google Meet",
+                "iconUri": "https://lh5.googleusercontent.com/proxy/bWvYBOb7O03a7HK5iKNEAPoUNPEXH1CHZjuOkiqxHx8OtyVn9sZ6Ktl8hfqBNQUUbCDg6T2unnsHx7RSkCyhrKgHcdoosAW8POQJm_ZEvZU9ZfAE7mZIBGr_tDlF8Z_rSzXcjTffVXg3M46v"
+            },
+            "conferenceId": "hpr-bwei-rqc",
+            "signature": "AGkP/s0EBemL+uHAI1j0UbxOmv8J"
+        },
+        "reminders": {
+            "useDefault": true
+        }
+    }, {
+        "kind": "calendar#event",
+        "etag": "\"3207601545662000\"",
+        "id": "5nek4vfo0j9u8vn5kf2l0jufe0_20201027",
+        "status": "confirmed",
+        "htmlLink": "https://www.google.com/calendar/event?eid=NW5lazR2Zm8wajl1OHZuNWtmMmwwanVmZTBfMjAyMDEwMjcgZHRlcnppY3Rlc3RAbQ",
+        "created": "2020-10-27T12:12:52.000Z",
+        "updated": "2020-10-27T12:12:52.861Z",
+        "summary": "Test reccurring",
+        "creator": {
+            "email": "dterzictest@gmail.com",
+            "self": true
+        },
+        "organizer": {
+            "email": "dterzictest@gmail.com",
+            "self": true
+        },
+        "start": {
+            "date": "2020-10-27"
+        },
+        "end": {
+            "date": "2020-10-28"
+        },
+        "recurringEventId": "5nek4vfo0j9u8vn5kf2l0jufe0",
+        "originalStartTime": {
+            "date": "2020-10-27"
+        },
+        "iCalUID": "5nek4vfo0j9u8vn5kf2l0jufe0@google.com",
+        "sequence": 0,
+        "reminders": {
+            "useDefault": false,
+            "overrides": [{
+                "method": "popup",
+                "minutes": 10
+            }]
+        }
+    }]
+}

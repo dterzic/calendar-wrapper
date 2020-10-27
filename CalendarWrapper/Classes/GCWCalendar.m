@@ -6,6 +6,8 @@
 
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
+#import "GCWCalendarAuthorizationManager.h"
+#import "GCWCalendarAuthorization.h"
 #import "GCWUserAccount.h"
 
 #import "NSDictionary+GCWCalendar.h"
@@ -15,7 +17,6 @@
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
 static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l:/oauthredirect";
-static NSString *const kCalendarWrapperAuthorizerKey = @"googleOAuthCodingKeyForCalendarWrapper";
 static NSString *const kUserIDs = @"googleUserIDsKey";
 static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis.com/auth/calendar";
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
@@ -28,21 +29,33 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
 @property (nonatomic) NSMutableDictionary *calendarSyncTokens;
+@property (nonatomic) NSUserDefaults *userDefaults;
 
 @end
 
 @implementation GCWCalendar
 
 - (instancetype)initWithClientId:(NSString *)clientId
-        presentingViewController:(UIViewController *)viewController {
+        presentingViewController:(UIViewController *)viewController
+            authorizationManager:(id<CalendarAuthorizationProtocol>)authorizationManager
+                    userDefaults:(NSUserDefaults *)userDefaults {
     self = [super init];
 
     if (self) {
         _calendarService = [[GTLRCalendarService alloc] init];
         _calendarService.shouldFetchNextPages = true;
         _calendarService.retryEnabled = true;
-
-        NSDictionary *entriesArchive = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarEntriesKey];
+        if (authorizationManager) {
+            _authorizationManager = authorizationManager;
+        } else {
+            _authorizationManager = [[GCWCalendarAuthorizationManager alloc] init];
+        }
+        if (userDefaults) {
+            _userDefaults = userDefaults;
+        } else {
+            _userDefaults = [NSUserDefaults standardUserDefaults];
+        }
+        NSDictionary *entriesArchive = [self.userDefaults objectForKey:kCalendarEntriesKey];
         if (entriesArchive) {
             _calendarEntries = [NSDictionary unarchiveCalendarEntriesFrom:entriesArchive];
         }
@@ -54,7 +67,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
         } else {
             _calendarEvents = [NSMutableDictionary dictionary];
         }
-        NSDictionary *calendarSyncTokens = [[NSUserDefaults standardUserDefaults] objectForKey:kCalendarSyncTokensKey];
+        NSDictionary *calendarSyncTokens = [self.userDefaults objectForKey:kCalendarSyncTokensKey];
         if (calendarSyncTokens) {
             self.calendarSyncTokens = [NSMutableDictionary dictionaryWithDictionary:calendarSyncTokens];
         } else {
@@ -78,7 +91,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
         [accountEntries setValue:[NSMutableArray array] forKey:userID];
     }
     for (GCWCalendarEntry *entry in self.calendarEntries.allValues) {
-        GTMAppAuthFetcherAuthorization *calendarAuthorization = [self getAuthorizationForCalendar:entry.identifier];
+        GCWCalendarAuthorization *calendarAuthorization = [self getAuthorizationForCalendar:entry.identifier];
         NSMutableArray *entries = [accountEntries valueForKey:calendarAuthorization.userID];
         [entries addObject:entry];
     }
@@ -91,8 +104,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 
 - (void)loadAuthorizationsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
     self.userAccounts = [NSMutableDictionary dictionary];
-    self.authorizations = [NSMutableArray array];
-    NSArray *userIDs = [[NSUserDefaults standardUserDefaults] arrayForKey:kUserIDs];
+    NSArray *userIDs = [self.userDefaults arrayForKey:kUserIDs];
 
     if (!userIDs || userIDs.count == 0) {
         failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
@@ -110,33 +122,35 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     };
 
     [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull userID, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSString * keychainKey = [self getKeychainKeyForUser:userID];
-        GTMAppAuthFetcherAuthorization* authorization = [self getAuthorizationFromKeychain:keychainKey];
+        NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:userID];
 
-        if (authorization.canAuthorize) {
+        if ([self.authorizationManager canAuthorizeWithAuthorizationFromKeychain:keychainKey]) {
+            GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
             [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                 NSString *userName = [userInfo valueForKey:@"name"];
                 if (userName && ![self.userAccounts valueForKey:userID]) {
                     GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
                     [self.userAccounts setValue:account forKey:userID];
                 }
-                [self saveAuthorization:authorization toKeychain:keychainKey];
+                [self.authorizationManager saveAuthorization:authorization toKeychain:keychainKey];
                 validationCompleted();
 
             } failure:^(NSError *error) {
                 // OIDOAuthTokenErrorDomain indicates an issue with the authorization.
                 if ([error.domain isEqual:OIDOAuthTokenErrorDomain]) {
                     NSLog(@"CalendarWrapper: Authorization error during token refresh, cleared state. %@", [self encodedUserInfoFor:error]);
-                    [self removeAuthorization:authorization fromKeychain:[self getKeychainKeyForAuthorization:authorization]];
+                    [self.authorizationManager removeAuthorization:authorization
+                                                      fromKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
                 } else {
                     // Other errors are assumed transient.
                     NSLog(@"CalendarWrapper: Transient error during token refresh. %@", [self encodedUserInfoFor:error]);
-                    [self saveAuthorization:authorization toKeychain:keychainKey];
+                    [self.authorizationManager saveAuthorization:authorization toKeychain:keychainKey];
                 }
                 validationCompleted();
             }];
         } else {
-            [self removeAuthorization:authorization fromKeychain:keychainKey];
+            GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
+            [self.authorizationManager removeAuthorization:authorization fromKeychain:keychainKey];
             validationCompleted();
         }
     }];
@@ -144,14 +158,14 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 
 - (void)saveState {
     NSMutableArray *userIDs = [NSMutableArray array];
-    [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
+    NSArray *authorizations = [self.authorizationManager getAuthorizations];
+    [authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
         [userIDs addObject: authorization.userID];
     }];
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:userIDs forKey:kUserIDs];
-    [defaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
-    [defaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
-    [defaults synchronize];
+    [self.userDefaults setObject:userIDs forKey:kUserIDs];
+    [self.userDefaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
+    [self.userDefaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
+    [self.userDefaults synchronize];
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
@@ -191,8 +205,10 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                                        presentingViewController:self.presentingViewController
                                                        callback:^(OIDAuthState *_Nullable authState, NSError *_Nullable error) {
             if (authState) {
-                GTMAppAuthFetcherAuthorization *authorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
-                [self saveAuthorization:authorization toKeychain:[self getKeychainKeyForAuthorization:authorization]];
+                GTMAppAuthFetcherAuthorization *fetcherAuthorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
+                GCWCalendarAuthorization *authorization = [[GCWCalendarAuthorization alloc] initWithFetcherAuthorization:fetcherAuthorization];
+                [self.authorizationManager saveAuthorization:authorization
+                                                  toKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
                 [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                     NSString *userName = [userInfo valueForKey:@"name"];
                     if (userName && ![self.userAccounts valueForKey:authorization.userID]) {
@@ -214,33 +230,12 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     }];
 }
 
-- (void)saveAuthorization:(GTMAppAuthFetcherAuthorization *)authorization toKeychain:(NSString *)keychainKey {
-    [GTMAppAuthFetcherAuthorization saveAuthorization:authorization toKeychainForName:keychainKey];
-    [self.authorizations addObject:authorization];
-}
-
-- (void)removeAuthorization:(GTMAppAuthFetcherAuthorization *)authorization fromKeychain:(NSString *)keychainKey {
-    [GTMAppAuthFetcherAuthorization removeAuthorizationFromKeychainForName:keychainKey];
-    [self.authorizations removeObject:authorization];
-}
-
-- (GTMAppAuthFetcherAuthorization *)getAuthorizationFromKeychain:(NSString *)keychainKey {
-    return [GTMAppAuthFetcherAuthorization authorizationFromKeychainForName:keychainKey];
-}
-
-- (NSString *)getKeychainKeyForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization {
-    return [NSString stringWithFormat:@"%@_%@", kCalendarWrapperAuthorizerKey, authorization.userID];
-}
-
-- (NSString *)getKeychainKeyForUser:(NSString *)userID {
-    return [NSString stringWithFormat:@"%@_%@", kCalendarWrapperAuthorizerKey, userID];
-}
-
-- (GTMAppAuthFetcherAuthorization *)getAuthorizationForCalendar:(NSString *)calendarId {
-    __block GTMAppAuthFetcherAuthorization *calendarAuthorization = nil;
+- (GCWCalendarAuthorization *)getAuthorizationForCalendar:(NSString *)calendarId {
+    __block GCWCalendarAuthorization *calendarAuthorization = nil;
     NSString *userId = self.calendarUsers[calendarId];
-    [self.authorizations enumerateObjectsUsingBlock:^(GTMAppAuthFetcherAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
-        if (authorization.userID == userId) {
+    NSArray *authorizations = [self.authorizationManager getAuthorizations];
+    [authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([authorization.userID isEqualToString:userId]) {
             calendarAuthorization = authorization;
             *stop = YES;
         }
@@ -248,11 +243,11 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     return calendarAuthorization;
 }
 
-- (void)getUserInfoForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
+- (void)getUserInfoForAuthorization:(GCWCalendarAuthorization *)authorization
                                       success:(void (^)(NSDictionary *))success
                                       failure:(void (^)(NSError *))failure {
     GTMSessionFetcherService *fetcherService = [[GTMSessionFetcherService alloc] init];
-    fetcherService.authorizer = authorization;
+    fetcherService.authorizer = authorization.fetcherAuthorization;
     NSURL *userinfoEndpoint = [NSURL URLWithString:kUserInfoURI];
     GTMSessionFetcher *fetcher = [fetcherService fetcherWithURL:userinfoEndpoint];
 
@@ -351,12 +346,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                          failure:(void (^)(NSError *))failure {
     NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
     self.calendarUsers = [NSMutableDictionary dictionary];
+    NSArray *authorizations = [self.authorizationManager getAuthorizations];
 
     __block NSUInteger authorizationIndex = 0;
-    for (GTMAppAuthFetcherAuthorization *authorization in self.authorizations) {
+    for (GCWCalendarAuthorization *authorization in authorizations) {
         [self loadCalendarListForAuthorization:authorization accessRole:accessRole success:^(NSDictionary *accountCalendars) {
             [calendars addEntriesFromDictionary:accountCalendars];
-            if (authorizationIndex == self.authorizations.count-1) {
+            if (authorizationIndex == authorizations.count-1) {
                 self.calendarEntries = [calendars copy];
                 success(calendars);
             }
@@ -368,11 +364,12 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     }
 }
 
-- (void)loadCalendarListForAuthorization:(GTMAppAuthFetcherAuthorization *)authorization
+- (void)loadCalendarListForAuthorization:(GCWCalendarAuthorization *)authorization
                               accessRole:(NSString *)accessRole
                                  success:(void (^)(NSDictionary *))success
                                  failure:(void (^)(NSError *))failure {
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
+    
     GTLRCalendarQuery_CalendarListList *query = [GTLRCalendarQuery_CalendarListList query];
     query.minAccessRole = accessRole;
     [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
@@ -410,13 +407,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                     success:(void (^)(GCWCalendarEvent *))success
                     failure:(void (^)(NSError *))failure {
 
-    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
         failure([GCWCalendar createErrorWithCode:-10002
                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
 
     GTLRCalendarQuery_EventsGet *query = [GTLRCalendarQuery_EventsGet queryWithCalendarId:calendarId eventId:eventId];
     [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
@@ -437,13 +434,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                          success:(void (^)(NSDictionary *))success
                          failure:(void (^)(NSError *))failure {
 
-    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
         failure([GCWCalendar createErrorWithCode:-10002
                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
 
     GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendarId];
     if (maxResults > 0) {
@@ -475,13 +472,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     NSMutableDictionary *events = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
-        GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
             failure([GCWCalendar createErrorWithCode:-10002
                                          description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
             return;
         }
-        self.calendarService.authorizer = authorization;
+        self.calendarService.authorizer = authorization.fetcherAuthorization;
 
         GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendar.identifier];
         query.maxResults = 2500;
@@ -530,16 +527,15 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
          success:(void (^)(NSString *))success
          failure:(void (^)(NSError *))failure {
 
-    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
         failure([GCWCalendar createErrorWithCode:-10002
                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
 
     GTLRCalendarQuery_EventsInsert *query = [GTLRCalendarQuery_EventsInsert queryWithObject:event calendarId:calendarId];
-    self.calendarService.authorizer = authorization;
     [self.calendarService executeQuery:query
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
                                          GTLRCalendar_Event *obj,
@@ -558,18 +554,17 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {
 
-    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
         failure([GCWCalendar createErrorWithCode:-10002
                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
 
     GTLRCalendarQuery_EventsDelete *query = [GTLRCalendarQuery_EventsDelete
                                              queryWithCalendarId:calendarId
                                              eventId:eventId];
-    self.calendarService.authorizer = authorization;
     [self.calendarService executeQuery:query
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
                                          id nilObject,
@@ -587,16 +582,15 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {
 
-    GTMAppAuthFetcherAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
         failure([GCWCalendar createErrorWithCode:-10002
                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
-    self.calendarService.authorizer = authorization;
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
 
     GTLRCalendarQuery_EventsUpdate *query = [GTLRCalendarQuery_EventsUpdate queryWithObject:event calendarId:calendarId eventId:event.identifier];
-    self.calendarService.authorizer = authorization;
     [self.calendarService executeQuery:query
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
                                          id nilObject,

@@ -1,0 +1,70 @@
+{
+    "kind": "calendar#calendarList",
+    "etag": "\"p324fl97kvqseo0g\"",
+    "nextSyncToken": "CIj6pPT-uOwCEhVkdGVyemljdGVzdEBnbWFpbC5jb20=",
+    "items": [{
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1601389708542000\"",
+        "id": "dterzictest@gmail.com",
+        "summary": "dterzictest@gmail.com",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "12",
+        "backgroundColor": "#fad165",
+        "foregroundColor": "#000000",
+        "selected": true,
+        "accessRole": "owner",
+        "defaultReminders": [{
+            "method": "popup",
+            "minutes": 30
+        }],
+        "notificationSettings": {
+            "notifications": [{
+                "type": "eventCreation",
+                "method": "email"
+            }, {
+                "type": "eventChange",
+                "method": "email"
+            }, {
+                "type": "eventCancellation",
+                "method": "email"
+            }, {
+                "type": "eventResponse",
+                "method": "email"
+            }]
+        },
+        "primary": true,
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }, {
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1601389767863000\"",
+        "id": "sr.rs#holiday@group.v.calendar.google.com",
+        "summary": "Празници у Србији",
+        "description": "Празници и светковине у Србији",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "8",
+        "backgroundColor": "#16a765",
+        "foregroundColor": "#000000",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }, {
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1601389767956000\"",
+        "id": "addressbook#contacts@group.v.calendar.google.com",
+        "summary": "Рођендани",
+        "description": "Приказује рођендане, годишњице и друге датуме догађаја за људе у Google контактима.",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "13",
+        "backgroundColor": "#92e1c0",
+        "foregroundColor": "#000000",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }]
+}

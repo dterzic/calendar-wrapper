@@ -5,20 +5,24 @@
 
 @class GTLRCalendarService;
 @class GCWCalendarEvent;
-@class GCWCalendarEntry;
+@class GCWCalendarAuthorization;
+
+@protocol CalendarAuthorizationProtocol;
 
 @interface GCWCalendar : NSObject
 
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
-@property (nonatomic, nullable) NSMutableArray<GTMAppAuthFetcherAuthorization *> *authorizations;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
+@property (nonatomic, strong, nullable) id<CalendarAuthorizationProtocol> authorizationManager;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
-                   presentingViewController:(UIViewController *_Nullable)viewController;
+                   presentingViewController:(UIViewController *_Nullable)viewController
+                       authorizationManager:(id<CalendarAuthorizationProtocol> _Nullable)authorizationManager
+                               userDefaults:(NSUserDefaults *_Nullable)userDefaults;
 
 - (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 

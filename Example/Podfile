@@ -5,8 +5,10 @@ target 'CalendarWrapper_Example' do
 
   target 'CalendarWrapper_Tests' do
     inherit! :search_paths
+    use_frameworks!
 
-    
+    pod 'OHHTTPStubs', '~> 9.0.0'
+    pod 'Nimble'
   end
 end
 

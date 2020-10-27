@@ -19,11 +19,15 @@
 		6003F5B1195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5B8195388D20070C39A /* InfoPlist.strings */; };
-		6003F5BC195388D20070C39A /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* Tests.m */; };
+		6003F5BC195388D20070C39A /* CalendarWrapperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* CalendarWrapperTests.m */; };
 		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
+		8466FD4E254845F300620A7F /* calendar_events.json in Resources */ = {isa = PBXBuildFile; fileRef = 8466FD4D254845F300620A7F /* calendar_events.json */; };
+		84812D9325471B03005BF573 /* MockCalendarAuthorizationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */; };
+		84E1101E25482DC40069EAA3 /* MockCalendarAuthorization.m in Sources */ = {isa = PBXBuildFile; fileRef = 84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */; };
+		84E11026254830200069EAA3 /* calendar_list.json in Resources */ = {isa = PBXBuildFile; fileRef = 84E11025254830200069EAA3 /* calendar_list.json */; };
 		873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 873B8AEA1B1F5CCA007FD442 /* Main.storyboard */; };
 		DA135BE8BB7231F29DBF676A /* libPods-CalendarWrapper_Example.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37F10EE2838F9682C2BD74EB /* libPods-CalendarWrapper_Example.a */; };
-		E3D0986A0BADE86F5BAE3273 /* libPods-CalendarWrapper_Tests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D53769628003494769601F /* libPods-CalendarWrapper_Tests.a */; };
+		E795C7DA03FFA484D3CBCE98 /* Pods_CalendarWrapper_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4F6B714A4B9C2AC9E57EC3 /* Pods_CalendarWrapper_Tests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,7 +42,6 @@
 
 /* Begin PBXFileReference section */
 		37F10EE2838F9682C2BD74EB /* libPods-CalendarWrapper_Example.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CalendarWrapper_Example.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		49D53769628003494769601F /* libPods-CalendarWrapper_Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CalendarWrapper_Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58A195388D20070C39A /* CalendarWrapper_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalendarWrapper_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6003F58F195388D20070C39A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -56,9 +59,17 @@
 		6003F5AF195388D20070C39A /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		6003F5B7195388D20070C39A /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
 		6003F5B9195388D20070C39A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		6003F5BB195388D20070C39A /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
+		6003F5BB195388D20070C39A /* CalendarWrapperTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarWrapperTests.m; sourceTree = "<group>"; };
 		606FC2411953D9B200FFA9A0 /* Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tests-Prefix.pch"; sourceTree = "<group>"; };
+		6F4F6B714A4B9C2AC9E57EC3 /* Pods_CalendarWrapper_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CalendarWrapper_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		71719F9E1E33DC2100824A3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		8466FD4D254845F300620A7F /* calendar_events.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_events.json; sourceTree = "<group>"; };
+		84812D9125471B03005BF573 /* MockCalendarAuthorizationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MockCalendarAuthorizationManager.h; sourceTree = "<group>"; };
+		84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MockCalendarAuthorizationManager.m; sourceTree = "<group>"; };
+		84906BCD2546C2730062751C /* libOHHTTPStubs.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libOHHTTPStubs.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		84E1101C25482DAC0069EAA3 /* MockCalendarAuthorization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MockCalendarAuthorization.h; sourceTree = "<group>"; };
+		84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MockCalendarAuthorization.m; sourceTree = "<group>"; };
+		84E11025254830200069EAA3 /* calendar_list.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_list.json; sourceTree = "<group>"; };
 		873B8AEA1B1F5CCA007FD442 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		BAFB8A39E4FC1620E8315153 /* Pods-CalendarWrapper_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CalendarWrapper_Tests.release.xcconfig"; path = "Target Support Files/Pods-CalendarWrapper_Tests/Pods-CalendarWrapper_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		C52EEF4CDA13CE69D110E69A /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -88,7 +99,7 @@
 				6003F5B0195388D20070C39A /* XCTest.framework in Frameworks */,
 				6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */,
 				6003F5B1195388D20070C39A /* Foundation.framework in Frameworks */,
-				E3D0986A0BADE86F5BAE3273 /* libPods-CalendarWrapper_Tests.a in Frameworks */,
+				E795C7DA03FFA484D3CBCE98 /* Pods_CalendarWrapper_Tests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,12 +130,13 @@
 		6003F58C195388D20070C39A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				84906BCD2546C2730062751C /* libOHHTTPStubs.a */,
 				6003F58D195388D20070C39A /* Foundation.framework */,
 				6003F58F195388D20070C39A /* CoreGraphics.framework */,
 				6003F591195388D20070C39A /* UIKit.framework */,
 				6003F5AF195388D20070C39A /* XCTest.framework */,
 				37F10EE2838F9682C2BD74EB /* libPods-CalendarWrapper_Example.a */,
-				49D53769628003494769601F /* libPods-CalendarWrapper_Tests.a */,
+				6F4F6B714A4B9C2AC9E57EC3 /* Pods_CalendarWrapper_Tests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -159,7 +171,12 @@
 		6003F5B5195388D20070C39A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				6003F5BB195388D20070C39A /* Tests.m */,
+				84E110292548308B0069EAA3 /* Fixtures */,
+				84E1101C25482DAC0069EAA3 /* MockCalendarAuthorization.h */,
+				84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */,
+				84812D9125471B03005BF573 /* MockCalendarAuthorizationManager.h */,
+				84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */,
+				6003F5BB195388D20070C39A /* CalendarWrapperTests.m */,
 				6003F5B6195388D20070C39A /* Supporting Files */,
 			);
 			path = Tests;
@@ -196,6 +213,15 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		84E110292548308B0069EAA3 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				84E11025254830200069EAA3 /* calendar_list.json */,
+				8466FD4D254845F300620A7F /* calendar_events.json */,
+			);
+			name = Fixtures;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -225,6 +251,7 @@
 				6003F5AA195388D20070C39A /* Sources */,
 				6003F5AB195388D20070C39A /* Frameworks */,
 				6003F5AC195388D20070C39A /* Resources */,
+				E7720CBBC1792B8F1A7D1781 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -291,6 +318,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */,
+				84E11026254830200069EAA3 /* calendar_list.json in Resources */,
+				8466FD4E254845F300620A7F /* calendar_events.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,6 +370,26 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		E7720CBBC1792B8F1A7D1781 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CalendarWrapper_Tests/Pods-CalendarWrapper_Tests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
+				"${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OHHTTPStubs.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CalendarWrapper_Tests/Pods-CalendarWrapper_Tests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -358,7 +407,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6003F5BC195388D20070C39A /* Tests.m in Sources */,
+				84E1101E25482DC40069EAA3 /* MockCalendarAuthorization.m in Sources */,
+				6003F5BC195388D20070C39A /* CalendarWrapperTests.m in Sources */,
+				84812D9325471B03005BF573 /* MockCalendarAuthorizationManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -528,6 +579,10 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/OHHTTPStubs\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -549,6 +604,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tests/Tests-Prefix.pch";
 				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/OHHTTPStubs\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
