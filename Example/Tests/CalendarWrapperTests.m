@@ -27,6 +27,44 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
 
 @implementation CalendarWrapperTests
 
+- (void)loadAuthorizations {
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Load authorizations expectation"];
+
+    self.authorizationManager.canAuthorize = YES;
+    [self.calendar loadAuthorizationsOnSuccess:^{
+        [expectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[expectation] timeout:10.0];
+}
+
+- (void)loadCalendarLists {
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar list expectation"];
+
+    [self.calendar loadCalendarListsForRole:@"test" success:^(NSDictionary *calendarList) {
+        [expectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[expectation] timeout:10.0];
+}
+
+- (HTTPStubsResponse *)responseWithUserInfoJson {
+    NSDictionary* responseJson = @{@"name": @"Test Name"};
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:responseJson
+                                                       options:(NSJSONWritingOptions)NSJSONWritingPrettyPrinted
+                                                         error:&error];
+    return [HTTPStubsResponse responseWithData:jsonData statusCode:200 headers:nil];
+}
+
+- (HTTPStubsResponse *)responseWithJsonFile:(NSString *)fileName {
+    return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(fileName, self.class)
+                                          statusCode:200
+                                             headers:@{@"Content-Type":@"application/json"}];
+}
+
+/// Tests
+
 - (void)setUp {
     [super setUp];
     self.userDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"CalendarUnitTests"];
@@ -55,24 +93,12 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
         return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
     } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
-        NSDictionary* responseJson = @{@"name": @"Test Name"};
-        NSError *error;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:responseJson
-                                                           options:(NSJSONWritingOptions)NSJSONWritingPrettyPrinted
-                                                             error:&error];
-        return [HTTPStubsResponse responseWithData:jsonData statusCode:200 headers:nil];
+        return [self responseWithUserInfoJson];
     }];
     [self.userDefaults setObject:@[@"1", @"2", @"3"] forKey:kUserIDs];
     [self.userDefaults synchronize];
 
-    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Load authorizations expectation"];
-
-    self.authorizationManager.canAuthorize = YES;
-    [self.calendar loadAuthorizationsOnSuccess:^{
-        [expectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[expectation] timeout:10.0];
+    [self loadAuthorizations];
 
     expect(self.calendar.userAccounts.count).to(equal(3));
 
@@ -88,69 +114,70 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     GCWUserAccount *user3 = self.calendar.userAccounts[@"3"];
     expect(user3.name).to(contain(@"Test Name"));
 }
-
 - (void)testAccountEntries {
+    __block NSUInteger calendarListCallCount = 0;
     [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
         return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
     } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
         if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
-            return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_list.json", self.class)
-                                                  statusCode:200
-                                                     headers:@{@"Content-Type":@"application/json"}];
+            // Have to use the calendarListCallCount because without valid authorization
+            // there's no way to distinct requests per user (no Bearer in header fields)
+            return [self responseWithJsonFile:(calendarListCallCount++ == 0) ? @"calendar_list_2.json" : @"calendar_list.json"];
         } else {
-            NSDictionary* responseJson = @{@"name": @"Test Name"};
-            NSError *error;
-            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:responseJson
-                                                               options:(NSJSONWritingOptions)NSJSONWritingPrettyPrinted
-                                                                 error:&error];
-            return [HTTPStubsResponse responseWithData:jsonData statusCode:200 headers:nil];
+            return [self responseWithUserInfoJson];
         }
     }];
 
     [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
     [self.userDefaults synchronize];
 
-    XCTestExpectation *loadAuthorizationExpectation = [[XCTestExpectation alloc] initWithDescription:@"Load authorizations expectation"];
+    [self loadAuthorizations];
+    expect(self.calendar.userAccounts.count).to(equal(2));
 
-    self.authorizationManager.canAuthorize = YES;
-    [self.calendar loadAuthorizationsOnSuccess:^{
-        [loadAuthorizationExpectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[loadAuthorizationExpectation] timeout:10.0];
-
-    XCTestExpectation *calendarListExpectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar list expectation"];
-
-    [self.calendar loadCalendarListsForRole:@"test" success:^(NSDictionary *calendarList) {
-        [calendarListExpectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[calendarListExpectation] timeout:10.0];
-
+    [self loadCalendarLists];
     expect(self.calendar.accountEntries.count).to(equal(2));
 
-    //NSArray *entries1 = self.calendar.accountEntries[@"dterzic@gmail.com"];
-    //NSArray *entries2 = self.calendar.accountEntries[@"dterzictest@gmail.com"];
+    NSArray *entries1 = self.calendar.accountEntries[@"dterzic@gmail.com"];
+    NSArray *entries2 = self.calendar.accountEntries[@"dterzictest@gmail.com"];
+
+    expect(entries1.count).to(equal(2));
+    expect(entries2.count).to(equal(3));
+
 }
+
+- (void)testGetCalendarOwner {
+    __block NSUInteger calendarListCallCount = 0;
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            // Have to use the calendarListCallCount because without valid authorization
+            // there's no way to distinct requests per user (no Bearer in header fields)
+            return [self responseWithJsonFile:(calendarListCallCount++ == 0) ? @"calendar_list_2.json" : @"calendar_list.json"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+
+    [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    expect([self.calendar getCalendarOwner:@"dterzictest@gmail.com"]).to(equal(@"dterzictest@gmail.com"));
+    expect([self.calendar getCalendarOwner:@"dterzic@gmail.com"]).to(equal(@"dterzic@gmail.com"));
+}
+
 
 - (void)testLoadCalendarListForRoleSuccess {
     [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
         return [request.URL.host isEqualToString:@"www.googleapis.com"];
     } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
-        return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_list.json", self.class)
-                                              statusCode:200
-                                                 headers:@{@"Content-Type":@"application/json"}];
+        return [self responseWithJsonFile:@"calendar_list.json"];
     }];
 
-    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar list expectation"];
-
-    [self.calendar loadCalendarListsForRole:@"test" success:^(NSDictionary *calendarList) {
-        expect(calendarList.count).to(equal(3));
-        [expectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[expectation] timeout:10.0];
-
+    [self loadCalendarLists];
     expect(self.calendar.calendarEntries.count).to(equal(3));
     
     GCWCalendarEntry *entry1 = self.calendar.calendarEntries[@"dterzictest@gmail.com"];
@@ -181,23 +208,13 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
         return [request.URL.host isEqualToString:@"www.googleapis.com"];
     } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
         if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
-            return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_list.json", self.class)
-                                                  statusCode:200
-                                                     headers:@{@"Content-Type":@"application/json"}];
+            return [self responseWithJsonFile:@"calendar_list.json"];
         } else {
-            return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_events.json", self.class)
-                                                  statusCode:200
-                                                     headers:@{@"Content-Type":@"application/json"}];
+            return [self responseWithJsonFile:@"calendar_events.json"];
         }
     }];
 
-    XCTestExpectation *calendarListExpectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar list expectation"];
-
-    [self.calendar loadCalendarListsForRole:@"test" success:^(NSDictionary *calendarList) {
-        [calendarListExpectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[calendarListExpectation] timeout:10.0];
+    [self loadCalendarLists];
 
     XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar events expectation"];
 
@@ -243,23 +260,13 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
         return [request.URL.host isEqualToString:@"www.googleapis.com"];
     } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
         if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
-            return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_list.json", self.class)
-                                                  statusCode:200
-                                                     headers:@{@"Content-Type":@"application/json"}];
+            return [self responseWithJsonFile:@"calendar_list.json"];
         } else {
-            return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(@"calendar_events.json", self.class)
-                                                  statusCode:200
-                                                     headers:@{@"Content-Type":@"application/json"}];
+            return [self responseWithJsonFile:@"calendar_events.json"];
         }
     }];
 
-    XCTestExpectation *calendarListExpectation = [[XCTestExpectation alloc] initWithDescription:@"Load calendar list expectation"];
-
-    [self.calendar loadCalendarListsForRole:@"test" success:^(NSDictionary *calendarList) {
-        [calendarListExpectation fulfill];
-    } failure:^(NSError *error) {
-    }];
-    [self waitForExpectations:@[calendarListExpectation] timeout:10.0];
+    [self loadCalendarLists];
 
     XCTestExpectation *calendarEventsExpectation = [[XCTestExpectation alloc] initWithDescription:@"Syncing calendar events expectation"];
 
@@ -289,6 +296,133 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     } failure:^(NSError *error) {
     }];
     [self waitForExpectations:@[calendarEventsExpectation] timeout:10.0];
+}
+
+- (void)testGetCalendarEvent {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.lastPathComponent isEqualToString:@"testeventid"]) {
+            return [self responseWithJsonFile:@"calendar_event.json"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+    [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *calendarEventExpectation = [[XCTestExpectation alloc] initWithDescription:@"Get calendar event expectation"];
+
+    [self.calendar getEventForCalendar:@"dterzictest@gmail.com"
+                               eventId:@"testeventid"
+                               success:^(GCWCalendarEvent *event) {
+        expect(event.identifier).to(equal(@"testeventid"));
+        expect(event.summary).to(equal(@"Test event"));
+        expect(event.startDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603809000]));
+        expect(event.endDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603812600]));
+
+        [calendarEventExpectation fulfill];
+
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[calendarEventExpectation] timeout:10.0];
+}
+
+- (void)testAddCalendarEvent {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.lastPathComponent isEqualToString:@"events"]) {
+            return [self responseWithJsonFile:@"calendar_event.json"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+    [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *newCalendarEventExpectation = [[XCTestExpectation alloc] initWithDescription:@"New calendar event expectation"];
+
+    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] init];
+
+    [self.calendar addEvent:event
+                 toCalendar:@"dterzictest@gmail.com"
+                    success:^(NSString *eventId) {
+        expect(eventId).to(equal(@"testeventid"));
+        [newCalendarEventExpectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[newCalendarEventExpectation] timeout:10.0];
+}
+
+- (void)testDeleteCalendarEvent {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.lastPathComponent isEqualToString:@"testeventid"]) {
+            return [HTTPStubsResponse responseWithData:[NSData data] statusCode:200 headers:nil];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+    [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *deleteCalendarEventExpectation = [[XCTestExpectation alloc] initWithDescription:@"Delete calendar event expectation"];
+
+    [self.calendar deleteEvent:@"testeventid"
+                  fromCalendar:@"dterzictest@gmail.com"
+                       success:^{
+        [deleteCalendarEventExpectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[deleteCalendarEventExpectation] timeout:10.0];
+}
+
+- (void)testUpdateCalendarEvent {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.lastPathComponent isEqualToString:@"events"]) {
+            return [self responseWithJsonFile:@"calendar_event.json"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+    [self.userDefaults setObject:@[@"dterzic@gmail.com", @"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *updateCalendarEventExpectation = [[XCTestExpectation alloc] initWithDescription:@"Update calendar event expectation"];
+
+    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] init];
+
+    [self.calendar updateEvent:event
+                    inCalendar:@"dterzictest@gmail.com"
+                       success:^{
+        [updateCalendarEventExpectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[updateCalendarEventExpectation] timeout:10.0];
 }
 
 @end

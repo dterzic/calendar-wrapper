@@ -1,0 +1,71 @@
+{
+    "kind": "calendar#calendarList",
+    "etag": "\"p324fffvjrvaeo0g\"",
+    "nextSyncToken": "CIj3v_Pf1OwCEhFkdGVyemljQGdtYWlsLmNvbQ==",
+    "items": [{
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1598465368341000\"",
+        "id": "dterzic@gmail.com",
+        "summary": "dterzic@gmail.com",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "8",
+        "backgroundColor": "#16a765",
+        "foregroundColor": "#000000",
+        "selected": true,
+        "accessRole": "owner",
+        "defaultReminders": [{
+            "method": "popup",
+            "minutes": 30
+        }],
+        "notificationSettings": {
+            "notifications": [{
+                "type": "eventCreation",
+                "method": "email"
+            }, {
+                "type": "eventChange",
+                "method": "email"
+            }, {
+                "type": "eventCancellation",
+                "method": "email"
+            }, {
+                "type": "eventResponse",
+                "method": "email"
+            }]
+        },
+        "primary": true,
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }, {
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1599161113116000\"",
+        "id": "rgordc83ks79c83gbp5i5da5c4@group.calendar.google.com",
+        "summary": "Test calendar",
+        "description": "Something about something",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "3",
+        "backgroundColor": "#f83a22",
+        "foregroundColor": "#000000",
+        "selected": true,
+        "accessRole": "owner",
+        "defaultReminders": [],
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }, {
+        "kind": "calendar#calendarListEntry",
+        "etag": "\"1601388217477000\"",
+        "id": "addressbook#contacts@group.v.calendar.google.com",
+        "summary": "Birthdays",
+        "description": "Displays birthdays, anniversaries, and other event dates of people in Google Contacts.",
+        "timeZone": "Europe/Belgrade",
+        "colorId": "4",
+        "backgroundColor": "#fa573c",
+        "foregroundColor": "#000000",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "conferenceProperties": {
+            "allowedConferenceSolutionTypes": ["hangoutsMeet"]
+        }
+    }]
+}
