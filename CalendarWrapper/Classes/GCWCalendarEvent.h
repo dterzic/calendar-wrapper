@@ -20,6 +20,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic) UIColor *color;
 @property (nonatomic) NSString *calendarId;
 @property (nonatomic, readonly) NSString *iconName;
+@property (nonatomic, readonly) BOOL isAllDay;
 @property (nonatomic) NSDate *startDate;
 @property (nonatomic, readonly) NSString *startDateIfInNext30MinutesString;
 @property (nonatomic, readonly) NSDate *startDateDayOnly;

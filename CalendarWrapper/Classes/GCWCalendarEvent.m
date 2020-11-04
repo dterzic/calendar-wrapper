@@ -38,6 +38,10 @@
     return [[self class] objectWithJSON:event.JSON];
 }
 
+- (BOOL)isAllDay {
+    return self.start && !self.start.dateTime && !self.end.dateTime;
+}
+
 - (NSDate *)startDateDayOnly {
     return self.startDate.dayOnly;
 }
