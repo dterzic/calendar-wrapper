@@ -239,6 +239,65 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
+- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *)events
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *))failure {
+    __weak GCWCalendarService *weakSelf = self;
+    [self.calendar batchAddEvents:events
+                          success:^(NSArray<GCWCalendarEvent *> *clonedEvents) {
+        for (GCWCalendarEvent *clonedEvent in clonedEvents) {
+            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
+                [weakSelf.delegate calendarServiceDidCreateEvent:clonedEvent];
+            }
+        }
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *)events
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure {
+    __weak GCWCalendarService *weakSelf = self;
+    [self.calendar batchUpdateEvents:events
+                             success:^{
+        for (GCWCalendarEvent *event in events) {
+            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidUpdateEvent:)]) {
+                [weakSelf.delegate calendarServiceDidUpdateEvent:event];
+            }
+        }
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)batchDeleteEvents:(NSArray <NSString *> *)eventIds
+            fromCalendars:(NSArray <NSString *> *)calendarIds
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure {
+
+    for(NSString *eventId in eventIds) {
+        [self removeEventFromCache:eventId];
+    }
+    [self.calendar batchDeleteEvents:eventIds
+                       fromCalendars:calendarIds
+                             success:^{
+        for(int index=0; index < eventIds.count; index++) {
+            NSString *eventId = eventIds[index];
+            NSString *calendarId = calendarIds[index];
+
+            if ([self.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
+                [self.delegate calendarServiceDidDeleteEvent:eventId forCalendar:calendarId];
+            }
+        }
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
 - (void)getEventForCalendar:(NSString *)calendarId
                     eventId:(NSString *)eventId
                     success:(void (^)(GCWCalendarEvent *))success

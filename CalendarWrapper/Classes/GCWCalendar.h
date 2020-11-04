@@ -77,4 +77,17 @@
             success:(void (^_Nullable)(void))success
             failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
+- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *_Nonnull)events
+               success:(void (^_Nullable)(NSArray<GCWCalendarEvent *> *_Nonnull))success
+               failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *_Nonnull)events
+                  success:(void (^_Nullable)(void))success
+                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)batchDeleteEvents:(NSArray <NSString *> *_Nonnull)eventIds
+            fromCalendars:(NSArray <NSString *> *_Nonnull)calendarIds
+                  success:(void (^_Nullable)(void))success
+                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
 @end

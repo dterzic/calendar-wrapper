@@ -69,6 +69,19 @@
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure;
 
+- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *)events
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *))failure;
+
+- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *)events
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure;
+
+- (void)batchDeleteEvents:(NSArray <NSString *> *)eventIds
+            fromCalendars:(NSArray <NSString *> *)calendarIds
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure;
+
 - (void)loadEventsOnSuccess:(void (^)(NSArray <GCWCalendarEvent *> *events, NSDictionary *calendarList))success
                     failure:(void (^)(NSError *))failure;
 

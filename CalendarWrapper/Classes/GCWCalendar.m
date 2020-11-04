@@ -603,4 +603,155 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                      }];
 }
 
+- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *)events
+               success:(void (^)(NSArray<GCWCalendarEvent *> *))success
+               failure:(void (^)(NSError *))failure {
+
+    NSMutableArray *clonedEvents = [NSMutableArray array];
+    NSMutableDictionary *calendarEvents = [NSMutableDictionary dictionary];
+
+    for (GCWCalendarEvent *event in events) {
+        NSString *calendarId = event.calendarId;
+
+        if (calendarEvents[calendarId] == nil) {
+            calendarEvents[calendarId] = [NSMutableArray array];
+        }
+        NSMutableArray *events = calendarEvents[calendarId];
+        [events addObject:event];
+    }
+    __block NSUInteger calendarIndex = 0;
+    for (NSString *calendarId in calendarEvents.allKeys) {
+        GCWCalendarEntry *calendar = self.calendarEntries[calendarId];
+        NSArray *groupedEvents = calendarEvents[calendarId];
+
+        GTLRBatchQuery *batchQuery = [[GTLRBatchQuery alloc] init];
+        for (GCWCalendarEvent *event in groupedEvents) {
+            GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+            if (!authorization) {
+                failure([GCWCalendar createErrorWithCode:-10002
+                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                return;
+            }
+            self.calendarService.authorizer = authorization.fetcherAuthorization;
+
+            GTLRCalendarQuery_EventsInsert *query = [GTLRCalendarQuery_EventsInsert queryWithObject:event calendarId:calendarId];
+            [batchQuery addQuery:query];
+        }
+        [self.calendarService executeQuery:batchQuery
+                         completionHandler:^(GTLRServiceTicket *callbackTicket,
+                                             id nilObject,
+                                             NSError *callbackError) {
+                             if (callbackError == nil) {
+                                 GTLRBatchResult *result = nilObject;
+                                 [result.successes.allValues enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                     GCWCalendarEvent *clonedEvent = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+
+                                     clonedEvent.calendarId = calendar.identifier;
+                                     clonedEvent.color = [UIColor colorWithHex:calendar.backgroundColor];
+                                     self.calendarEvents[clonedEvent.identifier] = clonedEvent;
+                                     [clonedEvents addObject:clonedEvent];
+                                 }];
+                                 if (calendarIndex == calendarEvents.count-1) {
+                                     success(clonedEvents);
+                                 }
+                                 calendarIndex++;
+                             } else {
+                                 failure(callbackError);
+                             }
+        }];
+    }
+}
+
+- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *)events
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure {
+
+    NSMutableDictionary *calendarEvents = [NSMutableDictionary dictionary];
+    for (GCWCalendarEvent *event in events) {
+        NSString *calendarId = event.calendarId;
+
+        if (calendarEvents[calendarId] == nil) {
+            calendarEvents[calendarId] = [NSMutableArray array];
+        }
+        NSMutableArray *events = calendarEvents[calendarId];
+        [events addObject:event];
+    }
+    for (NSString *calendarId in calendarEvents.allKeys) {
+        NSArray *groupedEvents = calendarEvents[calendarId];
+
+        GTLRBatchQuery *batchQuery = [[GTLRBatchQuery alloc] init];
+        for (GCWCalendarEvent *event in groupedEvents) {
+            GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+            if (!authorization) {
+                failure([GCWCalendar createErrorWithCode:-10002
+                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                return;
+            }
+            self.calendarService.authorizer = authorization.fetcherAuthorization;
+
+            GTLRCalendarQuery_EventsUpdate *query = [GTLRCalendarQuery_EventsUpdate queryWithObject:event calendarId:calendarId eventId:event.identifier];
+            [batchQuery addQuery:query];
+        }
+        [self.calendarService executeQuery:batchQuery
+                         completionHandler:^(GTLRServiceTicket *callbackTicket,
+                                             id nilObject,
+                                             NSError *callbackError) {
+                             if (callbackError == nil) {
+                                 success();
+                             } else {
+                                 failure(callbackError);
+                             }
+                         }];
+    }
+}
+
+- (void)batchDeleteEvents:(NSArray <NSString *> *)eventIds
+            fromCalendars:(NSArray <NSString *> *)calendarIds
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure {
+   NSAssert(eventIds.count == calendarIds.count, @"There must be calendarId for each eventId");
+
+    NSMutableDictionary *calendarEvents = [NSMutableDictionary dictionary];
+    for (int index=0; index < eventIds.count; index++) {
+        NSString *calendarId = calendarIds[index];
+
+        if (calendarEvents[calendarId] == nil) {
+            calendarEvents[calendarId] = [NSMutableArray array];
+        }
+        NSString *eventId = eventIds[index];
+        NSMutableArray *events = calendarEvents[calendarId];
+        [events addObject:eventId];
+    }
+    for (NSString *calendarId in calendarEvents.allKeys) {
+        NSArray *events = calendarEvents[calendarId];
+
+        GTLRBatchQuery *batchQuery = [[GTLRBatchQuery alloc] init];
+        for (NSString *eventId in events) {
+            GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+            if (!authorization) {
+                failure([GCWCalendar createErrorWithCode:-10002
+                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                return;
+            }
+            self.calendarService.authorizer = authorization.fetcherAuthorization;
+
+            GTLRCalendarQuery_EventsDelete *query = [GTLRCalendarQuery_EventsDelete
+                                                     queryWithCalendarId:calendarId
+                                                     eventId:eventId];
+
+            [batchQuery addQuery:query];
+        }
+        [self.calendarService executeQuery:batchQuery
+                         completionHandler:^(GTLRServiceTicket *callbackTicket,
+                                             id nilObject,
+                                             NSError *callbackError) {
+                             if (callbackError == nil) {
+                                 success();
+                             } else {
+                                 failure(callbackError);
+                             }
+                         }];
+    }
+}
+
 @end
