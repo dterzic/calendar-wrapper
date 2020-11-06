@@ -188,6 +188,7 @@ static NSUInteger daysInFuture = 45;
         forCalendar:(NSString *)calendarId
             success:(void (^)(void))success
             failure:(void (^)(NSError *))failure {
+    [self removeRecurringEvent:event.identifier];
 
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar updateEvent:event
@@ -259,6 +260,10 @@ static NSUInteger daysInFuture = 45;
 - (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *)events
                   success:(void (^)(void))success
                   failure:(void (^)(NSError *))failure {
+
+    for (GCWCalendarEvent *event in events) {
+        [self removeRecurringEvent:event.identifier];
+    }
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar batchUpdateEvents:events
                              success:^{
@@ -311,14 +316,52 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
-- (void)addEventToCache:(GCWCalendarEvent *)event {
-    self.calendar.calendarEvents[event.identifier] = event;
+- (void)getRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
+                      success:(void (^)(NSArray <GCWCalendarEvent *> *))success
+                      failure:(void (^)(NSError *))failure {
+
+    NSMutableArray *recurringEvents = [NSMutableArray array];
+    NSMutableArray *recurringEventIds = [NSMutableArray array];
+    NSMutableArray *calendarIds = [NSMutableArray array];
+    for(GCWCalendarEvent *event in events) {
+        if (![recurringEventIds containsObject:event.recurringEventId]) {
+            [recurringEventIds addObject:event.recurringEventId];
+            [calendarIds addObject:event.calendarId];
+        }
+    }
+    __block NSUInteger count = 0;
+    for (int index=0; index < recurringEventIds.count; index++) {
+        NSString *recurringEventId = recurringEventIds[index];
+        NSString *calendarId = calendarIds[index];
+
+        [self getEventForCalendar:calendarId
+                          eventId:recurringEventId
+                          success:^(GCWCalendarEvent *recurringEvent) {
+            [recurringEvents addObject:recurringEvent];
+
+            if (count == recurringEventIds.count-1) {
+                success([recurringEvents copy]);
+            }
+        } failure:^(NSError *error) {
+            failure(error);
+            return;
+        }];
+    }
 }
+
+- (void)saveState {
+    [self.calendar saveState];
+}
+
+#pragma mark - Private
 
 - (void)removeEventFromCache:(NSString *)eventId {
     [self.calendar.calendarEvents removeObjectForKey:eventId];
+    [self removeRecurringEvent:eventId];
+}
 
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"recurringEventId == %@", eventId];
+- (void)removeRecurringEvent:(NSString *)recurringEventId {
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"recurringEventId == %@", recurringEventId];
     NSArray *filteredArray = [self.calendar.calendarEvents.allValues filteredArrayUsingPredicate:predicate];
 
     if (filteredArray.count) {
@@ -326,10 +369,6 @@ static NSUInteger daysInFuture = 45;
             [self.calendar.calendarEvents removeObjectForKey:event.identifier];
         }
     }
-}
-
-- (void)saveState {
-    [self.calendar saveState];
 }
 
 @end

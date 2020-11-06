@@ -332,6 +332,9 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     clone.end = [event.end copy];
     clone.summary = [event.summary copy];
     clone.location = [event.location copy];
+    clone.descriptionProperty = [event.descriptionProperty copy];
+    clone.recurrence = [event.recurrence copy];
+    clone.attendees = [event.attendees copy];
 
     return clone;
 }
@@ -648,7 +651,6 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 
                                      clonedEvent.calendarId = calendar.identifier;
                                      clonedEvent.color = [UIColor colorWithHex:calendar.backgroundColor];
-                                     self.calendarEvents[clonedEvent.identifier] = clonedEvent;
                                      [clonedEvents addObject:clonedEvent];
                                  }];
                                  if (calendarIndex == calendarEvents.count-1) {
