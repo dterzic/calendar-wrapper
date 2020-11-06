@@ -210,4 +210,8 @@
     self.attendees = attendees;
 }
 
+- (BOOL)isRecurring {
+    return self.recurrence.count || self.recurringEventId.length;
+}
+
 @end

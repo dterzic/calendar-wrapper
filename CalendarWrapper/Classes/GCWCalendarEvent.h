@@ -34,6 +34,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic, readonly) NSString *videoConferenceURI;
 @property (nonatomic) NSArray< NSString *> *attendeesEmailAddresses;
 @property (nonatomic) BOOL isImportant;
+@property (nonatomic, readonly) BOOL isRecurring;
 
 - (BOOL)hasAttendeeWithEmail:(NSString *)email;
 
