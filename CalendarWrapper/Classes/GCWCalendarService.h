@@ -92,6 +92,10 @@
                     success:(void (^)(GCWCalendarEvent *))success
                     failure:(void (^)(NSError *))failure;
 
+- (void)getRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
+                      success:(void (^)(NSArray <GCWCalendarEvent *> *))success
+                      failure:(void (^)(NSError *))failure;
+
 - (void)saveState;
 
 @end
