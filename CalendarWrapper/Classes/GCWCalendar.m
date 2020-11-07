@@ -497,22 +497,21 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
             } else {
                 GTLRCalendar_Events *list = object;
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    if (![obj.status isEqualToString:@"cancelled"]) {
-                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                    if ([event.status isEqualToString:@"cancelled"]) {
+                        [self.calendarEvents removeObjectForKey:event.identifier];
+                    } else if ([startDate compare:event.startDate] == NSOrderedAscending &&
+                        [endDate compare:event.endDate] == NSOrderedDescending) {
+                        event.calendarId = calendar.identifier;
+                        event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
-                        if ([startDate compare:event.startDate] == NSOrderedAscending &&
-                            [endDate compare:event.endDate] == NSOrderedDescending) {
-                            event.calendarId = calendar.identifier;
-                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
-
-                            // Keep attributes from cached object
-                            GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
-                            if (cachedEvent) {
-                                event.isImportant = cachedEvent.isImportant;
-                            }
-                            self.calendarEvents[event.identifier] = event;
-                            events[event.identifier] = event;
+                        // Keep attributes from cached object
+                        GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+                        if (cachedEvent) {
+                            event.isImportant = cachedEvent.isImportant;
                         }
+                        self.calendarEvents[event.identifier] = event;
+                        events[event.identifier] = event;
                     }
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
