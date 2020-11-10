@@ -470,9 +470,10 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 
 - (void)syncEventsFrom:(NSDate *)startDate
                     to:(NSDate *)endDate
-               success:(void (^)(NSDictionary *))success
+               success:(void (^)(NSDictionary *, NSArray *))success
                failure:(void (^)(NSError *))failure {
-    NSMutableDictionary *events = [NSMutableDictionary dictionary];
+    NSMutableArray *removedEvents = [NSMutableArray array];
+    NSMutableDictionary *syncedEvents = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
@@ -498,11 +499,13 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                 GTLRCalendar_Events *list = object;
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                     GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                    event.calendarId = calendar.identifier;
+
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
+                        [removedEvents addObject:event];
                     } else if ([startDate compare:event.startDate] == NSOrderedAscending &&
                         [endDate compare:event.endDate] == NSOrderedDescending) {
-                        event.calendarId = calendar.identifier;
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
                         // Keep attributes from cached object
@@ -511,12 +514,12 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                             event.isImportant = cachedEvent.isImportant;
                         }
                         self.calendarEvents[event.identifier] = event;
-                        events[event.identifier] = event;
+                        syncedEvents[event.identifier] = event;
                     }
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success(events);
+                    success(syncedEvents, removedEvents);
                 }
                 calendarIndex++;
             }
