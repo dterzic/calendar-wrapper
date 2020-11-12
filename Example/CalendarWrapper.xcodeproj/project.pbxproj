@@ -21,6 +21,9 @@
 		6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5B8195388D20070C39A /* InfoPlist.strings */; };
 		6003F5BC195388D20070C39A /* CalendarWrapperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* CalendarWrapperTests.m */; };
 		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
+		84053339255C7705000A1F81 /* batch_add.txt in Resources */ = {isa = PBXBuildFile; fileRef = 84053338255C7705000A1F81 /* batch_add.txt */; };
+		8405334F255C87D3000A1F81 /* batch_delete.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8405334E255C87D3000A1F81 /* batch_delete.txt */; };
+		84053355255D9302000A1F81 /* batch_update.txt in Resources */ = {isa = PBXBuildFile; fileRef = 84053354255D9302000A1F81 /* batch_update.txt */; };
 		8466FD4E254845F300620A7F /* calendar_events.json in Resources */ = {isa = PBXBuildFile; fileRef = 8466FD4D254845F300620A7F /* calendar_events.json */; };
 		84812D9325471B03005BF573 /* MockCalendarAuthorizationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */; };
 		849E1CCB254990140059C1EB /* calendar_list_2.json in Resources */ = {isa = PBXBuildFile; fileRef = 849E1CCA254990140059C1EB /* calendar_list_2.json */; };
@@ -65,6 +68,9 @@
 		606FC2411953D9B200FFA9A0 /* Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tests-Prefix.pch"; sourceTree = "<group>"; };
 		6F4F6B714A4B9C2AC9E57EC3 /* Pods_CalendarWrapper_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CalendarWrapper_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		71719F9E1E33DC2100824A3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		84053338255C7705000A1F81 /* batch_add.txt */ = {isa = PBXFileReference; explicitFileType = text.html; fileEncoding = 4; lineEnding = 2; path = batch_add.txt; sourceTree = "<group>"; usesTabs = 0; wrapsLines = 0; };
+		8405334E255C87D3000A1F81 /* batch_delete.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = batch_delete.txt; sourceTree = "<group>"; };
+		84053354255D9302000A1F81 /* batch_update.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = batch_update.txt; sourceTree = "<group>"; };
 		8466FD4D254845F300620A7F /* calendar_events.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_events.json; sourceTree = "<group>"; };
 		84812D9125471B03005BF573 /* MockCalendarAuthorizationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MockCalendarAuthorizationManager.h; sourceTree = "<group>"; };
 		84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MockCalendarAuthorizationManager.m; sourceTree = "<group>"; };
@@ -220,6 +226,9 @@
 		84E110292548308B0069EAA3 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
+				84053354255D9302000A1F81 /* batch_update.txt */,
+				84053338255C7705000A1F81 /* batch_add.txt */,
+				8405334E255C87D3000A1F81 /* batch_delete.txt */,
 				84E11025254830200069EAA3 /* calendar_list.json */,
 				849E1CCA254990140059C1EB /* calendar_list_2.json */,
 				8466FD4D254845F300620A7F /* calendar_events.json */,
@@ -324,10 +333,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */,
+				84053339255C7705000A1F81 /* batch_add.txt in Resources */,
+				84053355255D9302000A1F81 /* batch_update.txt in Resources */,
 				84E11026254830200069EAA3 /* calendar_list.json in Resources */,
 				849E1CCB254990140059C1EB /* calendar_list_2.json in Resources */,
 				849E1CD125499C120059C1EB /* calendar_event.json in Resources */,
 				8466FD4E254845F300620A7F /* calendar_events.json in Resources */,
+				8405334F255C87D3000A1F81 /* batch_delete.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

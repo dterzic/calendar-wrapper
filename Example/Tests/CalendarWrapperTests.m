@@ -63,6 +63,13 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
                                              headers:@{@"Content-Type":@"application/json"}];
 }
 
+- (HTTPStubsResponse *)responseWithMultipartContentFile:(NSString *)fileName boundary:(NSString *)boundary {
+    NSString *contentType = [NSString stringWithFormat:@"multipart/mixed; boundary=%@", boundary];
+    return [HTTPStubsResponse responseWithFileAtPath:OHPathForFile(fileName, self.class)
+                                          statusCode:200
+                                             headers:@{@"Content-Type":contentType}];
+}
+
 - (void)stubGoogleApisRequestIndentifiedByLastPathComponent:(NSString *)lastPathComponent withJsonFile:(NSString *)fileName {
     [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
         return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
@@ -344,10 +351,10 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:1604185199];
     [self.calendar syncEventsFrom:startDate
                           to:endDate
-                     success:^(NSDictionary *events) {
-        expect(events.count).to(equal(2));
+                          success:^(NSDictionary *syncedEvents, NSArray *removedEvents) {
+        expect(syncedEvents.count).to(equal(2));
 
-        GCWCalendarEvent *event1 = events.allValues[0];
+        GCWCalendarEvent *event1 = syncedEvents.allValues[0];
         expect(event1.summary).to(equal(@"Test meeting 2"));
         expect(event1.startDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603809000]));
         expect(event1.endDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603812600]));
@@ -356,7 +363,7 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
         expect(event1.attendeesEmailAddresses[1]).to(equal(@"dterzictest@gmail.com"));
         expect(event1.hangoutLink).to(equal(@"https://meet.google.com/hpr-bwei-rqc"));
 
-        GCWCalendarEvent *event2 = events.allValues[1];
+        GCWCalendarEvent *event2 = syncedEvents.allValues[1];
         expect(event2.summary).to(equal(@"Test reccurring"));
         expect(event2.startDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603800000]));
         expect(event2.endDate).to(equal([NSDate dateWithTimeIntervalSince1970:1603886400]));
@@ -378,7 +385,7 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:1604185199];
     [self.calendar syncEventsFrom:startDate
                           to:endDate
-                     success:^(NSDictionary *events) {
+                          success:^(NSDictionary *syncedEvents, NSArray *removedEvents) {
     } failure:^(NSError *error) {
         expect(error.code).to(equal(400));
         [expectation fulfill];
@@ -570,6 +577,121 @@ static NSString *const kUserIDs = @"googleUserIDsKey";
     } failure:^(NSError *error) {
         expect(error.code).to(equal(400));
         [expectation fulfill];
+    }];
+    [self waitForExpectations:@[expectation] timeout:10.0];
+}
+
+- (void)testBatchAddEvents {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.path isEqualToString:@"/batch/calendar/v3"]) {
+            return [self responseWithMultipartContentFile:@"batch_add.txt" boundary:@"batch_5oddruAmmQmbGT1DgIzuJ3icF9J60RDz"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+
+    [self.userDefaults setObject:@[@"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Batch add calendar events expectation"];
+
+    GCWCalendarEvent *event1 = [[GCWCalendarEvent alloc] init];
+    event1.calendarId = @"dterzictest@gmail.com";
+    GCWCalendarEvent *event2 = [[GCWCalendarEvent alloc] init];
+    event2.calendarId = @"dterzictest@gmail.com";
+    NSMutableArray *events = [NSMutableArray arrayWithObjects:event1, event2, nil];
+
+    [self.calendar batchAddEvents:events
+                          success:^(NSArray<GCWCalendarEvent *> *events) {
+        GCWCalendarEvent *event1 = events[0];
+        expect(event1.summary).to(equal(@"Test update 8"));
+        expect(event1.startDate).to(equal([NSDate dateWithTimeIntervalSince1970:1605717000]));
+        expect(event1.endDate).to(equal([NSDate dateWithTimeIntervalSince1970:1605720600]));
+        expect(event1.status).to(equal("confirmed"));
+
+        GCWCalendarEvent *event2 = events[1];
+        expect(event2.summary).to(equal(@"Test update 81"));
+        expect(event2.startDate).to(equal([NSDate dateWithTimeIntervalSince1970:1605803400]));
+        expect(event2.endDate).to(equal([NSDate dateWithTimeIntervalSince1970:1605807000]));
+        expect(event2.status).to(equal("confirmed"));
+
+        [expectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[expectation] timeout:10.0];
+}
+
+- (void)testBatchUpdateEvents {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.path isEqualToString:@"/batch/calendar/v3"]) {
+            return [self responseWithMultipartContentFile:@"batch_update.txt" boundary:@"batch_UDQZmJHrEjzmjjjVB83P9xJE_9-ox97l"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+
+    [self.userDefaults setObject:@[@"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Batch add calendar events expectation"];
+
+    GCWCalendarEvent *event1 = [[GCWCalendarEvent alloc] init];
+    event1.calendarId = @"dterzictest@gmail.com";
+    GCWCalendarEvent *event2 = [[GCWCalendarEvent alloc] init];
+    event2.calendarId = @"dterzictest@gmail.com";
+    NSMutableArray *events = [NSMutableArray arrayWithObjects:event1, event2, nil];
+
+    [self.calendar batchUpdateEvents:events
+                             success:^{
+        [expectation fulfill];
+    } failure:^(NSError *error) {
+    }];
+    [self waitForExpectations:@[expectation] timeout:10.0];
+}
+
+- (void)testBatchDeleteEvents {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"accounts.google.com"] || [request.URL.host isEqualToString:@"www.googleapis.com"];
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        if ([request.URL.lastPathComponent isEqualToString:@"calendarList"]) {
+            return [self responseWithJsonFile:@"calendar_list.json"];
+        } else if ([request.URL.path isEqualToString:@"/batch/calendar/v3"]) {
+            return [self responseWithMultipartContentFile:@"batch_delete.txt" boundary:@"batch_Slg_g56t3GK7Igt3koEC0SfZXH05Gcfc"];
+        } else {
+            return [self responseWithUserInfoJson];
+        }
+    }];
+
+    [self.userDefaults setObject:@[@"dterzictest@gmail.com"] forKey:kUserIDs];
+    [self.userDefaults synchronize];
+
+    [self loadAuthorizations];
+    [self loadCalendarLists];
+
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Batch add calendar events expectation"];
+
+    NSMutableArray *eventIds = [NSMutableArray arrayWithObjects:@"testEvent1", @"testEvent2", nil];
+    NSMutableArray *calendarIds = [NSMutableArray arrayWithObjects:@"dterzictest@gmail.com", @"dterzictest@gmail.com", nil];
+
+    [self.calendar batchDeleteEvents:eventIds
+                       fromCalendars:calendarIds
+                             success:^{
+        [expectation fulfill];
+    } failure:^(NSError *error) {
     }];
     [self waitForExpectations:@[expectation] timeout:10.0];
 }

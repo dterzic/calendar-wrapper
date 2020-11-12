@@ -1,0 +1,94 @@
+
+--batch_UDQZmJHrEjzmjjjVB83P9xJE_9-ox97l
+Content-Type: application/http
+Content-ID: response-gtlr_9
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+ETag: "3210308641581000"
+Vary: Origin
+Vary: X-Origin
+Vary: Referer
+
+{
+ "kind": "calendar#event",
+ "etag": "\"3210308641581000\"",
+ "id": "jgkelm938fuhuqikblk36udsvg",
+ "status": "confirmed",
+ "htmlLink": "https://www.google.com/calendar/event?eid=amdrZWxtOTM4ZnVodXFpa2JsazM2dWRzdmcgcmdvcmRjODNrczc5YzgzZ2JwNWk1ZGE1YzRAZw",
+ "created": "2020-11-11T16:27:02.000Z",
+ "updated": "2020-11-12T15:56:59.275Z",
+ "summary": "Test update 8",
+ "creator": {
+  "email": "dterzic@gmail.com"
+ },
+ "organizer": {
+  "email": "rgordc83ks79c83gbp5i5da5c4@group.calendar.google.com",
+  "displayName": "Test calendar",
+  "self": true
+ },
+ "start": {
+  "dateTime": "2020-11-14T17:30:00+01:00",
+  "timeZone": "Europe/Belgrade"
+ },
+ "end": {
+  "dateTime": "2020-11-14T18:30:00+01:00",
+  "timeZone": "Europe/Belgrade"
+ },
+ "iCalUID": "jgkelm938fuhuqikblk36udsvg@google.com",
+ "sequence": 1,
+ "reminders": {
+  "useDefault": false,
+  "overrides": [
+   {
+    "method": "popup",
+    "minutes": 10
+   }
+  ]
+ }
+}
+
+--batch_UDQZmJHrEjzmjjjVB83P9xJE_9-ox97l
+Content-Type: application/http
+Content-ID: response-gtlr_10
+
+HTTP/1.1 200 OK
+ETag: "3210393238550000"
+Content-Type: application/json; charset=UTF-8
+Vary: Origin
+Vary: X-Origin
+Vary: Referer
+
+{
+ "kind": "calendar#event",
+ "etag": "\"3210393238550000\"",
+ "id": "jp72lm6mkhsbignfqagoet2hbg",
+ "status": "confirmed",
+ "htmlLink": "https://www.google.com/calendar/event?eid=anA3MmxtNm1raHNiaWduZnFhZ29ldDJoYmcgcmdvcmRjODNrczc5YzgzZ2JwNWk1ZGE1YzRAZw",
+ "created": "2020-11-11T16:27:21.000Z",
+ "updated": "2020-11-12T15:56:59.275Z",
+ "summary": "Test update 81",
+ "creator": {
+  "email": "dterzic@gmail.com"
+ },
+ "organizer": {
+  "email": "rgordc83ks79c83gbp5i5da5c4@group.calendar.google.com",
+  "displayName": "Test calendar",
+  "self": true
+ },
+ "start": {
+  "dateTime": "2020-11-15T17:30:00+01:00",
+  "timeZone": "Europe/Belgrade"
+ },
+ "end": {
+  "dateTime": "2020-11-15T18:30:00+01:00",
+  "timeZone": "Europe/Belgrade"
+ },
+ "iCalUID": "jp72lm6mkhsbignfqagoet2hbg@google.com",
+ "sequence": 1,
+ "reminders": {
+  "useDefault": true
+ }
+}
+
+--batch_UDQZmJHrEjzmjjjVB83P9xJE_9-ox97l--
