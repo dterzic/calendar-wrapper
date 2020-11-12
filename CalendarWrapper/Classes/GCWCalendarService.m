@@ -99,7 +99,7 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
-- (void)syncEventsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+- (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure {
     NSDate *startDate = [NSDate dateFromNumberOfDaysSinceNow:daysInPast];
     NSDate *endDate = [NSDate dateFromNumberOfDaysSinceNow:daysInFuture];
 
@@ -115,7 +115,7 @@ static NSUInteger daysInFuture = 45;
                 [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
             }
         }
-        success();
+        success(syncedEvents.count > 0 || removedEvents.count > 0);
     } failure:^(NSError *error) {
         failure(error);
     }];

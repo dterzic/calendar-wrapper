@@ -85,7 +85,7 @@
 - (void)loadEventsOnSuccess:(void (^)(NSArray <GCWCalendarEvent *> *events, NSDictionary *calendarList))success
                     failure:(void (^)(NSError *))failure;
 
-- (void)syncEventsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure;
+- (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure;
 
 - (void)getEventForCalendar:(NSString *)calendarId
                     eventId:(NSString *)eventId
