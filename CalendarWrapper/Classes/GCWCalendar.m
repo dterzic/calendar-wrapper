@@ -472,7 +472,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                     to:(NSDate *)endDate
                success:(void (^)(NSDictionary *, NSArray *))success
                failure:(void (^)(NSError *))failure {
-    NSMutableArray *removedEvents = [NSMutableArray array];
+    NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
     NSMutableDictionary *syncedEvents = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
@@ -503,7 +503,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
 
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
-                        [removedEvents addObject:event];
+                        removedEvents[event.identifier] = event;
                     } else if ([startDate compare:event.startDate] == NSOrderedAscending &&
                         [endDate compare:event.endDate] == NSOrderedDescending) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
@@ -519,7 +519,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success(syncedEvents, removedEvents);
+                    success(syncedEvents, removedEvents.allValues);
                 }
                 calendarIndex++;
             }

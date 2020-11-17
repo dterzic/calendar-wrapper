@@ -28,6 +28,8 @@
 		84812D9325471B03005BF573 /* MockCalendarAuthorizationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */; };
 		849E1CCB254990140059C1EB /* calendar_list_2.json in Resources */ = {isa = PBXBuildFile; fileRef = 849E1CCA254990140059C1EB /* calendar_list_2.json */; };
 		849E1CD125499C120059C1EB /* calendar_event.json in Resources */ = {isa = PBXBuildFile; fileRef = 849E1CD025499C120059C1EB /* calendar_event.json */; };
+		84D67A172562D74600A28C06 /* CalendarServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 84D67A162562D74600A28C06 /* CalendarServiceTests.m */; };
+		84D67A1D2562DEDF00A28C06 /* CalendarTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 84D67A1C2562DEDF00A28C06 /* CalendarTests.m */; };
 		84E1101E25482DC40069EAA3 /* MockCalendarAuthorization.m in Sources */ = {isa = PBXBuildFile; fileRef = 84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */; };
 		84E11026254830200069EAA3 /* calendar_list.json in Resources */ = {isa = PBXBuildFile; fileRef = 84E11025254830200069EAA3 /* calendar_list.json */; };
 		873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 873B8AEA1B1F5CCA007FD442 /* Main.storyboard */; };
@@ -77,6 +79,9 @@
 		84906BCD2546C2730062751C /* libOHHTTPStubs.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libOHHTTPStubs.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		849E1CCA254990140059C1EB /* calendar_list_2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_list_2.json; sourceTree = "<group>"; };
 		849E1CD025499C120059C1EB /* calendar_event.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_event.json; sourceTree = "<group>"; };
+		84D67A162562D74600A28C06 /* CalendarServiceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarServiceTests.m; sourceTree = "<group>"; };
+		84D67A1C2562DEDF00A28C06 /* CalendarTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarTests.m; sourceTree = "<group>"; };
+		84D67A242562E0AA00A28C06 /* CalendarTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CalendarTests.h; sourceTree = "<group>"; };
 		84E1101C25482DAC0069EAA3 /* MockCalendarAuthorization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MockCalendarAuthorization.h; sourceTree = "<group>"; };
 		84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MockCalendarAuthorization.m; sourceTree = "<group>"; };
 		84E11025254830200069EAA3 /* calendar_list.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = calendar_list.json; sourceTree = "<group>"; };
@@ -186,7 +191,10 @@
 				84E1101D25482DC40069EAA3 /* MockCalendarAuthorization.m */,
 				84812D9125471B03005BF573 /* MockCalendarAuthorizationManager.h */,
 				84812D9225471B03005BF573 /* MockCalendarAuthorizationManager.m */,
+				84D67A242562E0AA00A28C06 /* CalendarTests.h */,
+				84D67A1C2562DEDF00A28C06 /* CalendarTests.m */,
 				6003F5BB195388D20070C39A /* CalendarWrapperTests.m */,
+				84D67A162562D74600A28C06 /* CalendarServiceTests.m */,
 				6003F5B6195388D20070C39A /* Supporting Files */,
 			);
 			path = Tests;
@@ -430,6 +438,8 @@
 				84E1101E25482DC40069EAA3 /* MockCalendarAuthorization.m in Sources */,
 				6003F5BC195388D20070C39A /* CalendarWrapperTests.m in Sources */,
 				84812D9325471B03005BF573 /* MockCalendarAuthorizationManager.m in Sources */,
+				84D67A1D2562DEDF00A28C06 /* CalendarTests.m in Sources */,
+				84D67A172562D74600A28C06 /* CalendarServiceTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

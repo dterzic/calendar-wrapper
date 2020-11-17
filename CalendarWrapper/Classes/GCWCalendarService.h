@@ -105,6 +105,8 @@
 
 @property (nonatomic, weak) id<CalendarServiceDelegate> delegate;
 
-- (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController delegate:(id<CalendarServiceDelegate>)delegate;
+- (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController
+                                        delegate:(id<CalendarServiceDelegate>)delegate
+                                        calendar:(GCWCalendar *)calendar;
 
 @end

@@ -20,13 +20,19 @@ static NSUInteger daysInFuture = 45;
 
 @implementation GCWCalendarService
 
-- (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController delegate:(id<CalendarServiceDelegate>)delegate {
+- (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController
+                                        delegate:(id<CalendarServiceDelegate>)delegate
+                                        calendar:(GCWCalendar *)calendar {
     self = [super init];
     if (self) {
-        self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID
-                                            presentingViewController:presentingViewController
-                                         authorizationManager:nil
-                                                 userDefaults:nil];
+        if (calendar == nil) {
+            self.calendar = [[GCWCalendar alloc] initWithClientId:kClientID
+                                                presentingViewController:presentingViewController
+                                             authorizationManager:nil
+                                                     userDefaults:nil];
+        } else {
+            self.calendar = calendar;
+        }
         self.delegate = delegate;
     }
     return self;
@@ -213,6 +219,9 @@ static NSUInteger daysInFuture = 45;
                 [self.calendar updateEvent:event
                                        inCalendar:event.calendarId
                                           success:^{
+                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidUpdateEvent:)]) {
+                        [weakSelf.delegate calendarServiceDidUpdateEvent:event];
+                    }
                     success();
                 } failure:^(NSError *error) {
                     failure(error);
