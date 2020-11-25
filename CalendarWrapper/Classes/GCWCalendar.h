@@ -18,6 +18,7 @@
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
+@property (nonatomic) NSNumber *_Nonnull notificationPeriod;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
                    presentingViewController:(UIViewController *_Nullable)viewController
@@ -37,7 +38,8 @@
                             attendeesEmailAddresses:(NSArray<NSString *> *_Nullable)attendeesEmailAddresses
                                         description:(NSString *_Nullable)description
                                                date:(NSDate *_Nonnull)date
-                                           duration:(NSInteger)duration;
+                                           duration:(NSInteger)duration
+                                 notificationPeriod:(NSNumber *_Nonnull)notificationPeriod;
 
 + (GCWCalendarEvent *_Nonnull)cloneEvent:(GCWCalendarEvent *_Nonnull)event;
 

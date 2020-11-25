@@ -64,6 +64,14 @@ static NSUInteger daysInFuture = 45;
     self.calendar.calendarEntries = calendarListEntries;
 }
 
+- (NSNumber *)notificationPeriod {
+    return self.calendar.notificationPeriod;
+}
+
+- (void)setNotificationPeriod:(NSNumber *)notificationPeriod {
+    self.calendar.notificationPeriod = notificationPeriod;
+}
+
 - (void)setVisibility:(BOOL)visible forCalendar:(NSString *)calendarId {
     NSMutableDictionary *calendarEntries = [NSMutableDictionary dictionaryWithDictionary:self.calendarEntries];
     GCWCalendarEntry *entry = calendarEntries[calendarId];
@@ -143,7 +151,8 @@ static NSUInteger daysInFuture = 45;
                                            attendeesEmailAddresses:attendeesEmailAddresses
                                                        description:description
                                                               date:date
-                                                          duration:duration];
+                                                          duration:duration
+                                                notificationPeriod:self.calendar.notificationPeriod];
     newEvent.isImportant = important;
     
     __weak GCWCalendarService *weakSelf = self;
@@ -177,7 +186,8 @@ static NSUInteger daysInFuture = 45;
                                            attendeesEmailAddresses:attendeesEmailAddresses
                                                        description:description
                                                               date:date
-                                                          duration:duration];
+                                                          duration:duration
+                                                notificationPeriod:self.calendar.notificationPeriod];
     newEvent.recurrence = recurrence;
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent

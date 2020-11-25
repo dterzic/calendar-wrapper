@@ -22,6 +22,7 @@ static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTokensKey";
+static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperCalendarEventsNotificationPeriodKey";
 
 @interface GCWCalendar ()
 
@@ -72,6 +73,12 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
             self.calendarSyncTokens = [NSMutableDictionary dictionaryWithDictionary:calendarSyncTokens];
         } else {
             self.calendarSyncTokens = [NSMutableDictionary dictionary];
+        }
+        NSNumber *notificationPeriod = [self.userDefaults objectForKey:kCalendarEventsNotificationPeriodKey];
+        if (notificationPeriod) {
+            self.notificationPeriod = notificationPeriod;
+        } else {
+            self.notificationPeriod = @(10);
         }
         NSLog(@"LOADED: %lu calendars and %lu events.", (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
 
@@ -165,6 +172,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     [self.userDefaults setObject:userIDs forKey:kUserIDs];
     [self.userDefaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
     [self.userDefaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
+    [self.userDefaults setObject:self.notificationPeriod forKey:kCalendarEventsNotificationPeriodKey];
     [self.userDefaults synchronize];
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -271,7 +279,8 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
                    attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
                                description:(NSString *)description
                                       date:(NSDate *)date
-                                  duration:(NSInteger)duration {
+                                  duration:(NSInteger)duration
+                        notificationPeriod:(NSNumber *)notificationPeriod {
     // Make a new event, and show it to the user to edit
     GTLRCalendar_Event *newEvent = [GTLRCalendar_Event object];
 
@@ -307,7 +316,7 @@ static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTok
     newEvent.end.timeZone = [NSCalendar currentCalendar].timeZone.name;
 
     GTLRCalendar_EventReminder *reminder = [GTLRCalendar_EventReminder object];
-    reminder.minutes = @10;
+    reminder.minutes = notificationPeriod;
     reminder.method = @"popup";
 
     newEvent.reminders = [GTLRCalendar_Event_Reminders object];

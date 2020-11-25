@@ -23,6 +23,7 @@
 @property (nonatomic, readonly) NSDictionary *accountEntries;
 @property (nonatomic, readonly) NSDictionary *calendarEntries;
 @property (nonatomic, readonly) NSDictionary *calendarEvents;
+@property (nonatomic) NSNumber *notificationPeriod;
 
 - (NSString *)getCalendarOwner:(NSString *)calendarId;
 

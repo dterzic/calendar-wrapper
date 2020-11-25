@@ -183,7 +183,9 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
                                                        location:@"Infinite Loop, Cupertino, CA 95014, USA"
                                         attendeesEmailAddresses:nil
                                                     description:@"Test event"
-                                                           date:[NSDate dateWithTimeIntervalSinceNow:3600] duration:30];
+                                                           date:[NSDate dateWithTimeIntervalSinceNow:3600]
+                                                       duration:30
+                                             notificationPeriod:self.calendar.notificationPeriod];
     __weak GCWViewController *weakSelf = self;
     [self.calendar addEvent:event
                  toCalendar:self.defaultCalendarId
