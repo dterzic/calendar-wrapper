@@ -147,7 +147,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
                                  maxResults:0
                                     success:^(NSDictionary *events) {
         self.events = events;
-        [_eventsTable reloadData];
+        [weakSelf.eventsTable reloadData];
     } failure:^(NSError *error) {
         if (error.code == 1001) {
             [weakSelf showLogin];

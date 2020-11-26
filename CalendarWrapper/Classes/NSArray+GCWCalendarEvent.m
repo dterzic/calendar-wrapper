@@ -11,8 +11,13 @@
 + (NSArray *)unarchiveCalendarEventsFrom:(NSArray *)archive {
     NSMutableArray *events = [NSMutableArray array];
     for (NSData *data in archive) {
-        GCWCalendarEvent *event = (GCWCalendarEvent *)[NSKeyedUnarchiver unarchiveObjectWithData:data];
-        [events addObject:event];
+        NSError *error = nil;
+        GCWCalendarEvent *event = [NSKeyedUnarchiver unarchivedObjectOfClass:GCWCalendarEvent.class fromData:data error:&error];
+        if (error) {
+            NSLog(@"NSArray: Unarchive event failed with error: %@", error);
+        } else {
+            [events addObject:event];
+        }
     }
     return [events copy];
 }
@@ -20,8 +25,13 @@
 - (NSArray *)archiveCalendarEvents {
     NSMutableArray *archiveArray = [NSMutableArray arrayWithCapacity:self.count];
     for (GCWCalendarEvent *event in self) {
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:event];
-        [archiveArray addObject:data];
+        NSError *error = nil;
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:event requiringSecureCoding:NO error:&error];
+        if (error) {
+            NSLog(@"NSArray: Archive event failed with error: %@", error);
+        } else {
+            [archiveArray addObject:data];
+        }
     }
     return archiveArray;
 }

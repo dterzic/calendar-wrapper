@@ -13,8 +13,13 @@
 
     [archive enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         NSData *data = (NSData *)obj;
-        GCWCalendarEntry *entry = (GCWCalendarEntry *)[NSKeyedUnarchiver unarchiveObjectWithData:data];
-        [entries setValue:entry forKey:key];
+        NSError *error = nil;
+        GCWCalendarEntry *entry = [NSKeyedUnarchiver unarchivedObjectOfClass:GCWCalendarEntry.class fromData:data error:&error];
+        if (error) {
+            NSLog(@"Archive entry failed with error: %@", error);
+        } else {
+            [entries setValue:entry forKey:key];
+        }
     }];
     return [entries copy];
 }
@@ -23,8 +28,13 @@
     NSMutableDictionary *archiveDictionary = [NSMutableDictionary dictionaryWithCapacity:self.count];
     [self enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         GCWCalendarEntry *entry = (GCWCalendarEntry *)obj;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:entry];
-        [archiveDictionary setValue:data forKey:key];
+        NSError *error = nil;
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:entry requiringSecureCoding:NO error:&error];
+        if (error) {
+            NSLog(@"Archive entry failed with error: %@", error);
+        } else {
+            [archiveDictionary setValue:data forKey:key];
+        }
     }];
     return archiveDictionary;
 }
