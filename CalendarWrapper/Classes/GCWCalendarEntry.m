@@ -2,6 +2,10 @@
 
 @implementation GCWCalendarEntry
 
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
 - (instancetype)initWithCalendarListEntry:(GTLRCalendar_CalendarListEntry *)entry {
     return [[self class] objectWithJSON:entry.JSON];
 }

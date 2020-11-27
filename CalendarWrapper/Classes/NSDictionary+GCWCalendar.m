@@ -16,7 +16,7 @@
         NSError *error = nil;
         GCWCalendarEntry *entry = [NSKeyedUnarchiver unarchivedObjectOfClass:GCWCalendarEntry.class fromData:data error:&error];
         if (error) {
-            NSLog(@"Archive entry failed with error: %@", error);
+            NSLog(@"Unarchive entry failed with error: %@", error);
         } else {
             [entries setValue:entry forKey:key];
         }
@@ -29,7 +29,7 @@
     [self enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         GCWCalendarEntry *entry = (GCWCalendarEntry *)obj;
         NSError *error = nil;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:entry requiringSecureCoding:NO error:&error];
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:entry requiringSecureCoding:YES error:&error];
         if (error) {
             NSLog(@"Archive entry failed with error: %@", error);
         } else {

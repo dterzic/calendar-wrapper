@@ -26,7 +26,7 @@
     NSMutableArray *archiveArray = [NSMutableArray arrayWithCapacity:self.count];
     for (GCWCalendarEvent *event in self) {
         NSError *error = nil;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:event requiringSecureCoding:NO error:&error];
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:event requiringSecureCoding:YES error:&error];
         if (error) {
             NSLog(@"NSArray: Archive event failed with error: %@", error);
         } else {

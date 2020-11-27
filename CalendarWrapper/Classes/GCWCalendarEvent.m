@@ -7,6 +7,10 @@
 
 @implementation GCWCalendarEvent
 
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
 - (id)initWithCoder:(NSCoder *)coder {
     self = [super init];
     if (self != nil) {
