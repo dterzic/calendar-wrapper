@@ -344,6 +344,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     clone.descriptionProperty = [event.descriptionProperty copy];
     clone.recurrence = [event.recurrence copy];
     clone.attendees = [event.attendees copy];
+    clone.reminders = [event.reminders copy];
 
     return clone;
 }

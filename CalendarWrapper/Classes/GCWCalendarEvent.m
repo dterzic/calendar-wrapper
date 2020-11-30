@@ -218,4 +218,43 @@
     return self.recurrence.count || self.recurringEventId.length;
 }
 
+- (NSNumber *)notificationPeriod {
+    NSArray *notifications = self.reminders.overrides;
+
+    if (notifications == nil) {
+        return nil;
+    }
+    for (GTLRCalendar_EventReminder *notification in notifications) {
+        if ([notification.method isEqualToString:@"popup"]) {
+            NSNumber *minutes = notification.minutes;
+            return minutes;
+        }
+    }
+    return 0;
+}
+
+- (void)setNotificationPeriod:(NSNumber *)notificationPeriod {
+    NSArray *notifications = self.reminders.overrides;
+
+    if (notifications == nil && notificationPeriod == nil) {
+        return;
+    }
+    if (notifications == nil) {
+        GTLRCalendar_EventReminder *notification = [[GTLRCalendar_EventReminder alloc] init];
+        notification.method = @"popup";
+        notification.minutes = notificationPeriod;
+        self.reminders.overrides = @[notification];
+        return;
+    }
+    if (notificationPeriod == nil) {
+        self.reminders.overrides = @[];
+    } else {
+        for (GTLRCalendar_EventReminder *notification in notifications) {
+            if ([notification.method isEqualToString:@"popup"]) {
+                notification.minutes = notificationPeriod;
+            }
+        }
+    }
+}
+
 @end

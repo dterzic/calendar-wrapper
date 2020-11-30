@@ -142,9 +142,12 @@ static NSUInteger daysInFuture = 45;
                    description:(NSString *)description
                           date:(NSDate *)date
                       duration:(NSInteger)duration
+            notificationPeriod:(NSNumber *)notificationPeriod
                      important:(BOOL)important
                        success:(void (^)(NSString *))success
                        failure:(void (^)(NSError *))failure {
+
+    NSNumber *period = (notificationPeriod != nil) ? notificationPeriod : self.calendar.notificationPeriod;
 
     GCWCalendarEvent *newEvent = [GCWCalendar createEventWithTitle:title
                                                           location:location
@@ -152,7 +155,7 @@ static NSUInteger daysInFuture = 45;
                                                        description:description
                                                               date:date
                                                           duration:duration
-                                                notificationPeriod:self.calendar.notificationPeriod];
+                                                notificationPeriod:period];
     newEvent.isImportant = important;
     
     __weak GCWCalendarService *weakSelf = self;
@@ -179,15 +182,19 @@ static NSUInteger daysInFuture = 45;
                             description:(NSString *)description
                                    date:(NSDate *)date
                                duration:(NSInteger)duration
+                     notificationPeriod:(NSNumber *)notificationPeriod
                                 success:(void (^)(NSString *))success
                                 failure:(void (^)(NSError *))failure {
+
+    NSNumber *period = (notificationPeriod != nil) ? notificationPeriod : self.calendar.notificationPeriod;
+
     GCWCalendarEvent *newEvent = [GCWCalendar createEventWithTitle:title
                                                           location:location
                                            attendeesEmailAddresses:attendeesEmailAddresses
                                                        description:description
                                                               date:date
                                                           duration:duration
-                                                notificationPeriod:self.calendar.notificationPeriod];
+                                                notificationPeriod:period];
     newEvent.recurrence = recurrence;
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent

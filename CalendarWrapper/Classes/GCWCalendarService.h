@@ -45,6 +45,7 @@
                    description:(NSString *)description
                           date:(NSDate *)date
                       duration:(NSInteger)duration
+            notificationPeriod:(NSNumber *)notificationPeriod
                      important:(BOOL)important
                        success:(void (^)(NSString *))success
                        failure:(void (^)(NSError *))failure;
@@ -57,6 +58,7 @@
                             description:(NSString *)description
                                    date:(NSDate *)date
                                duration:(NSInteger)duration
+                     notificationPeriod:(NSNumber *)notificationPeriod
                                 success:(void (^)(NSString *))success
                                 failure:(void (^)(NSError *))failure;
 

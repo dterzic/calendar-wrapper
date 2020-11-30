@@ -35,6 +35,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic) NSArray< NSString *> *attendeesEmailAddresses;
 @property (nonatomic) BOOL isImportant;
 @property (nonatomic, readonly) BOOL isRecurring;
+@property (nonatomic) NSNumber *notificationPeriod;
 
 - (BOOL)hasAttendeeWithEmail:(NSString *)email;
 
