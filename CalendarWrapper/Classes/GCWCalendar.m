@@ -394,9 +394,12 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_CalendarListEntry * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 GCWCalendarEntry *calendar = [[GCWCalendarEntry alloc] initWithCalendarListEntry:obj];
                 GCWCalendarEntry *cachedCalendar = self.calendarEntries[calendar.identifier];
-                // Keep attribute value from cache
                 if (cachedCalendar) {
+                    // Keep attribute value from cache
                     calendar.hideEvents = cachedCalendar.hideEvents;
+                } else {
+                    // By default show events only for owned calendars
+                    calendar.hideEvents = ![calendar.accessRole isEqualToString:@"owner"];
                 }
                 calendars[obj.identifier] = calendar;
 
