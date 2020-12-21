@@ -154,6 +154,7 @@ static NSUInteger daysInFuture = 45;
                                                               date:date
                                                           duration:duration
                                                 notificationPeriod:period];
+    newEvent.calendarId = calendarId;
     newEvent.isImportant = important;
 
     return newEvent;
