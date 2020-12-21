@@ -135,6 +135,30 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
+- (GCWCalendarEvent *)newEventForCalendar:(NSString *)calendarId
+                                withTitle:(NSString *)title
+                                 location:(NSString *)location
+                  attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
+                              description:(NSString *)description
+                                     date:(NSDate *)date
+                                 duration:(NSInteger)duration
+                       notificationPeriod:(NSNumber *)notificationPeriod
+                                important:(BOOL)important {
+
+    NSNumber *period = (notificationPeriod != nil) ? notificationPeriod : self.calendar.notificationPeriod;
+
+    GCWCalendarEvent *newEvent = [GCWCalendar createEventWithTitle:title
+                                                          location:location
+                                           attendeesEmailAddresses:attendeesEmailAddresses
+                                                       description:description
+                                                              date:date
+                                                          duration:duration
+                                                notificationPeriod:period];
+    newEvent.isImportant = important;
+
+    return newEvent;
+}
+
 - (void)createEventForCalendar:(NSString *)calendarId
                      withTitle:(NSString *)title
                       location:(NSString *)location
@@ -147,21 +171,20 @@ static NSUInteger daysInFuture = 45;
                        success:(void (^)(NSString *))success
                        failure:(void (^)(NSError *))failure {
 
-    NSNumber *period = (notificationPeriod != nil) ? notificationPeriod : self.calendar.notificationPeriod;
+    GCWCalendarEvent *newEvent = [self newEventForCalendar:calendarId
+                                                 withTitle:title
+                                                  location:location
+                                   attendeesEmailAddresses:attendeesEmailAddresses
+                                               description:description
+                                                      date:date
+                                                  duration:duration
+                                        notificationPeriod:notificationPeriod
+                                                 important:important];
 
-    GCWCalendarEvent *newEvent = [GCWCalendar createEventWithTitle:title
-                                                          location:location
-                                           attendeesEmailAddresses:attendeesEmailAddresses
-                                                       description:description
-                                                              date:date
-                                                          duration:duration
-                                                notificationPeriod:period];
-    newEvent.isImportant = important;
-    
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent
-                        toCalendar:calendarId
-                           success:^(NSString *eventId) {
+                 toCalendar:calendarId
+                    success:^(NSString *eventId) {
         newEvent.identifier = eventId;
         newEvent.calendarId = calendarId;
 

@@ -38,6 +38,16 @@
 
 - (void)loadCalendarListOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure;
 
+- (GCWCalendarEvent *)newEventForCalendar:(NSString *)calendarId
+                                withTitle:(NSString *)title
+                                 location:(NSString *)location
+                  attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
+                              description:(NSString *)description
+                                     date:(NSDate *)date
+                                 duration:(NSInteger)duration
+                       notificationPeriod:(NSNumber *)notificationPeriod
+                                important:(BOOL)important;
+
 - (void)createEventForCalendar:(NSString *)calendarId
                      withTitle:(NSString *)title
                       location:(NSString *)location
