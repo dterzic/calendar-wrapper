@@ -43,7 +43,7 @@
 }
 
 - (BOOL)isAllDay {
-    return self.start && !self.start.dateTime && !self.end.dateTime;
+    return self.start && !self.start.dateTime && !self.end.dateTime && [self.endDate timeIntervalSinceDate:self.startDate] == 86400;
 }
 
 - (NSDate *)startDateDayOnly {
