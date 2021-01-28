@@ -80,6 +80,7 @@ static NSUInteger daysInFuture = 45;
     } else {
         assert("Unexpected calendar event type");
     }
+    return nil;
 }
 
 - (void)setNotificationPeriod:(NSNumber *)notificationPeriod {
