@@ -5,6 +5,22 @@
 
 @implementation NSArray (GCWEventsSorting)
 
+- (NSArray<GCWCalendarEvent *> *)eventsFlatMap {
+    NSMutableArray *events = [NSMutableArray array];
+    for (id item in self) {
+        if ([item isKindOfClass:NSDictionary.class]) {
+            NSDictionary *items = (NSDictionary *)item;
+            [events addObjectsFromArray:items.allValues];
+        } else if ([item isKindOfClass:GCWCalendarEvent.class]) {
+            GCWCalendarEvent *event = (GCWCalendarEvent *)item;
+            [events addObject:event];
+        } else {
+            assert("Unexpected calendar event type");
+        }
+    }
+    return events.copy;
+}
+
 - (NSArray *)sortedEvents {
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"timeIntervalSinceEpochTime" ascending:YES];
     return [self sortedArrayUsingDescriptors:@[sortDescriptor]];

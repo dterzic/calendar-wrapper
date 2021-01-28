@@ -1,4 +1,5 @@
 #import "NSDictionary+GCWCalendarEvent.h"
+#import "NSArray+GCWCalendarEvent.h"
 #import "GCWCalendarEvent.h"
 
 static NSString *const kCalendarEventKey = @"calendarWrapperCalendarEventKey";
@@ -24,7 +25,24 @@ static NSString *const kCalendarEventKey = @"calendarWrapperCalendarEventKey";
             NSSet *classes = [NSSet setWithObjects:GCWCalendarEvent.class, UIColor.class, nil];
             GCWCalendarEvent *event = [secureDecoder decodeObjectOfClasses:classes forKey:kCalendarEventKey];
 
-            [events setValue:event forKey:event.identifier];
+            id item = [events valueForKey:event.identifier];
+
+            if ([item isKindOfClass:NSDictionary.class]) {
+                NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                items[event.calendarId] = event;
+                [events setValue:items forKey:event.identifier];
+            } else {
+                GCWCalendarEvent *cachedEvent = (GCWCalendarEvent *)item;
+
+                if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                    [events setValue:event forKey:event.identifier];
+                } else {
+                    NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                    items[event.calendarId] = event;
+                    items[cachedEvent.calendarId] = cachedEvent;
+                    [events setValue:items forKey:event.identifier];
+                }
+            }
         }
     }
     return [events copy];
@@ -32,15 +50,34 @@ static NSString *const kCalendarEventKey = @"calendarWrapperCalendarEventKey";
 
 - (NSArray *)archiveCalendarEvents {
     NSMutableArray *archiveArray = [NSMutableArray arrayWithCapacity:self.count];
-    for (GCWCalendarEvent *event in self.allValues) {
-        NSKeyedArchiver *secureEncoder = [[NSKeyedArchiver alloc] initRequiringSecureCoding:YES];
+    for (id item in self.allValues) {
+        if ([item isKindOfClass:NSDictionary.class]) {
+            NSDictionary *itemsDictionary = (NSDictionary *)item;
 
-        [secureEncoder encodeObject:event forKey:kCalendarEventKey];
-        [secureEncoder finishEncoding];
+            for (GCWCalendarEvent *event in itemsDictionary.allValues) {
+                NSKeyedArchiver *secureEncoder = [[NSKeyedArchiver alloc] initRequiringSecureCoding:YES];
 
-        NSData *data = [secureEncoder encodedData];
+                [secureEncoder encodeObject:event forKey:kCalendarEventKey];
+                [secureEncoder finishEncoding];
 
-        [archiveArray addObject:data];
+                NSData *data = [secureEncoder encodedData];
+
+                [archiveArray addObject:data];
+            }
+        } else if ([item isKindOfClass:GCWCalendarEvent.class]) {
+            NSKeyedArchiver *secureEncoder = [[NSKeyedArchiver alloc] initRequiringSecureCoding:YES];
+
+            GCWCalendarEvent *event = (GCWCalendarEvent *)item;
+
+            [secureEncoder encodeObject:event forKey:kCalendarEventKey];
+            [secureEncoder finishEncoding];
+
+            NSData *data = [secureEncoder encodedData];
+
+            [archiveArray addObject:data];
+        } else {
+            assert("Archive event invalid type");
+        }
     }
     return archiveArray;
 }

@@ -47,17 +47,17 @@
                          success:(void (^_Nonnull)(NSDictionary *_Nonnull))success
                          failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)getEventForCalendar:(NSString *_Nonnull)calendarId
-                    eventId:(NSString *_Nonnull)eventId
-                    success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
-                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)loadEventForCalendar:(NSString *_Nonnull)calendarId
+                     eventId:(NSString *_Nonnull)eventId
+                     success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
+                     failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)getEventsListForCalendar:(NSString *_Nonnull)calendarId
-                       startDate:(NSDate *_Nonnull)startDate
-                         endDate:(NSDate *_Nonnull)endDate
-                      maxResults:(NSUInteger)maxResults
-                         success:(void (^_Nullable)(NSDictionary *_Nonnull))success
-                         failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)loadEventsListForCalendar:(NSString *_Nonnull)calendarId
+                        startDate:(NSDate *_Nonnull)startDate
+                          endDate:(NSDate *_Nonnull)endDate
+                       maxResults:(NSUInteger)maxResults
+                          success:(void (^_Nullable)(NSDictionary *_Nonnull))success
+                          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate

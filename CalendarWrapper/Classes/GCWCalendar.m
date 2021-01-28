@@ -133,7 +133,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
         if ([self.authorizationManager canAuthorizeWithAuthorizationFromKeychain:keychainKey]) {
             GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
-            [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
+            [self loadUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                 NSString *userName = [userInfo valueForKey:@"name"];
                 if (userName && ![self.userAccounts valueForKey:userID]) {
                     GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
@@ -217,7 +217,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 GCWCalendarAuthorization *authorization = [[GCWCalendarAuthorization alloc] initWithFetcherAuthorization:fetcherAuthorization];
                 [self.authorizationManager saveAuthorization:authorization
                                                   toKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
-                [self getUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
+                [self loadUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                     NSString *userName = [userInfo valueForKey:@"name"];
                     if (userName && ![self.userAccounts valueForKey:authorization.userID]) {
                         GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
@@ -251,7 +251,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     return calendarAuthorization;
 }
 
-- (void)getUserInfoForAuthorization:(GCWCalendarAuthorization *)authorization
+- (void)loadUserInfoForAuthorization:(GCWCalendarAuthorization *)authorization
                                       success:(void (^)(NSDictionary *))success
                                       failure:(void (^)(NSError *))failure {
     GTMSessionFetcherService *fetcherService = [[GTMSessionFetcherService alloc] init];
@@ -418,10 +418,10 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }];
 }
 
-- (void)getEventForCalendar:(NSString *)calendarId
-                    eventId:(NSString *)eventId
-                    success:(void (^)(GCWCalendarEvent *))success
-                    failure:(void (^)(NSError *))failure {
+- (void)loadEventForCalendar:(NSString *)calendarId
+                     eventId:(NSString *)eventId
+                     success:(void (^)(GCWCalendarEvent *))success
+                     failure:(void (^)(NSError *))failure {
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
@@ -443,12 +443,12 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }];
 }
 
-- (void)getEventsListForCalendar:(NSString *)calendarId
-                       startDate:(NSDate *)startDate
-                         endDate:(NSDate *)endDate
-                      maxResults:(NSUInteger)maxResults
-                         success:(void (^)(NSDictionary *))success
-                         failure:(void (^)(NSError *))failure {
+- (void)loadEventsListForCalendar:(NSString *)calendarId
+                        startDate:(NSDate *)startDate
+                          endDate:(NSDate *)endDate
+                       maxResults:(NSUInteger)maxResults
+                          success:(void (^)(NSDictionary *))success
+                          failure:(void (^)(NSError *))failure {
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
@@ -521,12 +521,36 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                         [endDate compare:event.endDate] == NSOrderedDescending) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
-                        // Keep attributes from cached object
-                        GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
-                        if (cachedEvent) {
-                            event.isImportant = cachedEvent.isImportant;
+                        id item = self.calendarEvents[event.identifier];
+
+                        if ([item isKindOfClass:NSDictionary.class]) {
+                            NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                            GCWCalendarEvent *cachedEvent = items[calendar.identifier];
+
+                            // Keep attributes from cached object
+                            if (cachedEvent) {
+                                event.isImportant = cachedEvent.isImportant;
+                            }
+                            items[calendar.identifier] = event;
+
+                            self.calendarEvents[event.identifier] = items.copy;
+                        } else {
+                            GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+
+                            if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                                // Keep attributes from cached object
+                                if (cachedEvent) {
+                                    event.isImportant = cachedEvent.isImportant;
+                                }
+                                self.calendarEvents[event.identifier] = event;
+                            } else {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                                items[event.calendarId] = event;
+                                items[cachedEvent.calendarId] = cachedEvent;
+
+                                self.calendarEvents[event.identifier] = items.copy;
+                            }
                         }
-                        self.calendarEvents[event.identifier] = event;
                         syncedEvents[event.identifier] = event;
                     }
                 }];

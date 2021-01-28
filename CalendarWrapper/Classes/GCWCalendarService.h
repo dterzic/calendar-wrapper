@@ -22,10 +22,12 @@
 @property (nonatomic, readonly) NSDictionary *userAccounts;
 @property (nonatomic, readonly) NSDictionary *accountEntries;
 @property (nonatomic, readonly) NSDictionary *calendarEntries;
-@property (nonatomic, readonly) NSDictionary *calendarEvents;
+@property (nonatomic, readonly) NSArray *calendarEvents;
 @property (nonatomic) NSNumber *notificationPeriod;
 
 - (NSString *)getCalendarOwner:(NSString *)calendarId;
+
+- (GCWCalendarEvent *)getCalendarEventWithId:(NSString *)eventId calendarId:(NSString *)calendarId;
 
 - (void)setVisibility:(BOOL)visible forCalendar:(NSString *)calendarId;
 
@@ -100,14 +102,14 @@
 
 - (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure;
 
-- (void)getEventForCalendar:(NSString *)calendarId
-                    eventId:(NSString *)eventId
-                    success:(void (^)(GCWCalendarEvent *))success
-                    failure:(void (^)(NSError *))failure;
+- (void)loadEventForCalendar:(NSString *)calendarId
+                     eventId:(NSString *)eventId
+                     success:(void (^)(GCWCalendarEvent *))success
+                     failure:(void (^)(NSError *))failure;
 
-- (void)getRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
-                      success:(void (^)(NSArray <GCWCalendarEvent *> *))success
-                      failure:(void (^)(NSError *))failure;
+- (void)loadRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
+                       success:(void (^)(NSArray <GCWCalendarEvent *> *))success
+                       failure:(void (^)(NSError *))failure;
 
 - (void)saveState;
 

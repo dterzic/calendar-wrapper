@@ -44,8 +44,8 @@ static NSUInteger daysInFuture = 45;
     return [self.calendar getCalendarOwner:calendarId];
 }
 
-- (NSDictionary *)calendarEvents {
-    return self.calendar.calendarEvents;
+- (NSArray *)calendarEvents {
+    return self.calendar.calendarEvents.allValues.eventsFlatMap;
 }
 
 - (NSDictionary *)calendarEntries {
@@ -66,6 +66,20 @@ static NSUInteger daysInFuture = 45;
 
 - (NSNumber *)notificationPeriod {
     return self.calendar.notificationPeriod;
+}
+
+- (GCWCalendarEvent *)getCalendarEventWithId:(NSString *)eventId calendarId:(NSString *)calendarId {
+    id item = self.calendar.calendarEvents[eventId];
+    if ([item isKindOfClass:NSDictionary.class]) {
+        NSDictionary *items = (NSDictionary *)item;
+        GCWCalendarEvent *event = items[calendarId];
+        return event;
+    } else if ([item isKindOfClass:GCWCalendarEvent.class]) {
+        GCWCalendarEvent *event = (GCWCalendarEvent *)item;
+        return event;
+    } else {
+        assert("Unexpected calendar event type");
+    }
 }
 
 - (void)setNotificationPeriod:(NSNumber *)notificationPeriod {
@@ -253,9 +267,9 @@ static NSUInteger daysInFuture = 45;
     } failure:^(NSError *error) {
         // Precondition failed; resource is already changed, get the latest version and retry updating
         if (error.code == 412) {
-            [self getEventForCalendar:event.calendarId
-                              eventId:event.identifier
-                              success:^(GCWCalendarEvent *updatedEvent) {
+            [self loadEventForCalendar:event.calendarId
+                               eventId:event.identifier
+                               success:^(GCWCalendarEvent *updatedEvent) {
                 event.ETag = updatedEvent.ETag;
                 [self.calendar updateEvent:event
                                        inCalendar:event.calendarId
@@ -358,22 +372,22 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
-- (void)getEventForCalendar:(NSString *)calendarId
-                    eventId:(NSString *)eventId
-                    success:(void (^)(GCWCalendarEvent *))success
-                    failure:(void (^)(NSError *))failure {
-    [self.calendar getEventForCalendar:calendarId
-                                      eventId:eventId
-                                      success:^(GCWCalendarEvent *event) {
+- (void)loadEventForCalendar:(NSString *)calendarId
+                     eventId:(NSString *)eventId
+                     success:(void (^)(GCWCalendarEvent *))success
+                     failure:(void (^)(NSError *))failure {
+    [self.calendar loadEventForCalendar:calendarId
+                                eventId:eventId
+                                success:^(GCWCalendarEvent *event) {
         success(event);
     } failure:^(NSError *error) {
         failure(error);
     }];
 }
 
-- (void)getRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
-                      success:(void (^)(NSArray <GCWCalendarEvent *> *))success
-                      failure:(void (^)(NSError *))failure {
+- (void)loadRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
+                       success:(void (^)(NSArray <GCWCalendarEvent *> *))success
+                       failure:(void (^)(NSError *))failure {
 
     NSMutableArray *recurringEvents = [NSMutableArray array];
     NSMutableArray *recurringEventIds = [NSMutableArray array];
@@ -389,9 +403,9 @@ static NSUInteger daysInFuture = 45;
         NSString *recurringEventId = recurringEventIds[index];
         NSString *calendarId = calendarIds[index];
 
-        [self getEventForCalendar:calendarId
-                          eventId:recurringEventId
-                          success:^(GCWCalendarEvent *recurringEvent) {
+        [self loadEventForCalendar:calendarId
+                           eventId:recurringEventId
+                           success:^(GCWCalendarEvent *recurringEvent) {
             [recurringEvents addObject:recurringEvent];
 
             if (count == recurringEventIds.count-1) {

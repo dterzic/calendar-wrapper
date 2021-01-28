@@ -1,6 +1,8 @@
 #import "NSArray+GCWCalendarEvent.h"
-
 #import "GCWCalendarEvent.h"
+
+static NSString *const kCalendarEventKey = @"calendarWrapperCalendarEventKey";
+
 
 @implementation NSArray (GCWCalendarEvent)
 
@@ -12,10 +14,16 @@
     NSMutableArray *events = [NSMutableArray array];
     for (NSData *data in archive) {
         NSError *error = nil;
-        GCWCalendarEvent *event = [NSKeyedUnarchiver unarchivedObjectOfClass:GCWCalendarEvent.class fromData:data error:&error];
+        NSKeyedUnarchiver *secureDecoder = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
+
         if (error) {
             NSLog(@"NSArray: Unarchive event failed with error: %@", error);
         } else {
+            [secureDecoder setRequiresSecureCoding:YES];
+
+            NSSet *classes = [NSSet setWithObjects:GCWCalendarEvent.class, UIColor.class, nil];
+            GCWCalendarEvent *event = [secureDecoder decodeObjectOfClasses:classes forKey:kCalendarEventKey];
+
             [events addObject:event];
         }
     }
@@ -25,13 +33,14 @@
 - (NSArray *)archiveCalendarEvents {
     NSMutableArray *archiveArray = [NSMutableArray arrayWithCapacity:self.count];
     for (GCWCalendarEvent *event in self) {
-        NSError *error = nil;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:event requiringSecureCoding:YES error:&error];
-        if (error) {
-            NSLog(@"NSArray: Archive event failed with error: %@", error);
-        } else {
-            [archiveArray addObject:data];
-        }
+        NSKeyedArchiver *secureEncoder = [[NSKeyedArchiver alloc] initRequiringSecureCoding:YES];
+
+        [secureEncoder encodeObject:event forKey:kCalendarEventKey];
+        [secureEncoder finishEncoding];
+
+        NSData *data = [secureEncoder encodedData];
+
+        [archiveArray addObject:data];
     }
     return archiveArray;
 }
