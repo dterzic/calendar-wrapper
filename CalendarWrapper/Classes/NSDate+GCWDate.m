@@ -15,6 +15,17 @@
     return [[NSDate date] dateByAddingTimeInterval:(days * 86400)];
 }
 
+- (NSDate *)dateWithDaylightSavingOffset {
+    BOOL isDaylightSaving = [NSTimeZone.localTimeZone isDaylightSavingTimeForDate:self];
+
+    if (isDaylightSaving) {
+        NSInteger daylightSavingOffset = [NSTimeZone.localTimeZone daylightSavingTimeOffsetForDate:self];
+        return [self dateByAddingTimeInterval:daylightSavingOffset];
+    } else {
+        return self;
+    }
+}
+
 - (NSDate *)dateFromNumberOfMonth:(NSInteger)month {
     NSCalendar *calendar = [NSCalendar currentCalendar];
     NSDateComponents *dateComponents = [NSDateComponents new];

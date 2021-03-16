@@ -79,7 +79,7 @@
 }
 
 - (NSDate *)startDate {
-    return self.start.dateTime.date ? : self.start.date.date;
+    return [self.start.dateTime.date dateWithDaylightSavingOffset] ? : [self.start.date.date dateWithDaylightSavingOffset];
 }
 
 - (void)setStartDate:(NSDate *)startDate {
@@ -114,7 +114,7 @@
 }
 
 - (NSDate *)endDate {
-    return self.end.dateTime.date ? : self.end.date.date;
+    return [self.end.dateTime.date dateWithDaylightSavingOffset] ? : [self.end.date.date dateWithDaylightSavingOffset];
 }
 
 - (void)setEndDate:(NSDate *)endDate {
