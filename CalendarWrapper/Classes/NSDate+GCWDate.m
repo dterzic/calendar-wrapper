@@ -12,7 +12,10 @@
 }
 
 + (NSDate *)dateFromNumberOfDaysSinceNow:(NSInteger)days {
-    return [[NSDate date] dateByAddingTimeInterval:(days * 86400)];
+    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitDay
+                                                  value:days
+                                                 toDate:[NSDate date]
+                                                options:0];
 }
 
 - (NSDate *)dateWithDaylightSavingOffset {
@@ -34,7 +37,24 @@
 }
 
 - (NSDate *)dateFromNumberOfDays:(NSInteger)days {
-    return [self dateByAddingTimeInterval:(days * 86400)];
+    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitDay
+                                                  value:days
+                                                 toDate:self
+                                                options:0];
+}
+
+- (NSDate *)dateFromNumberOfHours:(NSInteger)hours {
+    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitHour
+                                                  value:hours
+                                                 toDate:self
+                                                options:0];
+}
+
+- (NSDate *)dateFromNumberOfSeconds:(NSInteger)seconds {
+    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitSecond
+                                                  value:seconds
+                                                 toDate:self
+                                                options:0];
 }
 
 - (NSDate *)dayOnly {
