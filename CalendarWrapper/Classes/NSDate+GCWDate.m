@@ -87,4 +87,11 @@
     return date ? [[NSCalendar currentCalendar] isDate:self inSameDayAsDate:date] : NO;
 }
 
+- (NSInteger)numberOfDaysUntil:(NSDate *)date {
+    NSDateComponents *startComponents = [NSCalendar.currentCalendar components:NSCalendarUnitDay fromDate:self];
+    NSDateComponents *endComponents = [NSCalendar.currentCalendar components:NSCalendarUnitDay fromDate:date];
+
+    return endComponents.day - startComponents.day;
+}
+
 @end

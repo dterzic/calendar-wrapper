@@ -22,5 +22,6 @@ typedef NS_ENUM(NSInteger, GCWCalendarDayType) {
 - (NSDate *)dateFromNumberOfHours:(NSInteger)hours;
 - (NSDate *)dateFromNumberOfSeconds:(NSInteger)seconds;
 - (NSDate *)dateWithDaylightSavingOffset;
+- (NSInteger)numberOfDaysUntil:(NSDate *)date;
 
 @end
