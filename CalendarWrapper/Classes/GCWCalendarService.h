@@ -19,6 +19,7 @@
 
 @optional
 
+@property (nonatomic, readonly) BOOL hasSignup;
 @property (nonatomic, readonly) NSDictionary *userAccounts;
 @property (nonatomic, readonly) NSDictionary *accountEntries;
 @property (nonatomic, readonly) NSDictionary *calendarEntries;

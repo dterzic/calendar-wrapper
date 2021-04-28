@@ -60,6 +60,10 @@ static NSUInteger daysInFuture = 45;
     return self.calendar.userAccounts;
 }
 
+- (BOOL)hasSignup {
+    return self.calendar.userAccounts.count > 0;
+}
+
 - (void)setCalendarListEntries:(NSDictionary *)calendarListEntries {
     self.calendar.calendarEntries = calendarListEntries;
 }
