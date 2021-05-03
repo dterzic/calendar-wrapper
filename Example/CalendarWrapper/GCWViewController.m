@@ -189,8 +189,8 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
     __weak GCWViewController *weakSelf = self;
     [self.calendar addEvent:event
                  toCalendar:self.defaultCalendarId
-                    success:^(NSString *eventId) {
-        weakSelf.calendarEventId = eventId;
+                    success:^(GCWCalendarEvent *event) {
+        weakSelf.calendarEventId = event.identifier;
         [weakSelf loadEvents];
         [weakSelf showAlertWithTitle:@"Info" description:@"Calendar event added!"];
     } failure:^(NSError *error) {

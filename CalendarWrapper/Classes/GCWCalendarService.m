@@ -223,7 +223,7 @@ static NSUInteger daysInFuture = 45;
                                    date:(NSDate *)date
                                duration:(NSInteger)duration
                      notificationPeriod:(NSNumber *)notificationPeriod
-                                success:(void (^)(NSString *))success
+                                success:(void (^)(GCWCalendarEvent *))success
                                 failure:(void (^)(NSError *))failure {
 
     NSNumber *period = (notificationPeriod != nil) ? notificationPeriod : self.calendar.notificationPeriod;
