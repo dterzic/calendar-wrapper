@@ -188,7 +188,7 @@ static NSUInteger daysInFuture = 45;
                       duration:(NSInteger)duration
             notificationPeriod:(NSNumber *)notificationPeriod
                      important:(BOOL)important
-                       success:(void (^)(NSString *))success
+                       success:(void (^)(GCWCalendarEvent *))success
                        failure:(void (^)(NSError *))failure {
 
     GCWCalendarEvent *newEvent = [self newEventForCalendar:calendarId
@@ -204,14 +204,11 @@ static NSUInteger daysInFuture = 45;
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent
                  toCalendar:calendarId
-                    success:^(NSString *eventId) {
-        newEvent.identifier = eventId;
-        newEvent.calendarId = calendarId;
-
+                    success:^(GCWCalendarEvent *event) {
         if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
-            [weakSelf.delegate calendarServiceDidCreateEvent:newEvent];
+            [weakSelf.delegate calendarServiceDidCreateEvent:event];
         }
-        success(eventId);
+        success(event);
     } failure:^(NSError *error) {
         failure(error);
     }];
@@ -242,14 +239,11 @@ static NSUInteger daysInFuture = 45;
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent
                         toCalendar:calendarId
-                           success:^(NSString *eventId) {
-        newEvent.identifier = eventId;
-        newEvent.calendarId = calendarId;
-
+                           success:^(GCWCalendarEvent *event) {
         if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
-            [weakSelf.delegate calendarServiceDidCreateEvent:newEvent];
+            [weakSelf.delegate calendarServiceDidCreateEvent:event];
         }
-        success(eventId);
+        success(event);
     } failure:^(NSError *error) {
         failure(error);
     }];
@@ -315,7 +309,7 @@ static NSUInteger daysInFuture = 45;
 }
 
 - (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *)events
-               success:(void (^)(void))success
+               success:(void (^)(NSArray<GCWCalendarEvent *> *))success
                failure:(void (^)(NSError *))failure {
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar batchAddEvents:events
@@ -325,7 +319,7 @@ static NSUInteger daysInFuture = 45;
                 [weakSelf.delegate calendarServiceDidCreateEvent:clonedEvent];
             }
         }
-        success();
+        success(clonedEvents);
     } failure:^(NSError *error) {
         failure(error);
     }];

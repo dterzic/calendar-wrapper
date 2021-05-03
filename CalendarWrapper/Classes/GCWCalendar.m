@@ -566,7 +566,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
 - (void)addEvent:(GCWCalendarEvent *)event
       toCalendar:(NSString *)calendarId
-         success:(void (^)(NSString *))success
+         success:(void (^)(GCWCalendarEvent *))success
          failure:(void (^)(NSError *))failure {
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
@@ -583,8 +583,9 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                          GTLRCalendar_Event *obj,
                                          NSError *callbackError) {
         GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+        event.calendarId = calendarId;
         if (callbackError == nil) {
-            success(event.identifier);
+            success(event);
         } else {
             failure(callbackError);
         }

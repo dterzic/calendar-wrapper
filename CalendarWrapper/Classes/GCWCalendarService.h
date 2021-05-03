@@ -8,10 +8,10 @@
 
 @optional
 
-- (void)calendarServiceDidCreateEvent:(GCWCalendarEvent *)event;
-- (void)calendarServiceDidUpdateEvent:(GCWCalendarEvent *)event;
-- (void)calendarServiceDidDeleteEvent:(NSString *)eventId forCalendar:(NSString *)calendarId;
-- (void)calendarServiceDidSyncEvent:(GCWCalendarEvent *)event;
+- (void)calendarServiceDidCreateEvent:(GCWCalendarEvent *_Nonnull)event;
+- (void)calendarServiceDidUpdateEvent:(GCWCalendarEvent *_Nonnull)event;
+- (void)calendarServiceDidDeleteEvent:(NSString *_Nonnull)eventId forCalendar:(NSString *_Nonnull)calendarId;
+- (void)calendarServiceDidSyncEvent:(GCWCalendarEvent *_Nonnull)event;
 
 @end
 
@@ -20,97 +20,97 @@
 @optional
 
 @property (nonatomic, readonly) BOOL hasSignup;
-@property (nonatomic, readonly) NSDictionary *userAccounts;
-@property (nonatomic, readonly) NSDictionary *accountEntries;
-@property (nonatomic, readonly) NSDictionary *calendarEntries;
-@property (nonatomic, readonly) NSArray *calendarEvents;
-@property (nonatomic) NSNumber *notificationPeriod;
+@property (nonatomic, readonly) NSDictionary *_Nullable userAccounts;
+@property (nonatomic, readonly) NSDictionary *_Nullable accountEntries;
+@property (nonatomic, readonly) NSDictionary *_Nullable calendarEntries;
+@property (nonatomic, readonly) NSArray *_Nullable calendarEvents;
+@property (nonatomic) NSNumber *_Nullable notificationPeriod;
 
-- (NSString *)getCalendarOwner:(NSString *)calendarId;
+- (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 
-- (GCWCalendarEvent *)getCalendarEventWithId:(NSString *)eventId calendarId:(NSString *)calendarId;
+- (GCWCalendarEvent *_Nullable)getCalendarEventWithId:(NSString *_Nonnull)eventId calendarId:(NSString *_Nullable)calendarId;
 
-- (void)setVisibility:(BOOL)visible forCalendar:(NSString *)calendarId;
+- (void)setVisibility:(BOOL)visible forCalendar:(NSString *_Nonnull)calendarId;
 
-- (BOOL)resumeAuthorizationFlowWithURL:(NSURL *)url;
+- (BOOL)resumeAuthorizationFlowWithURL:(NSURL *_Nonnull)url;
 
-- (void)loadAuthorizationsOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure;
+- (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)doLoginOnSuccess:(void (^)(void))success
-                 failure:(void (^)(NSError *))failure;
+- (void)doLoginOnSuccess:(void (^_Nonnull)(void))success
+                 failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadCalendarListOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure;
+- (void)loadCalendarListOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (GCWCalendarEvent *)newEventForCalendar:(NSString *)calendarId
-                                withTitle:(NSString *)title
-                                 location:(NSString *)location
-                  attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
-                              description:(NSString *)description
-                                     date:(NSDate *)date
+- (GCWCalendarEvent *_Nullable)newEventForCalendar:(NSString *_Nonnull)calendarId
+                                withTitle:(NSString *_Nonnull)title
+                                 location:(NSString *_Nullable)location
+                  attendeesEmailAddresses:(NSArray<NSString *> *_Nullable)attendeesEmailAddresses
+                              description:(NSString *_Nullable)description
+                                     date:(NSDate *_Nonnull)date
                                  duration:(NSInteger)duration
-                       notificationPeriod:(NSNumber *)notificationPeriod
+                       notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
                                 important:(BOOL)important;
 
-- (void)createEventForCalendar:(NSString *)calendarId
-                     withTitle:(NSString *)title
-                      location:(NSString *)location
-       attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
-                   description:(NSString *)description
-                          date:(NSDate *)date
+- (void)createEventForCalendar:(NSString *_Nonnull)calendarId
+                     withTitle:(NSString *_Nonnull)title
+                      location:(NSString *_Nullable)location
+       attendeesEmailAddresses:(NSArray<NSString *> *_Nullable)attendeesEmailAddresses
+                   description:(NSString *_Nullable)description
+                          date:(NSDate *_Nonnull)date
                       duration:(NSInteger)duration
-            notificationPeriod:(NSNumber *)notificationPeriod
+            notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
                      important:(BOOL)important
-                       success:(void (^)(NSString *))success
-                       failure:(void (^)(NSError *))failure;
+                       success:(void (^_Nonnull)(GCWCalendarEvent *_Nonnull))success
+                       failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)createRecurringEventForCalendar:(NSString *)calendarId
-                              withTitle:(NSString *)title
-                             recurrence:(NSArray<NSString *> *)recurrence
-                               location:(NSString *)location
-                attendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses
-                            description:(NSString *)description
-                                   date:(NSDate *)date
+- (void)createRecurringEventForCalendar:(NSString *_Nonnull)calendarId
+                              withTitle:(NSString *_Nonnull)title
+                             recurrence:(NSArray<NSString *> *_Nullable)recurrence
+                               location:(NSString *_Nullable)location
+                attendeesEmailAddresses:(NSArray<NSString *> *_Nullable)attendeesEmailAddresses
+                            description:(NSString *_Nullable)description
+                                   date:(NSDate *_Nonnull)date
                                duration:(NSInteger)duration
-                     notificationPeriod:(NSNumber *)notificationPeriod
-                                success:(void (^)(NSString *))success
-                                failure:(void (^)(NSError *))failure;
+                     notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
+                                success:(void (^_Nonnull)(GCWCalendarEvent *_Nonnull))success
+                                failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)updateEvent:(GTLRCalendar_Event *)event
-        forCalendar:(NSString *)calendarId
-            success:(void (^)(void))success
-            failure:(void (^)(NSError *))failure;
+- (void)updateEvent:(GTLRCalendar_Event *_Nonnull)event
+        forCalendar:(NSString *_Nonnull)calendarId
+            success:(void (^_Nonnull)(void))success
+            failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)deleteEvent:(NSString *)eventId
-       fromCalendar:(NSString *)calendarId
-            success:(void (^)(void))success
-            failure:(void (^)(NSError *))failure;
+- (void)deleteEvent:(NSString *_Nonnull)eventId
+       fromCalendar:(NSString *_Nonnull)calendarId
+            success:(void (^_Nonnull)(void))success
+            failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *)events
-               success:(void (^)(void))success
-               failure:(void (^)(NSError *))failure;
+- (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *_Nonnull)events
+               success:(void (^_Nonnull)(NSArray<GCWCalendarEvent *> *_Nonnull))success
+               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *)events
-                  success:(void (^)(void))success
-                  failure:(void (^)(NSError *))failure;
+- (void)batchUpdateEvents:(NSArray <GCWCalendarEvent *> *_Nonnull)events
+                  success:(void (^_Nonnull)(void))success
+                  failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)batchDeleteEvents:(NSArray <NSString *> *)eventIds
-            fromCalendars:(NSArray <NSString *> *)calendarIds
-                  success:(void (^)(void))success
-                  failure:(void (^)(NSError *))failure;
+- (void)batchDeleteEvents:(NSArray <NSString *> *_Nonnull)eventIds
+            fromCalendars:(NSArray <NSString *> *_Nonnull)calendarIds
+                  success:(void (^_Nonnull)(void))success
+                  failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadEventsOnSuccess:(void (^)(NSArray <GCWCalendarEvent *> *events, NSDictionary *calendarList))success
-                    failure:(void (^)(NSError *))failure;
+- (void)loadEventsOnSuccess:(void (^_Nonnull)(NSArray <GCWCalendarEvent *> *_Nullable events, NSDictionary *_Nullable calendarList))success
+                    failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure;
+- (void)syncEventsOnSuccess:(void (^_Nonnull)(BOOL))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadEventForCalendar:(NSString *)calendarId
-                     eventId:(NSString *)eventId
-                     success:(void (^)(GCWCalendarEvent *))success
-                     failure:(void (^)(NSError *))failure;
+- (void)loadEventForCalendar:(NSString *_Nonnull)calendarId
+                     eventId:(NSString *_Nonnull)eventId
+                     success:(void (^_Nonnull)(GCWCalendarEvent *_Nullable))success
+                     failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadRecurringEventsFor:(NSArray <GCWCalendarEvent *> *)events
-                       success:(void (^)(NSArray <GCWCalendarEvent *> *))success
-                       failure:(void (^)(NSError *))failure;
+- (void)loadRecurringEventsFor:(NSArray <GCWCalendarEvent *> *_Nonnull)events
+                       success:(void (^_Nonnull)(NSArray <GCWCalendarEvent *> *_Nullable))success
+                       failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)saveState;
 
@@ -119,10 +119,10 @@
 
 @interface GCWCalendarService : NSObject
 
-@property (nonatomic, weak) id<CalendarServiceDelegate> delegate;
+@property (nonatomic, weak, nullable) id<CalendarServiceDelegate> delegate;
 
-- (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController
-                                        delegate:(id<CalendarServiceDelegate>)delegate
-                                        calendar:(GCWCalendar *)calendar;
+- (instancetype _Nonnull)initWithPresentingViewController:(UIViewController *_Nonnull)presentingViewController
+                                        delegate:(id<CalendarServiceDelegate>_Nullable)delegate
+                                        calendar:(GCWCalendar *_Nullable)calendar;
 
 @end

@@ -66,7 +66,7 @@
 
 - (void)addEvent:(GCWCalendarEvent *_Nonnull)event
       toCalendar:(NSString *_Nonnull)calendarId
-         success:(void (^_Nullable)(NSString *_Nonnull))success
+         success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)deleteEvent:(NSString *_Nonnull)eventId
