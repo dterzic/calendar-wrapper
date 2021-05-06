@@ -24,7 +24,7 @@ static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey
 static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTokensKey";
 static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperCalendarEventsNotificationPeriodKey";
 
-@interface GCWCalendar ()
+@interface GCWCalendar () <OIDAuthStateChangeDelegate>
 
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
@@ -133,6 +133,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
         if ([self.authorizationManager canAuthorizeWithAuthorizationFromKeychain:keychainKey]) {
             GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
+            authorization.fetcherAuthorization.authState.stateChangeDelegate = self;
+
             [self loadUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                 NSString *userName = [userInfo valueForKey:@"name"];
                 if (userName && ![self.userAccounts valueForKey:userID]) {
@@ -214,9 +216,12 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                                        callback:^(OIDAuthState *_Nullable authState, NSError *_Nullable error) {
             if (authState) {
                 GTMAppAuthFetcherAuthorization *fetcherAuthorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
+                fetcherAuthorization.authState.stateChangeDelegate = self;
+
                 GCWCalendarAuthorization *authorization = [[GCWCalendarAuthorization alloc] initWithFetcherAuthorization:fetcherAuthorization];
                 [self.authorizationManager saveAuthorization:authorization
                                                   toKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
+                
                 [self loadUserInfoForAuthorization:authorization success:^(NSDictionary *userInfo) {
                     NSString *userName = [userInfo valueForKey:@"name"];
                     if (userName && ![self.userAccounts valueForKey:authorization.userID]) {
@@ -794,6 +799,17 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                              }
                          }];
     }
+}
+
+#pragma mark  - OIDAuthStateChangeDelegate
+
+- (void)didChangeState:(OIDAuthState *)state {
+    GTMAppAuthFetcherAuthorization *fetcherAuthorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:state];
+    fetcherAuthorization.authState.stateChangeDelegate = self;
+
+    GCWCalendarAuthorization *authorization = [[GCWCalendarAuthorization alloc] initWithFetcherAuthorization:fetcherAuthorization];
+    [self.authorizationManager saveAuthorization:authorization
+                                      toKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
 }
 
 @end
