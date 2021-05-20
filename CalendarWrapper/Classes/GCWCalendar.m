@@ -29,7 +29,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
-@property (nonatomic) NSMutableDictionary *calendarSyncTokens;
 @property (nonatomic) NSUserDefaults *userDefaults;
 
 @end

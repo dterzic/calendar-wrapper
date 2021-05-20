@@ -421,6 +421,11 @@ static NSUInteger daysInFuture = 45;
     [self.calendar saveState];
 }
 
+- (void)clearEventsCache {
+    [self.calendar.calendarEvents removeAllObjects];
+    [self.calendar.calendarSyncTokens removeAllObjects];
+}
+
 #pragma mark - Private
 
 - (void)removeEventFromCache:(NSString *)eventId {

@@ -114,6 +114,8 @@
 
 - (void)saveState;
 
+- (void)clearEventsCache;
+
 @end
 
 
