@@ -16,6 +16,7 @@
 @property (nonatomic, strong, nullable) id<CalendarAuthorizationProtocol> authorizationManager;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
+@property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 @property (nonatomic) NSNumber *_Nonnull notificationPeriod;
@@ -52,12 +53,10 @@
                      success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
                      failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)loadEventsListForCalendar:(NSString *_Nonnull)calendarId
-                        startDate:(NSDate *_Nonnull)startDate
-                          endDate:(NSDate *_Nonnull)endDate
-                       maxResults:(NSUInteger)maxResults
-                          success:(void (^_Nullable)(NSDictionary *_Nonnull))success
-                          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
+                        to:(NSDate *_Nonnull)endDate
+                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull))success
+                   failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate

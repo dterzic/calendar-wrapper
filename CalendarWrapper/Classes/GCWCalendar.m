@@ -10,6 +10,7 @@
 #import "GCWCalendarAuthorization.h"
 #import "GCWUserAccount.h"
 
+#import "NSDate+GCWDate.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "UIColor+MNTColor.h"
@@ -29,7 +30,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
-@property (nonatomic) NSMutableDictionary *calendarSyncTokens;
 @property (nonatomic) NSUserDefaults *userDefaults;
 
 @end
@@ -448,42 +448,85 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }];
 }
 
-- (void)loadEventsListForCalendar:(NSString *)calendarId
-                        startDate:(NSDate *)startDate
-                          endDate:(NSDate *)endDate
-                       maxResults:(NSUInteger)maxResults
-                          success:(void (^)(NSDictionary *))success
-                          failure:(void (^)(NSError *))failure {
+- (void)loadEventsListFrom:(NSDate *)startDate
+                        to:(NSDate *)endDate
+                   success:(void (^)(NSDictionary *, NSArray *))success
+                   failure:(void (^)(NSError *))failure {
 
-    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
-    if (!authorization) {
-        failure([GCWCalendar createErrorWithCode:-10002
-                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
-        return;
-    }
-    self.calendarService.authorizer = authorization.fetcherAuthorization;
-
-    GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendarId];
-    if (maxResults > 0) {
-        query.maxResults = maxResults;
-    }
-    query.singleEvents = true;
-    query.timeMin = [GTLRDateTime dateTimeWithDate:startDate];
-    query.timeMax = [GTLRDateTime dateTimeWithDate:endDate];
-    query.orderBy = kGTLRCalendarOrderByStartTime;
-    [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
-        if (callbackError) {
-            failure(callbackError);
-        } else {
-            NSMutableDictionary *events = [NSMutableDictionary dictionary];
-            GTLRCalendar_Events *list = object;
-            [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
-                events[event.identifier] = event;
-            }];
-            success(events.copy);
+    NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
+    NSMutableDictionary *loadedEvents = [NSMutableDictionary dictionary];
+    __block NSUInteger calendarIndex = 0;
+    for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+        if (!authorization) {
+            failure([GCWCalendar createErrorWithCode:-10002
+                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            return;
         }
-    }];
+        self.calendarService.authorizer = authorization.fetcherAuthorization;
+        
+        GTLRCalendarQuery_EventsList *query = [GTLRCalendarQuery_EventsList queryWithCalendarId:calendar.identifier];
+        query.maxResults = 2500;
+        query.singleEvents = true;
+        query.timeMin = [GTLRDateTime dateTimeWithDate:startDate];
+        query.timeMax = [GTLRDateTime dateTimeWithDate:endDate];
+        query.orderBy = kGTLRCalendarOrderByStartTime;
+        [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+            if (callbackError) {
+                failure(callbackError);
+            } else {
+                GTLRCalendar_Events *list = object;
+                [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                    event.calendarId = calendar.identifier;
+
+                    if ([event.status isEqualToString:@"cancelled"]) {
+                        [self.calendarEvents removeObjectForKey:event.identifier];
+                        removedEvents[event.identifier] = event;
+                    } else if ([event.startDate isLaterThanOrEqualTo:startDate] &&
+                               [event.endDate isEarlierThanOrEqualTo:endDate]) {
+                        event.color = [UIColor colorWithHex:calendar.backgroundColor];
+
+                        id item = self.calendarEvents[event.identifier];
+
+                        if ([item isKindOfClass:NSDictionary.class]) {
+                            NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                            GCWCalendarEvent *cachedEvent = items[calendar.identifier];
+
+                            // Keep attributes from cached object
+                            if (cachedEvent) {
+                                event.isImportant = cachedEvent.isImportant;
+                            }
+                            items[calendar.identifier] = event;
+
+                            self.calendarEvents[event.identifier] = items.copy;
+                        } else {
+                            GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+
+                            if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                                // Keep attributes from cached object
+                                if (cachedEvent) {
+                                    event.isImportant = cachedEvent.isImportant;
+                                }
+                                self.calendarEvents[event.identifier] = event;
+                            } else {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                                items[event.calendarId] = event;
+                                items[cachedEvent.calendarId] = cachedEvent;
+
+                                self.calendarEvents[event.identifier] = items.copy;
+                            }
+                        }
+                        loadedEvents[event.identifier] = event;
+                    }
+                }];
+                if (calendarIndex == self.calendarEntries.count-1) {
+                    success(loadedEvents, removedEvents.allValues);
+                }
+                calendarIndex++;
+            }
+        }];
+    }
 }
 
 - (void)syncEventsFrom:(NSDate *)startDate
@@ -509,8 +552,9 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 if (callbackError.code == 410) {
-                    // In case token expire, remove it from cache
+                    // In case token expire, remove it from cache and wipe events cache.
                     [self.calendarSyncTokens removeObjectForKey:calendar.identifier];
+                    [self.calendarEvents removeAllObjects];
                 }
                 failure(callbackError);
             } else {
@@ -522,8 +566,10 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
                         removedEvents[event.identifier] = event;
-                    } else if ([startDate compare:event.startDate] == NSOrderedAscending &&
-                        [endDate compare:event.endDate] == NSOrderedDescending) {
+                    } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
+                               [event.endDate isEarlierThanOrEqualTo:endDate]) ||
+                               //event.isAllDay ||
+                               abs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
                         id item = self.calendarEvents[event.identifier];

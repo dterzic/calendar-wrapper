@@ -4,20 +4,6 @@
 
 @implementation NSDate (GCWDate)
 
-+ (NSDate *)dateFromNumberOfMonthSinceNow:(NSInteger)month {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDateComponents *dateComponents = [NSDateComponents new];
-    dateComponents.month = month;
-    return [calendar dateByAddingComponents:dateComponents toDate:[NSDate date] options:NSCalendarMatchStrictly];
-}
-
-+ (NSDate *)dateFromNumberOfDaysSinceNow:(NSInteger)days {
-    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitDay
-                                                  value:days
-                                                 toDate:[NSDate date]
-                                                options:0];
-}
-
 - (NSDate *)dateWithDaylightSavingOffset {
     BOOL isDaylightSaving = [NSTimeZone.localTimeZone isDaylightSavingTimeForDate:self];
 
@@ -27,20 +13,6 @@
     } else {
         return self;
     }
-}
-
-- (NSDate *)dateFromNumberOfMonth:(NSInteger)month {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDateComponents *dateComponents = [NSDateComponents new];
-    dateComponents.month = month;
-    return [calendar dateByAddingComponents:dateComponents toDate:self options:NSCalendarMatchStrictly];
-}
-
-- (NSDate *)dateFromNumberOfDays:(NSInteger)days {
-    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitDay
-                                                  value:days
-                                                 toDate:self
-                                                options:0];
 }
 
 - (NSDate *)dateFromNumberOfHours:(NSInteger)hours {
@@ -85,6 +57,23 @@
 
 - (BOOL)inSameDayAsDate:(NSDate *)date {
     return date ? [[NSCalendar currentCalendar] isDate:self inSameDayAsDate:date] : NO;
+}
+
+-(BOOL) isLaterThanOrEqualTo:(NSDate*)date {
+    return !([self compare:date] == NSOrderedAscending);
+}
+
+-(BOOL) isEarlierThanOrEqualTo:(NSDate*)date {
+    return !([self compare:date] == NSOrderedDescending);
+}
+
+-(BOOL) isLaterThan:(NSDate*)date {
+    return ([self compare:date] == NSOrderedDescending);
+
+}
+
+-(BOOL) isEarlierThan:(NSDate*)date {
+    return ([self compare:date] == NSOrderedAscending);
 }
 
 - (NSInteger)numberOfDaysUntil:(NSDate *)date {

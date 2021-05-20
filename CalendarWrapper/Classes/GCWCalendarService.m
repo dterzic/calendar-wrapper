@@ -7,10 +7,9 @@
 #import "NSDate+GCWDate.h"
 #import "UIColor+MNTColor.h"
 
+
 static NSString * const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey";
-static NSUInteger daysInPast = -15;
-static NSUInteger daysInFuture = 45;
 
 @interface GCWCalendarService () <CalendarServiceProtocol>
 
@@ -132,9 +131,24 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
-- (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure {
-    NSDate *startDate = [NSDate dateFromNumberOfDaysSinceNow:daysInPast];
-    NSDate *endDate = [NSDate dateFromNumberOfDaysSinceNow:daysInFuture];
+- (void)loadEventsListFrom:(NSDate *)startDate
+                        to:(NSDate *)endDate
+                   success:(void (^)(BOOL))success
+                   failure:(void (^)(NSError * _Nonnull))failure {
+    
+    __weak GCWCalendarService *weakSelf = self;
+    [self.calendar loadEventsListFrom:startDate to:endDate
+                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents) {
+        success(loadedEvents.count > 0 || removedEvents.count > 0);
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)syncEventsFrom:(NSDate *)startDate
+                    to:(NSDate *)endDate
+               success:(void (^)(BOOL))success
+               failure:(void (^)(NSError *))failure {
 
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents) {
@@ -419,6 +433,11 @@ static NSUInteger daysInFuture = 45;
 
 - (void)saveState {
     [self.calendar saveState];
+}
+
+- (void)clearEventsCache {
+    [self.calendar.calendarEvents removeAllObjects];
+    [self.calendar.calendarSyncTokens removeAllObjects];
 }
 
 #pragma mark - Private

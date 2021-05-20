@@ -98,10 +98,15 @@
                   success:(void (^_Nonnull)(void))success
                   failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadEventsOnSuccess:(void (^_Nonnull)(NSArray <GCWCalendarEvent *> *_Nullable events, NSDictionary *_Nullable calendarList))success
-                    failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
+                        to:(NSDate *_Nonnull)endDate
+                   success:(void (^_Nullable)(BOOL))success
+                   failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)syncEventsOnSuccess:(void (^_Nonnull)(BOOL))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (void)syncEventsFrom:(NSDate *_Nonnull)startDate
+                    to:(NSDate *_Nonnull)endDate
+               success:(void (^_Nonnull)(BOOL))success
+               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)loadEventForCalendar:(NSString *_Nonnull)calendarId
                      eventId:(NSString *_Nonnull)eventId
@@ -113,6 +118,8 @@
                        failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)saveState;
+
+- (void)clearEventsCache;
 
 @end
 
