@@ -80,7 +80,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         } else {
             self.notificationPeriod = @(10);
         }
-        NSLog(@"LOADED: %lu calendars and %lu events.", (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
+        NSLog(@"LOADED: %lu calendars and %lu events.", (unsigned long)self.calendarEntries.count, (unsigned long)eventsArchive.count);
 
         self.clientId = clientId;
         self.presentingViewController = viewController;
@@ -182,7 +182,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     NSArray *archive = [self.calendarEvents archiveCalendarEvents];
     [archive writeToFile:filePath atomically:YES];
 
-    NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", (unsigned long)userIDs.count, (unsigned long)self.calendarEntries.count, (unsigned long)self.calendarEvents.count);
+    NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", (unsigned long)userIDs.count, (unsigned long)self.calendarEntries.count, (unsigned long)archive.count);
 }
 
 - (void)doLoginOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
@@ -529,6 +529,31 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }
 }
 
+- (NSArray *)getFetchedEventsBefore:(NSDate *)startDate andAfter:(NSDate *)endDate {
+    NSMutableArray *events = [NSMutableArray array];
+    [self.calendarEvents enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        if ([obj isKindOfClass:NSDictionary.class]) {
+            NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)obj];
+            [items enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                if (([event.startDate isEarlierThan:startDate] ||
+                     [event.endDate isLaterThan:endDate]) &&
+                    abs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
+                    [events addObject:event.identifier];
+                }
+            }];
+        } else {
+            GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+            if (([event.startDate isEarlierThan:startDate] ||
+                 [event.endDate isLaterThan:endDate]) &&
+                abs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
+                [events addObject:event.identifier];
+            }
+        }
+    }];
+    return [events copy];
+}
+
 - (void)syncEventsFrom:(NSDate *)startDate
                     to:(NSDate *)endDate
                success:(void (^)(NSDictionary *, NSArray *))success
@@ -567,8 +592,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                         [self.calendarEvents removeObjectForKey:event.identifier];
                         removedEvents[event.identifier] = event;
                     } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
-                               [event.endDate isEarlierThanOrEqualTo:endDate]) ||
-                               //event.isAllDay ||
+                                [event.endDate isEarlierThanOrEqualTo:endDate]) ||
                                abs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 

@@ -121,6 +121,10 @@
 
 - (void)clearEventsCache;
 
+- (void)clearFetchedEventsBefore:(NSDate *_Nonnull)startDate
+                           after:(NSDate *_Nonnull)endDate
+                       completed:(void (^_Nonnull)(void))completed;
+
 @end
 
 

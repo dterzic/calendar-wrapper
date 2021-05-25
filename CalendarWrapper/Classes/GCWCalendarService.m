@@ -440,6 +440,17 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar.calendarSyncTokens removeAllObjects];
 }
 
+- (void)clearFetchedEventsBefore:(NSDate *)startDate
+                           after:(NSDate *)endDate
+                       completed:(void (^)(void))completed {
+    NSArray *events = [self.calendar getFetchedEventsBefore:startDate andAfter:endDate];
+    [events enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSString *eventId = (NSString *)obj;
+        [self removeEventFromCache:eventId];
+    }];
+    completed();
+}
+
 #pragma mark - Private
 
 - (void)removeEventFromCache:(NSString *)eventId {
