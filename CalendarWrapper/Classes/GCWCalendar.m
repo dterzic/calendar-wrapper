@@ -169,7 +169,17 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     NSMutableArray *userIDs = [NSMutableArray array];
     NSArray *authorizations = [self.authorizationManager getAuthorizations];
     [authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
-        [userIDs addObject: authorization.userID];
+        __block BOOL found = NO;
+        [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            NSString *userID = (GCWCalendarAuthorization *)obj;
+            if ([userID isEqualToString:authorization.userID]) {
+                found = YES;
+                *stop = YES;
+            }
+        }];
+        if (!found) {
+            [userIDs addObject: authorization.userID];
+        }
     }];
     [self.userDefaults setObject:userIDs forKey:kUserIDs];
     [self.userDefaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
@@ -483,8 +493,9 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
                         removedEvents[event.identifier] = event;
-                    } else if ([event.startDate isLaterThanOrEqualTo:startDate] &&
-                               [event.endDate isEarlierThanOrEqualTo:endDate]) {
+                    } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
+                                [event.endDate isEarlierThanOrEqualTo:endDate]) ||
+                               abs([event.startDate numberOfDaysUntil:event.endDate]) == 1) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
                         id item = self.calendarEvents[event.identifier];

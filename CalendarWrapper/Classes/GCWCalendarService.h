@@ -100,7 +100,7 @@
 
 - (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
                         to:(NSDate *_Nonnull)endDate
-                   success:(void (^_Nullable)(BOOL))success
+                   success:(void (^_Nullable)(NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate

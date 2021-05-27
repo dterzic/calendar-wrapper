@@ -77,10 +77,11 @@
 }
 
 - (NSInteger)numberOfDaysUntil:(NSDate *)date {
-    NSDateComponents *startComponents = [NSCalendar.currentCalendar components:NSCalendarUnitDay fromDate:self];
-    NSDateComponents *endComponents = [NSCalendar.currentCalendar components:NSCalendarUnitDay fromDate:date];
-
-    return endComponents.day - startComponents.day;
+    NSDateComponents *components = [NSCalendar.currentCalendar components:NSCalendarUnitDay
+                                                                 fromDate:self
+                                                                   toDate:date
+                                                                  options:0];
+    return components.day;
 }
 
 @end
