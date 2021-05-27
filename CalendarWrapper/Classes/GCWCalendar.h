@@ -58,7 +58,7 @@
                    success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (NSArray *)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;
+- (NSArray *_Nonnull)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate
