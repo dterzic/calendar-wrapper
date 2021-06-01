@@ -100,6 +100,7 @@
 
 - (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
                         to:(NSDate *_Nonnull)endDate
+                    filter:(NSString *_Nullable)filter
                    success:(void (^_Nullable)(NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 

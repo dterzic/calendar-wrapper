@@ -460,9 +460,11 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
 - (void)loadEventsListFrom:(NSDate *)startDate
                         to:(NSDate *)endDate
-                   success:(void (^)(NSDictionary *, NSArray *))success
+                    filter:(NSString *)filter
+                   success:(void (^)(NSDictionary *, NSArray *, NSUInteger))success
                    failure:(void (^)(NSError *))failure {
 
+    __block NSUInteger filteredEventsCount = 0;
     NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
     NSMutableDictionary *loadedEvents = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
@@ -490,6 +492,9 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
                     event.calendarId = calendar.identifier;
 
+                    if (filter.length && [event.JSONString.lowercaseString containsString:filter.lowercaseString]) {
+                        filteredEventsCount++;
+                    }
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
                         removedEvents[event.identifier] = event;
@@ -532,7 +537,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     }
                 }];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success(loadedEvents, removedEvents.allValues);
+                    success(loadedEvents, removedEvents.allValues, filteredEventsCount);
                 }
                 calendarIndex++;
             }

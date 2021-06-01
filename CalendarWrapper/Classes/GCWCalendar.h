@@ -55,7 +55,8 @@
 
 - (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
                         to:(NSDate *_Nonnull)endDate
-                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull))success
+                    filter:(NSString *_Nullable)filter
+                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (NSArray *_Nonnull)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;

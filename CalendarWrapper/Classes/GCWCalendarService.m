@@ -133,13 +133,18 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 - (void)loadEventsListFrom:(NSDate *)startDate
                         to:(NSDate *)endDate
+                    filter:(NSString *)filter
                    success:(void (^)(NSUInteger))success
                    failure:(void (^)(NSError * _Nonnull))failure {
     
     __weak GCWCalendarService *weakSelf = self;
-    [self.calendar loadEventsListFrom:startDate to:endDate
-                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents) {
-        success(loadedEvents.count + removedEvents.count);
+    [self.calendar loadEventsListFrom:startDate to:endDate filter:filter
+                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount) {
+        if (filter.length) {
+            success(filteredEventsCount);
+        } else {
+            success(loadedEvents.count + removedEvents.count);
+        }
     } failure:^(NSError *error) {
         failure(error);
     }];
@@ -461,7 +466,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 - (void)removeRecurringEvent:(NSString *)recurringEventId {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"recurringEventId == %@", recurringEventId];
     NSArray *filteredArray = [self.calendar.calendarEvents.allValues filteredArrayUsingPredicate:predicate];
-
     if (filteredArray.count) {
         for (GCWCalendarEvent *event in filteredArray) {
             [self.calendar.calendarEvents removeObjectForKey:event.identifier];
