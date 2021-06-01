@@ -171,7 +171,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     [authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization * _Nonnull authorization, NSUInteger idx, BOOL * _Nonnull stop) {
         __block BOOL found = NO;
         [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            NSString *userID = (GCWCalendarAuthorization *)obj;
+            NSString *userID = (NSString *)obj;
             if ([userID isEqualToString:authorization.userID]) {
                 found = YES;
                 *stop = YES;
@@ -500,7 +500,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                         removedEvents[event.identifier] = event;
                     } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
                                 [event.endDate isEarlierThanOrEqualTo:endDate]) ||
-                               abs([event.startDate numberOfDaysUntil:event.endDate]) == 1) {
+                               labs([event.startDate numberOfDaysUntil:event.endDate]) == 1) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
                         id item = self.calendarEvents[event.identifier];
@@ -554,7 +554,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
                 if (([event.startDate isEarlierThan:startDate] ||
                      [event.endDate isLaterThan:endDate]) &&
-                    abs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
+                    labs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
                     [events addObject:event.identifier];
                 }
             }];
@@ -562,7 +562,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
             if (([event.startDate isEarlierThan:startDate] ||
                  [event.endDate isLaterThan:endDate]) &&
-                abs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
+                labs([event.startDate numberOfDaysUntil:event.endDate]) <= 1) {
                 [events addObject:event.identifier];
             }
         }
@@ -609,7 +609,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                         removedEvents[event.identifier] = event;
                     } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
                                 [event.endDate isEarlierThanOrEqualTo:endDate]) ||
-                               abs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
+                               labs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
                         id item = self.calendarEvents[event.identifier];

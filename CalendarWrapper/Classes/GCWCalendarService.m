@@ -137,7 +137,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                    success:(void (^)(NSUInteger))success
                    failure:(void (^)(NSError * _Nonnull))failure {
     
-    __weak GCWCalendarService *weakSelf = self;
     [self.calendar loadEventsListFrom:startDate to:endDate filter:filter
                               success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount) {
         if (filter.length) {
