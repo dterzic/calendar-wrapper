@@ -491,7 +491,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                     GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
                     event.calendarId = calendar.identifier;
-
                     if (filter.length && [event.JSONString.lowercaseString containsString:filter.lowercaseString]) {
                         filteredEventsCount++;
                     }
