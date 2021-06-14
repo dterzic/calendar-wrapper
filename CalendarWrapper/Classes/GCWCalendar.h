@@ -6,6 +6,7 @@
 @class GTLRCalendarService;
 @class GCWCalendarEvent;
 @class GCWCalendarAuthorization;
+@class GCWLoadEventsListRequest;
 
 @protocol CalendarAuthorizationProtocol;
 
@@ -17,6 +18,7 @@
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
+@property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 @property (nonatomic) NSNumber *_Nonnull notificationPeriod;
@@ -53,12 +55,15 @@
                      success:(void (^_Nullable)(GCWCalendarEvent *_Nonnull))success
                      failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
-- (void)loadEventsListForCalendar:(NSString *_Nonnull)calendarId
-                        startDate:(NSDate *_Nonnull)startDate
-                          endDate:(NSDate *_Nonnull)endDate
-                       maxResults:(NSUInteger)maxResults
-                          success:(void (^_Nullable)(NSDictionary *_Nonnull))success
-                          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+- (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
+                        to:(NSDate *_Nonnull)endDate
+                    filter:(NSString *_Nullable)filter
+                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger))success
+                   failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (GCWLoadEventsListRequest *_Nullable)createEventsListRequest;
+
+- (NSArray *_Nonnull)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate

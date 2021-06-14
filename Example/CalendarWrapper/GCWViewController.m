@@ -141,12 +141,11 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
 
 - (void)loadEvents {
     __weak GCWViewController *weakSelf = self;
-    [self.calendar loadEventsListForCalendar:self.defaultCalendarId
-                                   startDate:[NSDate date]
-                                     endDate:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
-                                  maxResults:0
-                                     success:^(NSDictionary *events) {
-        self.events = events;
+    [self.calendar loadEventsListFrom:[NSDate date]
+                                   to:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
+                               filter:nil
+                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger fetchedCound) {
+        self.events = loadedEvents;
         [weakSelf.eventsTable reloadData];
     } failure:^(NSError *error) {
         if (error.code == 1001) {

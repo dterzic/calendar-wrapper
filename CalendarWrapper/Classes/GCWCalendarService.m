@@ -1,16 +1,17 @@
 #import "GCWCalendarService.h"
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
+#import "GCWLoadEventsListRequest.h"
+
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "NSArray+GCWEventsSorting.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDate+GCWDate.h"
 #import "UIColor+MNTColor.h"
 
+
 static NSString * const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey";
-static NSUInteger daysInPast = -15;
-static NSUInteger daysInFuture = 45;
 
 @interface GCWCalendarService () <CalendarServiceProtocol>
 
@@ -132,9 +133,32 @@ static NSUInteger daysInFuture = 45;
     }];
 }
 
-- (void)syncEventsOnSuccess:(void (^)(BOOL))success failure:(void (^)(NSError *))failure {
-    NSDate *startDate = [NSDate dateFromNumberOfDaysSinceNow:daysInPast];
-    NSDate *endDate = [NSDate dateFromNumberOfDaysSinceNow:daysInFuture];
+- (void)loadEventsListFrom:(NSDate *)startDate
+                        to:(NSDate *)endDate
+                    filter:(NSString *)filter
+                   success:(void (^)(NSUInteger))success
+                   failure:(void (^)(NSError * _Nonnull))failure {
+    
+    [self.calendar loadEventsListFrom:startDate to:endDate filter:filter
+                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount) {
+        if (filter.length) {
+            success(filteredEventsCount);
+        } else {
+            success(loadedEvents.count + removedEvents.count);
+        }
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (GCWLoadEventsListRequest *)createEventsListRequest {
+    return [self.calendar createEventsListRequest];
+}
+
+- (void)syncEventsFrom:(NSDate *)startDate
+                    to:(NSDate *)endDate
+               success:(void (^)(BOOL))success
+               failure:(void (^)(NSError *))failure {
 
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents) {
@@ -426,6 +450,14 @@ static NSUInteger daysInFuture = 45;
     [self.calendar.calendarSyncTokens removeAllObjects];
 }
 
+- (void)clearFetchedEventsBefore:(NSDate *)startDate after:(NSDate *)endDate {
+    NSArray *events = [self.calendar getFetchedEventsBefore:startDate andAfter:endDate];
+    [events enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSString *eventId = (NSString *)obj;
+        [self.calendar.calendarEvents removeObjectForKey:eventId];
+    }];
+}
+
 #pragma mark - Private
 
 - (void)removeEventFromCache:(NSString *)eventId {
@@ -436,7 +468,6 @@ static NSUInteger daysInFuture = 45;
 - (void)removeRecurringEvent:(NSString *)recurringEventId {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"recurringEventId == %@", recurringEventId];
     NSArray *filteredArray = [self.calendar.calendarEvents.allValues filteredArrayUsingPredicate:predicate];
-
     if (filteredArray.count) {
         for (GCWCalendarEvent *event in filteredArray) {
             [self.calendar.calendarEvents removeObjectForKey:event.identifier];
