@@ -3,6 +3,7 @@
 @class GCWCalendar;
 @class GTLRCalendar_Event;
 @class GCWCalendarEvent;
+@class GCWLoadEventsListRequest;
 
 @protocol CalendarServiceDelegate <NSObject>
 
@@ -103,6 +104,8 @@
                     filter:(NSString *_Nullable)filter
                    success:(void (^_Nullable)(NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (GCWLoadEventsListRequest *_Nullable)createEventsListRequest;
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate

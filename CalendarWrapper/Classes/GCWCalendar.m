@@ -9,6 +9,7 @@
 #import "GCWCalendarAuthorizationManager.h"
 #import "GCWCalendarAuthorization.h"
 #import "GCWUserAccount.h"
+#import "GCWLoadEventsListRequest.h"
 
 #import "NSDate+GCWDate.h"
 #import "NSDictionary+GCWCalendar.h"
@@ -536,12 +537,18 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     }
                 }];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success(loadedEvents, removedEvents.allValues, filteredEventsCount);
+                    success([loadedEvents copy], removedEvents.allValues, filteredEventsCount);
                 }
                 calendarIndex++;
             }
         }];
     }
+}
+
+- (GCWLoadEventsListRequest *)createEventsListRequest {
+    return [[GCWLoadEventsListRequest alloc] initWithCalendarEntries:self.calendarEntries
+                                                authorizationManager:self.authorizationManager
+                                                       calendarUsers:self.calendarUsers];
 }
 
 - (NSArray *)getFetchedEventsBefore:(NSDate *)startDate andAfter:(NSDate *)endDate {
@@ -592,11 +599,15 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 if (callbackError.code == 410) {
-                    // In case token expire, remove it from cache and wipe events cache.
-                    [self.calendarSyncTokens removeObjectForKey:calendar.identifier];
+                    // In case sync token expires wipe all tokens and events cache.
+                    [self.calendarSyncTokens removeAllObjects];
                     [self.calendarEvents removeAllObjects];
+                    failure(callbackError);
+                    return;
                 }
-                failure(callbackError);
+                else {
+                    failure(callbackError);
+                }
             } else {
                 GTLRCalendar_Events *list = object;
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -646,7 +657,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success(syncedEvents, removedEvents.allValues);
+                    success([syncedEvents copy], removedEvents.allValues);
                 }
                 calendarIndex++;
             }

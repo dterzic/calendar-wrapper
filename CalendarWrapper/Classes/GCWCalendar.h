@@ -6,6 +6,7 @@
 @class GTLRCalendarService;
 @class GCWCalendarEvent;
 @class GCWCalendarAuthorization;
+@class GCWLoadEventsListRequest;
 
 @protocol CalendarAuthorizationProtocol;
 
@@ -58,6 +59,8 @@
                     filter:(NSString *_Nullable)filter
                    success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (GCWLoadEventsListRequest *_Nullable)createEventsListRequest;
 
 - (NSArray *_Nonnull)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;
 

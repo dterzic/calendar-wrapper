@@ -1,6 +1,8 @@
 #import "GCWCalendarService.h"
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
+#import "GCWLoadEventsListRequest.h"
+
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "NSArray+GCWEventsSorting.h"
 #import "NSDictionary+GCWCalendar.h"
@@ -147,6 +149,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     } failure:^(NSError *error) {
         failure(error);
     }];
+}
+
+- (GCWLoadEventsListRequest *)createEventsListRequest {
+    return [self.calendar createEventsListRequest];
 }
 
 - (void)syncEventsFrom:(NSDate *)startDate
