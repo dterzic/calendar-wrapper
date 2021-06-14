@@ -16,6 +16,7 @@
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic, strong, nullable) id<CalendarAuthorizationProtocol> authorizationManager;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
+@property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
