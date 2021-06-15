@@ -6,6 +6,7 @@
 #import "GCWCalendarAuthorizationManager.h"
 #import "GCWCalendarAuthorization.h"
 
+#import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
 @interface GCWLoadEventsListRequest ()
@@ -17,11 +18,6 @@
 @end
 
 @implementation GCWLoadEventsListRequest
-
-+ (NSError *)createErrorWithCode:(NSInteger)code description:(NSString *)description {
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, nil];
-    return [NSError errorWithDomain:@"com.calendar-wrapper" code:code userInfo:userInfo];
-}
 
 - (instancetype)initWithCalendarEntries:(NSDictionary *)calendarEntries
                    authorizationManager:(id<CalendarAuthorizationProtocol>)authorizationManager
@@ -64,8 +60,8 @@
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
-            failure([GCWLoadEventsListRequest createErrorWithCode:-10002
-                                                      description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
             return;
         }
         calendarService.authorizer = authorization.fetcherAuthorization;

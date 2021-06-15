@@ -7,6 +7,7 @@
 #import "NSArray+GCWEventsSorting.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDate+GCWDate.h"
+#import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
 
@@ -161,7 +162,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                failure:(void (^)(NSError *))failure {
 
     __weak GCWCalendarService *weakSelf = self;
-    [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents) {
+    [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents, NSArray *expiredTokens) {
         for (GCWCalendarEvent *event in syncedEvents.allValues) {
             if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
                 [weakSelf.delegate calendarServiceDidSyncEvent:event];
@@ -172,12 +173,18 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                 [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
             }
         }
-        BOOL hasChanged = syncedEvents.count > 0 || removedEvents.count > 0;
-
-        if (hasChanged) {
-            [self.calendar saveState];
+        // Remove expired sync tokens from storage and wipe calendar events from cache.
+        for (NSString *calendarId in expiredTokens) {
+            [self removeEventsForCalendar:calendarId];
+            [self.calendar.calendarSyncTokens removeObjectForKey:calendarId];
         }
-        success(hasChanged);
+        [self.calendar saveState];
+
+        if (expiredTokens.count) {
+            failure([NSError createErrorWithCode:410 description:@"Sync token is no longer valid, a full sync is required."]);
+        } else {
+            success(syncedEvents.count > 0 || removedEvents.count > 0);
+        }
 
     } failure:^(NSError *error) {
         failure(error);
@@ -477,6 +484,16 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     if (filteredArray.count) {
         for (GCWCalendarEvent *event in filteredArray) {
             [self.calendar.calendarEvents removeObjectForKey:event.identifier];
+        }
+    }
+}
+
+- (void)removeEventsForCalendar:(NSString *)calendarId {
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"calendarId == %@", calendarId];
+    NSArray *filteredArray = [self.calendar.calendarEvents.allValues filteredArrayUsingPredicate:predicate];
+    if (filteredArray.count) {
+        for (GCWCalendarEvent *event in filteredArray) {
+            [self removeEventFromCache:event.identifier];
         }
     }
 }

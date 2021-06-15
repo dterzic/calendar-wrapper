@@ -14,6 +14,7 @@
 #import "NSDate+GCWDate.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDictionary+GCWCalendarEvent.h"
+#import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
@@ -75,6 +76,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         } else {
             self.calendarSyncTokens = [NSMutableDictionary dictionary];
         }
+        //self.calendarSyncTokens[@"stromme@envoy.com"] = [NSString stringWithFormat:@"1%@", self.calendarSyncTokens[@"stromme@envoy.com"]];
+        
         NSNumber *notificationPeriod = [self.userDefaults objectForKey:kCalendarEventsNotificationPeriodKey];
         if (notificationPeriod) {
             self.notificationPeriod = notificationPeriod;
@@ -365,11 +368,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     return clone;
 }
 
-+ (NSError *)createErrorWithCode:(NSInteger)code description:(NSString *)description {
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, nil];
-    return [NSError errorWithDomain:@"com.calendar-wrapper" code:code userInfo:userInfo];
-}
-
 - (void)loadCalendarListsForRole:(NSString *)accessRole
                          success:(void (^)(NSDictionary *))success
                          failure:(void (^)(NSError *))failure {
@@ -441,8 +439,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
-        failure([GCWCalendar createErrorWithCode:-10002
-                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
     self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -472,8 +470,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
-            failure([GCWCalendar createErrorWithCode:-10002
-                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
             return;
         }
         self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -578,16 +576,18 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
 - (void)syncEventsFrom:(NSDate *)startDate
                     to:(NSDate *)endDate
-               success:(void (^)(NSDictionary *, NSArray *))success
+               success:(void (^)(NSDictionary *, NSArray *, NSArray *))success
                failure:(void (^)(NSError *))failure {
     NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
     NSMutableDictionary *syncedEvents = [NSMutableDictionary dictionary];
+    NSMutableArray *expiredTokens = [NSMutableArray array];
+
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
-            failure([GCWCalendar createErrorWithCode:-10002
-                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
             return;
         }
         self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -599,13 +599,9 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 if (callbackError.code == 410) {
-                    // In case sync token expires wipe all tokens and events cache.
-                    [self.calendarSyncTokens removeAllObjects];
-                    [self.calendarEvents removeAllObjects];
-                    failure(callbackError);
-                    return;
-                }
-                else {
+                    // In case sync token has expired mark it for removal.
+                    [expiredTokens addObject:calendar.identifier];
+                } else {
                     failure(callbackError);
                 }
             } else {
@@ -657,10 +653,10 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 }];
                 self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
                 if (calendarIndex == self.calendarEntries.count-1) {
-                    success([syncedEvents copy], removedEvents.allValues);
+                    success([syncedEvents copy], removedEvents.allValues, [expiredTokens copy]);
                 }
-                calendarIndex++;
             }
+            calendarIndex++;
         }];
     }
 }
@@ -672,8 +668,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
-        failure([GCWCalendar createErrorWithCode:-10002
-                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
     self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -700,8 +696,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
-        failure([GCWCalendar createErrorWithCode:-10002
-                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
     self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -728,8 +724,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
     GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
     if (!authorization) {
-        failure([GCWCalendar createErrorWithCode:-10002
-                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
         return;
     }
     self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -772,8 +768,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         for (GCWCalendarEvent *event in groupedEvents) {
             GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
             if (!authorization) {
-                failure([GCWCalendar createErrorWithCode:-10002
-                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                failure([NSError createErrorWithCode:-10002
+                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
                 return;
             }
             self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -826,8 +822,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         for (GCWCalendarEvent *event in groupedEvents) {
             GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
             if (!authorization) {
-                failure([GCWCalendar createErrorWithCode:-10002
-                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                failure([NSError createErrorWithCode:-10002
+                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
                 return;
             }
             self.calendarService.authorizer = authorization.fetcherAuthorization;
@@ -872,8 +868,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         for (NSString *eventId in events) {
             GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
             if (!authorization) {
-                failure([GCWCalendar createErrorWithCode:-10002
-                                             description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+                failure([NSError createErrorWithCode:-10002
+                                         description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
                 return;
             }
             self.calendarService.authorizer = authorization.fetcherAuthorization;
