@@ -172,7 +172,13 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                 [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
             }
         }
-        success(syncedEvents.count > 0 || removedEvents.count > 0);
+        BOOL hasChanged = syncedEvents.count > 0 || removedEvents.count > 0;
+
+        if (hasChanged) {
+            [self.calendar saveState];
+        }
+        success(hasChanged);
+
     } failure:^(NSError *error) {
         failure(error);
     }];

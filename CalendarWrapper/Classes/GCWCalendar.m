@@ -182,16 +182,16 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             [userIDs addObject: authorization.userID];
         }
     }];
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
+    NSArray *archive = [self.calendarEvents archiveCalendarEvents];
+    [archive writeToFile:filePath atomically:YES];
+
     [self.userDefaults setObject:userIDs forKey:kUserIDs];
     [self.userDefaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
     [self.userDefaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
     [self.userDefaults setObject:self.notificationPeriod forKey:kCalendarEventsNotificationPeriodKey];
     [self.userDefaults synchronize];
-
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:kCalendarEventsKey];
-    NSArray *archive = [self.calendarEvents archiveCalendarEvents];
-    [archive writeToFile:filePath atomically:YES];
 
     NSLog(@"SAVED: %lu users, %lu calendars and %lu events.", (unsigned long)userIDs.count, (unsigned long)self.calendarEntries.count, (unsigned long)archive.count);
 }
