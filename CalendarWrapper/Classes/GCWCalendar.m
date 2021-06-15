@@ -76,7 +76,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         } else {
             self.calendarSyncTokens = [NSMutableDictionary dictionary];
         }
-        //self.calendarSyncTokens[@"stromme@envoy.com"] = [NSString stringWithFormat:@"1%@", self.calendarSyncTokens[@"stromme@envoy.com"]];
+        // Used for testing sync token expiration (error code 410)
+        //self.calendarSyncTokens[@"amywei@envoy.com"] = [NSString stringWithFormat:@"1%@", self.calendarSyncTokens[@"amywei@envoy.com"]];
         
         NSNumber *notificationPeriod = [self.userDefaults objectForKey:kCalendarEventsNotificationPeriodKey];
         if (notificationPeriod) {
