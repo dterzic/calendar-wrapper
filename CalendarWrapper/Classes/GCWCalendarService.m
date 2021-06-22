@@ -2,6 +2,7 @@
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
 #import "GCWLoadEventsListRequest.h"
+#import "GCWSyncEventsOperation.h"
 
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "NSArray+GCWEventsSorting.h"
@@ -17,6 +18,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 @interface GCWCalendarService () <CalendarServiceProtocol>
 
 @property (nonatomic) GCWCalendar *calendar;
+@property (nonatomic) NSOperationQueue *syncEventsQueue;
 
 @end
 
@@ -35,6 +37,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
         } else {
             self.calendar = calendar;
         }
+        self.syncEventsQueue = [[NSOperationQueue alloc] init];
+        self.syncEventsQueue.maxConcurrentOperationCount = 1;
         self.delegate = delegate;
     }
     return self;
@@ -42,12 +46,21 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 #pragma mark - CalendarServiceProtocol
 
+- (void)removeSyncTokenForCalendar:(NSString *)calendarId {
+    [self removeEventsForCalendar:calendarId];
+    [self.calendar.calendarSyncTokens removeObjectForKey:calendarId];
+}
+
 - (NSString *)getCalendarOwner:(NSString *)calendarId {
     return [self.calendar getCalendarOwner:calendarId];
 }
 
 - (NSArray *)calendarEvents {
     return self.calendar.calendarEvents.allValues.eventsFlatMap;
+}
+
+- (NSDictionary *)calendarSyncTokens {
+    return self.calendar.calendarSyncTokens;
 }
 
 - (NSDictionary *)calendarEntries {
@@ -68,6 +81,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 - (void)setCalendarListEntries:(NSDictionary *)calendarListEntries {
     self.calendar.calendarEntries = calendarListEntries;
+}
+
+- (BOOL)calendarsInSync {
+    return self.calendar.calendarsInSync;
 }
 
 - (NSNumber *)notificationPeriod {
@@ -162,33 +179,50 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                failure:(void (^)(NSError *))failure {
 
     __weak GCWCalendarService *weakSelf = self;
-    [self.calendar syncEventsFrom:startDate to:endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents, NSArray *expiredTokens) {
-        for (GCWCalendarEvent *event in syncedEvents.allValues) {
-            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
-                [weakSelf.delegate calendarServiceDidSyncEvent:event];
-            }
-        }
-        for (GCWCalendarEvent *event in removedEvents) {
-            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
-                [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
-            }
-        }
-        // Remove expired sync tokens from storage and wipe calendar events from cache.
-        for (NSString *calendarId in expiredTokens) {
-            [self removeEventsForCalendar:calendarId];
-            [self.calendar.calendarSyncTokens removeObjectForKey:calendarId];
-        }
-        [self.calendar saveState];
 
-        if (expiredTokens.count) {
-            failure([NSError createErrorWithCode:410 description:@"Sync token is no longer valid, a full sync is required."]);
-        } else {
-            success(syncedEvents.count > 0 || removedEvents.count > 0);
-        }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @synchronized (self) {
+            dispatch_group_t group = dispatch_group_create();
+            dispatch_group_enter(group);
 
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
+            GCWSyncEventsOperation *syncEventsOperation = [[GCWSyncEventsOperation alloc] initWithCalendar:self.calendar
+                                                                                                 startDate:startDate
+                                                                                                   endDate:endDate];
+            __weak GCWSyncEventsOperation *weakOperation = syncEventsOperation;
+            syncEventsOperation.completionBlock = ^{
+                if (weakOperation.error != nil) {
+                    failure(weakOperation.error);
+                    dispatch_group_leave(group);
+                    return;
+                }
+                for (GCWCalendarEvent *event in weakOperation.syncedEvents.allValues) {
+                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
+                        [weakSelf.delegate calendarServiceDidSyncEvent:event];
+                    }
+                }
+                for (GCWCalendarEvent *event in weakOperation.removedEvents) {
+                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
+                        [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
+                    }
+                }
+                // Remove expired sync tokens from storage and wipe calendar events from cache.
+                for (NSString *calendarId in weakOperation.expiredTokens) {
+                    [weakSelf removeEventsForCalendar:calendarId];
+                    [weakSelf.calendar.calendarSyncTokens removeObjectForKey:calendarId];
+                }
+                [weakSelf.calendar saveState];
+
+                if (weakOperation.expiredTokens.count) {
+                    failure([NSError createErrorWithCode:410 description:@"Sync token is no longer valid, a full sync is required."]);
+                } else {
+                    success(weakOperation.syncedEvents.count > 0 || weakOperation.removedEvents.count > 0);
+                }
+                dispatch_group_leave(group);
+            };
+            [self.syncEventsQueue addOperations:@[syncEventsOperation] waitUntilFinished:YES];
+            dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+        }
+    });
 }
 
 - (GCWCalendarEvent *)newEventForCalendar:(NSString *)calendarId

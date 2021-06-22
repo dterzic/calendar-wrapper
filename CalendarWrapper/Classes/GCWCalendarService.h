@@ -24,8 +24,12 @@
 @property (nonatomic, readonly) NSDictionary *_Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary *_Nullable accountEntries;
 @property (nonatomic, readonly) NSDictionary *_Nullable calendarEntries;
+@property (nonatomic, readonly) NSDictionary *_Nullable calendarSyncTokens;
 @property (nonatomic, readonly) NSArray *_Nullable calendarEvents;
+@property (nonatomic, readonly) BOOL calendarsInSync;
 @property (nonatomic) NSNumber *_Nullable notificationPeriod;
+
+- (void)removeSyncTokenForCalendar:(NSString *_Nonnull)calendarId;
 
 - (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 

@@ -20,6 +20,7 @@
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
 @property (nonatomic) NSDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
+@property (nonatomic, readonly) BOOL calendarsInSync;
 @property (nonatomic) NSNumber *_Nonnull notificationPeriod;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId

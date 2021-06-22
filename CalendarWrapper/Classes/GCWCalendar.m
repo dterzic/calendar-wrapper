@@ -93,6 +93,21 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     return self;
 }
 
+- (BOOL)calendarsInSync {
+    __block BOOL status = YES;
+    [self.calendarEntries enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        GCWCalendarEntry *calendar = (GCWCalendarEntry *)obj;
+        NSString *syncToken = self.calendarSyncTokens[calendar.identifier];
+
+        if (syncToken == nil) {
+            *stop = YES;
+            status = NO;
+        }
+    }];
+    return status;
+
+}
+
 - (NSString *)getCalendarOwner:(NSString *)calendarId {
     return self.calendarUsers[calendarId];
 }
@@ -597,6 +612,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         query.maxResults = 2500;
         query.singleEvents = true;
         query.syncToken = self.calendarSyncTokens[calendar.identifier];
+        [self.calendarSyncTokens removeObjectForKey:calendar.identifier];
+        
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 if (callbackError.code == 410) {
