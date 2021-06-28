@@ -2,6 +2,7 @@
 #import "GCWCalendarEntry.h"
 #import "GCWCalendarEvent.h"
 #import "GCWLoadEventsListRequest.h"
+#import "GCWLoadEventsOperation.h"
 #import "GCWSyncEventsOperation.h"
 
 #import "NSDictionary+GCWCalendarEvent.h"
@@ -18,7 +19,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 @interface GCWCalendarService () <CalendarServiceProtocol>
 
 @property (nonatomic) GCWCalendar *calendar;
-@property (nonatomic) NSOperationQueue *syncEventsQueue;
+@property (nonatomic) NSOperationQueue *eventsOperationQueue;
 
 @end
 
@@ -37,8 +38,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
         } else {
             self.calendar = calendar;
         }
-        self.syncEventsQueue = [[NSOperationQueue alloc] init];
-        self.syncEventsQueue.maxConcurrentOperationCount = 1;
+        self.eventsOperationQueue = [[NSOperationQueue alloc] init];
+        self.eventsOperationQueue.maxConcurrentOperationCount = 1;
         self.delegate = delegate;
     }
     return self;
@@ -156,17 +157,34 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                     filter:(NSString *)filter
                    success:(void (^)(NSUInteger))success
                    failure:(void (^)(NSError * _Nonnull))failure {
-    
-    [self.calendar loadEventsListFrom:startDate to:endDate filter:filter
-                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount) {
-        if (filter.length) {
-            success(filteredEventsCount);
-        } else {
-            success(loadedEvents.count + removedEvents.count);
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @synchronized (self) {
+            dispatch_group_t group = dispatch_group_create();
+            dispatch_group_enter(group);
+
+            GCWLoadEventsOperation *loadEventsOperation = [[GCWLoadEventsOperation alloc] initWithCalendar:self.calendar
+                                                                                                 startDate:startDate
+                                                                                                   endDate:endDate
+                                                                                                    filter:filter];
+            __weak GCWLoadEventsOperation *weakOperation = loadEventsOperation;
+            loadEventsOperation.completionBlock = ^{
+                if (weakOperation.error != nil) {
+                    failure(weakOperation.error);
+                    dispatch_group_leave(group);
+                    return;
+                }
+                if (filter.length) {
+                    success(weakOperation.filteredEventsCount);
+                } else {
+                    success(weakOperation.loadedEvents.count + weakOperation.removedEvents.count);
+                }
+                dispatch_group_leave(group);
+            };
+            [self.eventsOperationQueue addOperations:@[loadEventsOperation] waitUntilFinished:YES];
+            dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
         }
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
+    });
 }
 
 - (GCWLoadEventsListRequest *)createEventsListRequest {
@@ -219,7 +237,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                 }
                 dispatch_group_leave(group);
             };
-            [self.syncEventsQueue addOperations:@[syncEventsOperation] waitUntilFinished:YES];
+            [self.eventsOperationQueue addOperations:@[syncEventsOperation] waitUntilFinished:YES];
             dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
         }
     });
