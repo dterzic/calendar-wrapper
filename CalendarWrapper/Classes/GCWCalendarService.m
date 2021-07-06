@@ -194,7 +194,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 - (void)syncEventsFrom:(NSDate *)startDate
                     to:(NSDate *)endDate
                success:(void (^)(BOOL))success
-               failure:(void (^)(NSError *))failure {
+               failure:(void (^)(NSError *))failure
+              progress:(void (^)(CGFloat))progress {
 
     __weak GCWCalendarService *weakSelf = self;
 
@@ -205,7 +206,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
             GCWSyncEventsOperation *syncEventsOperation = [[GCWSyncEventsOperation alloc] initWithCalendar:self.calendar
                                                                                                  startDate:startDate
-                                                                                                   endDate:endDate];
+                                                                                                   endDate:endDate
+                                                                                                  progress:^(CGFloat percent) {
+                progress(percent);
+            }];
             __weak GCWSyncEventsOperation *weakOperation = syncEventsOperation;
             syncEventsOperation.completionBlock = ^{
                 if (weakOperation.error != nil) {

@@ -68,7 +68,8 @@
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate
                success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSArray *_Nonnull))success
-               failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+               failure:(void (^_Nullable)(NSError *_Nonnull))failure
+              progress:(void (^_Nullable)(CGFloat))progress;
 
 - (void)addEvent:(GCWCalendarEvent *_Nonnull)event
       toCalendar:(NSString *_Nonnull)calendarId

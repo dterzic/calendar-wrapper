@@ -114,7 +114,8 @@
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate
                success:(void (^_Nonnull)(BOOL))success
-               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+               failure:(void (^_Nonnull)(NSError *_Nonnull))failure
+              progress:(void (^_Nonnull)(CGFloat))progress;
 
 - (void)loadEventForCalendar:(NSString *_Nonnull)calendarId
                      eventId:(NSString *_Nonnull)eventId

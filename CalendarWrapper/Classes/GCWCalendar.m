@@ -501,6 +501,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 failure(callbackError);
+                return;
             } else {
                 GTLRCalendar_Events *list = object;
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -593,12 +594,15 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 - (void)syncEventsFrom:(NSDate *)startDate
                     to:(NSDate *)endDate
                success:(void (^)(NSDictionary *, NSArray *, NSArray *))success
-               failure:(void (^)(NSError *))failure {
+               failure:(void (^)(NSError *))failure
+              progress:(void (^)(CGFloat))progress {
     NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
     NSMutableDictionary *syncedEvents = [NSMutableDictionary dictionary];
     NSMutableArray *expiredTokens = [NSMutableArray array];
 
     __block NSUInteger calendarIndex = 0;
+    __block CGFloat percent = 0.0f;
+    __block CGFloat calendarPercent = 0.0f;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
@@ -613,7 +617,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         query.singleEvents = true;
         query.syncToken = self.calendarSyncTokens[calendar.identifier];
         [self.calendarSyncTokens removeObjectForKey:calendar.identifier];
-        
+
+        calendarPercent = 0;
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 if (callbackError.code == 410) {
@@ -621,6 +626,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     [expiredTokens addObject:calendar.identifier];
                 } else {
                     failure(callbackError);
+                    return;
                 }
             } else {
                 GTLRCalendar_Events *list = object;
@@ -628,6 +634,11 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
                     event.calendarId = calendar.identifier;
 
+                    CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
+                    if (calendarPercent != portion) {
+                        calendarPercent = portion;
+                        progress(percent + calendarPercent);
+                    }
                     if ([event.status isEqualToString:@"cancelled"]) {
                         [self.calendarEvents removeObjectForKey:event.identifier];
                         removedEvents[event.identifier] = event;
@@ -675,6 +686,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 }
             }
             calendarIndex++;
+            percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
+            progress(percent);
         }];
     }
 }

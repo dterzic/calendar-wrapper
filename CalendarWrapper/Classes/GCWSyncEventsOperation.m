@@ -5,17 +5,19 @@
 @property (nonatomic) GCWCalendar *calendar;
 @property (nonatomic) NSDate *startDate;
 @property (nonatomic) NSDate *endDate;
+@property (nonatomic, copy) void (^onProgress)(CGFloat);
 
 @end
 
 @implementation GCWSyncEventsOperation
 
-- (instancetype)initWithCalendar:(GCWCalendar *)calendar startDate:(NSDate *)startDate endDate:(NSDate *)endDate {
+- (instancetype)initWithCalendar:(GCWCalendar *)calendar startDate:(NSDate *)startDate endDate:(NSDate *)endDate progress:(void (^)(CGFloat))progress {
     self = [super init];
     if (self) {
         self.calendar = calendar;
         self.startDate = startDate;
         self.endDate = endDate;
+        self.onProgress = progress;
     }
     return self;
 }
@@ -33,6 +35,8 @@
         } failure:^(NSError *error) {
             self.error = error;
             dispatch_group_leave(group);
+        } progress:^(CGFloat percent) {
+            self.onProgress(percent);
         }];
     });
     dispatch_group_wait(group, DISPATCH_TIME_FOREVER);

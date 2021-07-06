@@ -16,7 +16,8 @@
           endDate:(NSDate *_Nonnull)endDate
            filter:(NSString *_Nonnull)filter
           success:(void (^_Nullable)(NSArray *_Nonnull))success
-          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+          failure:(void (^_Nullable)(NSError *_Nonnull))failure
+         progress:(void (^_Nonnull)(CGFloat))progress;
 
 - (void)cancel;
 

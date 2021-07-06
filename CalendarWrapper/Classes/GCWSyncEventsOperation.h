@@ -10,6 +10,7 @@
 
 - (instancetype _Nullable)initWithCalendar:(GCWCalendar *_Nonnull)calendar
                                  startDate:(NSDate *_Nonnull)startDate
-                                   endDate:(NSDate *_Nonnull)endDate;
+                                   endDate:(NSDate *_Nonnull)endDate
+                                  progress:(void (^_Nonnull)(CGFloat))progress;
 
 @end

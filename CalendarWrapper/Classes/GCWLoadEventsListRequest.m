@@ -50,13 +50,17 @@
 - (void)startFrom:(NSDate *)startDate
           endDate:(NSDate *)endDate
            filter:(NSString *)filter
-          success:(void (^)(NSArray *))success failure:(void (^)(NSError *))failure {
-    
+          success:(void (^)(NSArray *))success
+          failure:(void (^)(NSError *))failure
+         progress:(void (^)(CGFloat))progress {
+
     GTLRCalendarService *calendarService = [[GTLRCalendarService alloc] init];
     calendarService.shouldFetchNextPages = YES;
     calendarService.retryEnabled = YES;
 
     __block NSUInteger calendarIndex = 0;
+    __block CGFloat percent = 0.0f;
+    __block CGFloat calendarPercent = 0.0f;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
@@ -73,6 +77,8 @@
         query.singleEvents = YES;
         query.maxResults = 2500;
         query.orderBy = kGTLRCalendarOrderByStartTime;
+
+        calendarPercent = 0;
         GTLRServiceTicket *ticket = [calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
             if (callbackError) {
                 failure(callbackError);
@@ -84,6 +90,12 @@
                 [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                     GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
                     event.calendarId = calendar.identifier;
+
+                    CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
+                    if (calendarPercent != portion) {
+                        calendarPercent = portion;
+                        progress(percent + calendarPercent);
+                    }
                     if (![event.status isEqualToString:@"cancelled"] &&
                         [event.JSONString.lowercaseString containsString:filter.lowercaseString]) {
                         event.color = [UIColor colorWithHex:calendar.backgroundColor];
@@ -95,6 +107,8 @@
                     success([self.events.allValues copy]);
                 }
                 calendarIndex++;
+                percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
+                progress(percent);
             }
         }];
         [self.calendarServiceTickets addObject:ticket];
