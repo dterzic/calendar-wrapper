@@ -33,6 +33,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
 @property (nonatomic) NSUserDefaults *userDefaults;
+@property (nonatomic) dispatch_queue_t eventsQueue;
+
 
 @end
 
@@ -45,6 +47,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     self = [super init];
 
     if (self) {
+        self.eventsQueue = dispatch_queue_create("com.moment.gcwcalendar.eventsqueue", DISPATCH_QUEUE_SERIAL);
+
         _calendarService = [[GTLRCalendarService alloc] init];
         _calendarService.shouldFetchNextPages = true;
         _calendarService.retryEnabled = true;
@@ -620,74 +624,76 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
         calendarPercent = 0;
         [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
-            if (callbackError) {
-                if (callbackError.code == 410) {
-                    // In case sync token has expired mark it for removal.
-                    [expiredTokens addObject:calendar.identifier];
-                } else {
-                    failure(callbackError);
-                    return;
-                }
-            } else {
-                GTLRCalendar_Events *list = object;
-                [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
-                    event.calendarId = calendar.identifier;
-
-                    CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
-                    if (calendarPercent != portion) {
-                        calendarPercent = portion;
-                        progress(percent + calendarPercent);
+            dispatch_async(self.eventsQueue, ^{
+                if (callbackError) {
+                    if (callbackError.code == 410) {
+                        // In case sync token has expired mark it for removal.
+                        [expiredTokens addObject:calendar.identifier];
+                    } else {
+                        failure(callbackError);
+                        return;
                     }
-                    if ([event.status isEqualToString:@"cancelled"]) {
-                        [self.calendarEvents removeObjectForKey:event.identifier];
-                        removedEvents[event.identifier] = event;
-                    } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
-                                [event.endDate isEarlierThanOrEqualTo:endDate]) ||
-                               labs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
-                        event.color = [UIColor colorWithHex:calendar.backgroundColor];
+                } else {
+                    GTLRCalendar_Events *list = object;
+                    [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                        event.calendarId = calendar.identifier;
 
-                        id item = self.calendarEvents[event.identifier];
+                        CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
+                        if (calendarPercent != portion) {
+                            calendarPercent = portion;
+                            progress(percent + calendarPercent);
+                        }
+                        if ([event.status isEqualToString:@"cancelled"]) {
+                            [self.calendarEvents removeObjectForKey:event.identifier];
+                            removedEvents[event.identifier] = event;
+                        } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
+                                    [event.endDate isEarlierThanOrEqualTo:endDate]) ||
+                                   labs([event.startDate numberOfDaysUntil:event.endDate]) > 1) {
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
 
-                        if ([item isKindOfClass:NSDictionary.class]) {
-                            NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
-                            GCWCalendarEvent *cachedEvent = items[calendar.identifier];
+                            id item = self.calendarEvents[event.identifier];
 
-                            // Keep attributes from cached object
-                            if (cachedEvent) {
-                                event.isImportant = cachedEvent.isImportant;
-                            }
-                            items[calendar.identifier] = event;
+                            if ([item isKindOfClass:NSDictionary.class]) {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                                GCWCalendarEvent *cachedEvent = items[calendar.identifier];
 
-                            self.calendarEvents[event.identifier] = items.copy;
-                        } else {
-                            GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
-
-                            if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
                                 // Keep attributes from cached object
                                 if (cachedEvent) {
                                     event.isImportant = cachedEvent.isImportant;
                                 }
-                                self.calendarEvents[event.identifier] = event;
-                            } else {
-                                NSMutableDictionary *items = [NSMutableDictionary dictionary];
-                                items[event.calendarId] = event;
-                                items[cachedEvent.calendarId] = cachedEvent;
+                                items[calendar.identifier] = event;
 
                                 self.calendarEvents[event.identifier] = items.copy;
+                            } else {
+                                GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+
+                                if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                                    // Keep attributes from cached object
+                                    if (cachedEvent) {
+                                        event.isImportant = cachedEvent.isImportant;
+                                    }
+                                    self.calendarEvents[event.identifier] = event;
+                                } else {
+                                    NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                                    items[event.calendarId] = event;
+                                    items[cachedEvent.calendarId] = cachedEvent;
+
+                                    self.calendarEvents[event.identifier] = items.copy;
+                                }
                             }
+                            syncedEvents[event.identifier] = event;
                         }
-                        syncedEvents[event.identifier] = event;
+                    }];
+                    self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
+                    if (calendarIndex == self.calendarEntries.count-1) {
+                        success([syncedEvents copy], removedEvents.allValues, [expiredTokens copy]);
                     }
-                }];
-                self.calendarSyncTokens[calendar.identifier] = [list nextSyncToken];
-                if (calendarIndex == self.calendarEntries.count-1) {
-                    success([syncedEvents copy], removedEvents.allValues, [expiredTokens copy]);
                 }
-            }
-            calendarIndex++;
-            percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
-            progress(percent);
+                calendarIndex++;
+                percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
+                progress(percent);
+            });
         }];
     }
 }

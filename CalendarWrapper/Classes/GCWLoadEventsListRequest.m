@@ -14,6 +14,7 @@
 @property (nonatomic) NSMutableArray *calendarServiceTickets;
 @property (nonatomic) NSMutableDictionary *events;
 @property (nonatomic) BOOL cancelled;
+@property (nonatomic) dispatch_queue_t eventsQueue;
 
 @end
 
@@ -24,6 +25,8 @@
                           calendarUsers:(NSDictionary *)calendarUsers {
     self = [super init];
     if (self) {
+        self.eventsQueue = dispatch_queue_create("com.moment.gcwloadeventslistrequest.eventsqueue", DISPATCH_QUEUE_SERIAL);
+
         _authorizationManager = authorizationManager;
         _calendarUsers = calendarUsers;
         _calendarEntries = calendarEntries;
@@ -80,36 +83,38 @@
 
         calendarPercent = 0;
         GTLRServiceTicket *ticket = [calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
-            if (callbackError) {
-                failure(callbackError);
-            } else {
-                if (self.cancelled) {
-                    return;
-                }
-                GTLRCalendar_Events *list = object;
-                [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
-                    event.calendarId = calendar.identifier;
+            dispatch_async(self.eventsQueue, ^{
+                if (callbackError) {
+                    failure(callbackError);
+                } else {
+                    if (self.cancelled) {
+                        return;
+                    }
+                    GTLRCalendar_Events *list = object;
+                    [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                        event.calendarId = calendar.identifier;
 
-                    CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
-                    if (calendarPercent != portion) {
-                        calendarPercent = portion;
-                        progress(percent + calendarPercent);
+                        CGFloat portion = floor(100.0f * (CGFloat)idx / (CGFloat)list.items.count / (CGFloat)self.calendarEntries.count);
+                        if (calendarPercent != portion) {
+                            calendarPercent = portion;
+                            progress(percent + calendarPercent);
+                        }
+                        if (![event.status isEqualToString:@"cancelled"] &&
+                            [event.JSONString.lowercaseString containsString:filter.lowercaseString]) {
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
+                            self.events[event.identifier] = event;
+                        }
+                    }];
+                    if (calendarIndex == self.calendarEntries.count-1) {
+                        [self.calendarServiceTickets removeAllObjects];
+                        success([self.events.allValues copy]);
                     }
-                    if (![event.status isEqualToString:@"cancelled"] &&
-                        [event.JSONString.lowercaseString containsString:filter.lowercaseString]) {
-                        event.color = [UIColor colorWithHex:calendar.backgroundColor];
-                        self.events[event.identifier] = event;
-                    }
-                }];
-                if (calendarIndex == self.calendarEntries.count-1) {
-                    [self.calendarServiceTickets removeAllObjects];
-                    success([self.events.allValues copy]);
+                    calendarIndex++;
+                    percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
+                    progress(percent);
                 }
-                calendarIndex++;
-                percent = floor(100.0f * (CGFloat)calendarIndex / (CGFloat)self.calendarEntries.count);
-                progress(percent);
-            }
+            });
         }];
         [self.calendarServiceTickets addObject:ticket];
     }
