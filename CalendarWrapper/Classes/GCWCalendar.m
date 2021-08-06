@@ -675,7 +675,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
                             if ([item isKindOfClass:NSDictionary.class]) {
                                 NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
-                                GCWCalendarEvent *cachedEvent = items[calendar.identifier];
 
                                 items[calendar.identifier] = event;
 

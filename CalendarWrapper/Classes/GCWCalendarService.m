@@ -500,8 +500,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *))failure {
 
-    NSArray *recurringEvents = [NSMutableArray array];
-
     [self.calendar batchDeleteEvents:eventIds
                        fromCalendars:calendarIds
                              success:^{
