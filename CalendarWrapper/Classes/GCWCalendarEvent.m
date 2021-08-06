@@ -205,7 +205,7 @@
 - (void)setAttendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses {
     NSMutableArray *attendees = [NSMutableArray arrayWithArray:self.attendees];
     for (NSString *email in attendeesEmailAddresses) {
-        if (![self hasAttendeeWithEmail:email]) {
+        if (email.length && ![self hasAttendeeWithEmail:email]) {
             GTLRCalendar_EventAttendee *attendee = [[GTLRCalendar_EventAttendee alloc] init];
             attendee.email = email;
             [attendees addObject:attendee];
@@ -254,6 +254,23 @@
                 notification.minutes = notificationPeriod;
             }
         }
+    }
+}
+
+- (BOOL)isImportant {
+    return [[self.extendedProperties.privateProperty additionalPropertyForName:@"GCWCalendarEventImportant"] boolValue];
+}
+
+- (void)setIsImportant:(BOOL)isImportant {
+    if (self.extendedProperties == nil) {
+        GTLRCalendar_Event_ExtendedProperties *extendedProperties = [[GTLRCalendar_Event_ExtendedProperties alloc] init];
+        GTLRCalendar_Event_ExtendedProperties_Private *privateProperty = [[GTLRCalendar_Event_ExtendedProperties_Private alloc] init];
+        [privateProperty setAdditionalProperty:[NSString stringWithFormat:@"%d", isImportant] forName:@"GCWCalendarEventImportant"];
+        [extendedProperties setPrivateProperty:privateProperty];
+        [self setExtendedProperties:extendedProperties];
+    } else {
+        [self.extendedProperties.privateProperty setAdditionalProperty:[NSString stringWithFormat:@"%d", isImportant]
+                                                               forName:@"GCWCalendarEventImportant"];
     }
 }
 

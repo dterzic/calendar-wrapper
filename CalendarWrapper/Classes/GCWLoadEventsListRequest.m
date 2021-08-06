@@ -65,6 +65,15 @@
     __block CGFloat percent = 0.0f;
     __block CGFloat calendarPercent = 0.0f;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
+        if (calendar.hideEvents) {
+            if (calendarIndex == self.calendarEntries.count-1) {
+                [self.calendarServiceTickets removeAllObjects];
+                success([self.events.allValues copy]);
+            } else {
+                calendarIndex++;
+            }
+            continue;
+        }
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
             failure([NSError createErrorWithCode:-10002
@@ -127,10 +136,8 @@
         GTLRServiceTicket *ticket = (GTLRServiceTicket *)obj;
         [ticket cancelTicket];
     }];
-    [self.calendarServiceTickets removeAllObjects];
+    //[self.calendarServiceTickets removeAllObjects];
     [self.events removeAllObjects];
-
-    self.cancelled = NO;
 }
 
 @end

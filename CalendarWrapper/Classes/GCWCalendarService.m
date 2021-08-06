@@ -26,7 +26,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 @implementation GCWCalendarService
 
 - (instancetype)initWithPresentingViewController:(UIViewController *)presentingViewController
-                                        delegate:(id<CalendarServiceDelegate>)delegate
+                                        delegate:(id<GCWServiceDelegate>)delegate
                                         calendar:(GCWCalendar *)calendar {
     self = [super init];
     if (self) {
@@ -74,6 +74,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 - (NSDictionary *)userAccounts {
     return self.calendar.userAccounts;
+}
+
+- (BOOL)isConnected {
+    return self.calendar.calendarEntries.count > 0;
 }
 
 - (BOOL)hasSignup {
@@ -218,13 +222,13 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                     return;
                 }
                 for (GCWCalendarEvent *event in weakOperation.syncedEvents.allValues) {
-                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidSyncEvent:)]) {
-                        [weakSelf.delegate calendarServiceDidSyncEvent:event];
+                    if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidSyncEvent:)]) {
+                        [weakSelf.delegate gcwServiceDidSyncEvent:event];
                     }
                 }
                 for (GCWCalendarEvent *event in weakOperation.removedEvents) {
-                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
-                        [weakSelf.delegate calendarServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
+                    if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
+                        [weakSelf.delegate gcwServiceDidDeleteEvent:event.identifier forCalendar:event.calendarId];
                     }
                 }
                 // Remove expired sync tokens from storage and wipe calendar events from cache.
@@ -265,9 +269,9 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                                                        description:description
                                                               date:date
                                                           duration:duration
-                                                notificationPeriod:period];
+                                                notificationPeriod:period
+                                                         important:important];
     newEvent.calendarId = calendarId;
-    newEvent.isImportant = important;
 
     return newEvent;
 }
@@ -298,8 +302,9 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar addEvent:newEvent
                  toCalendar:calendarId
                     success:^(GCWCalendarEvent *event) {
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
-            [weakSelf.delegate calendarServiceDidCreateEvent:event];
+
+        if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidCreateEvent:)]) {
+            [weakSelf.delegate gcwServiceDidCreateEvent:event];
         }
         success(event);
     } failure:^(NSError *error) {
@@ -316,6 +321,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                                    date:(NSDate *)date
                                duration:(NSInteger)duration
                      notificationPeriod:(NSNumber *)notificationPeriod
+                              important:(BOOL)important
                                 success:(void (^)(GCWCalendarEvent *))success
                                 failure:(void (^)(NSError *))failure {
 
@@ -327,14 +333,15 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                                                        description:description
                                                               date:date
                                                           duration:duration
-                                                notificationPeriod:period];
+                                                notificationPeriod:period
+                                                         important:important];
     newEvent.recurrence = recurrence;
     __weak GCWCalendarService *weakSelf = self;
     [self.calendar addEvent:newEvent
                         toCalendar:calendarId
                            success:^(GCWCalendarEvent *event) {
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
-            [weakSelf.delegate calendarServiceDidCreateEvent:event];
+        if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidCreateEvent:)]) {
+            [weakSelf.delegate gcwServiceDidCreateEvent:event];
         }
         success(event);
     } failure:^(NSError *error) {
@@ -352,8 +359,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar updateEvent:event
                            inCalendar:calendarId
                               success:^{
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidUpdateEvent:)]) {
-            [weakSelf.delegate calendarServiceDidUpdateEvent:event];
+        if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidUpdateEvent:)]) {
+            [weakSelf.delegate gcwServiceDidUpdateEvent:event];
         }
         success();
     } failure:^(NSError *error) {
@@ -366,8 +373,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                 [self.calendar updateEvent:event
                                        inCalendar:event.calendarId
                                           success:^{
-                    if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidUpdateEvent:)]) {
-                        [weakSelf.delegate calendarServiceDidUpdateEvent:event];
+                    if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidUpdateEvent:)]) {
+                        [weakSelf.delegate gcwServiceDidUpdateEvent:event];
                     }
                     success();
                 } failure:^(NSError *error) {
@@ -392,10 +399,34 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar deleteEvent:eventId
                          fromCalendar:calendarId
                               success:^{
-        if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
-            [weakSelf.delegate calendarServiceDidDeleteEvent:eventId forCalendar:calendarId];
+        if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
+            [weakSelf.delegate gcwServiceDidDeleteEvent:eventId forCalendar:calendarId];
         }
         success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)deleteRecurringEvent:(NSString *)eventId
+                fromCalendar:(NSString *)calendarId
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *))failure {
+
+    [self removeEventFromCache:eventId];
+
+    __weak GCWCalendarService *weakSelf = self;
+    [self.calendar loadEventForCalendar:calendarId eventId:eventId success:^(GCWCalendarEvent *event) {
+        [self.calendar deleteEvent:event.identifier
+                      fromCalendar:calendarId
+                           success:^{
+            if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
+                [weakSelf.delegate gcwServiceDidDeleteEvent:event.identifier forCalendar:calendarId];
+            }
+            success();
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
     } failure:^(NSError *error) {
         failure(error);
     }];
@@ -408,8 +439,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar batchAddEvents:events
                           success:^(NSArray<GCWCalendarEvent *> *clonedEvents) {
         for (GCWCalendarEvent *clonedEvent in clonedEvents) {
-            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidCreateEvent:)]) {
-                [weakSelf.delegate calendarServiceDidCreateEvent:clonedEvent];
+            if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidCreateEvent:)]) {
+                [weakSelf.delegate gcwServiceDidCreateEvent:clonedEvent];
             }
         }
         success(clonedEvents);
@@ -429,8 +460,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar batchUpdateEvents:events
                              success:^{
         for (GCWCalendarEvent *event in events) {
-            if ([weakSelf.delegate respondsToSelector:@selector(calendarServiceDidUpdateEvent:)]) {
-                [weakSelf.delegate calendarServiceDidUpdateEvent:event];
+            if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidUpdateEvent:)]) {
+                [weakSelf.delegate gcwServiceDidUpdateEvent:event];
             }
         }
         success();
@@ -444,9 +475,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                   success:(void (^)(void))success
                   failure:(void (^)(NSError *))failure {
 
-    for(NSString *eventId in eventIds) {
-        [self removeEventFromCache:eventId];
-    }
     [self.calendar batchDeleteEvents:eventIds
                        fromCalendars:calendarIds
                              success:^{
@@ -454,9 +482,39 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             NSString *eventId = eventIds[index];
             NSString *calendarId = calendarIds[index];
 
-            if ([self.delegate respondsToSelector:@selector(calendarServiceDidDeleteEvent:forCalendar:)]) {
-                [self.delegate calendarServiceDidDeleteEvent:eventId forCalendar:calendarId];
+            if ([self.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
+                [self.delegate gcwServiceDidDeleteEvent:eventId forCalendar:calendarId];
             }
+        }
+        for(NSString *eventId in eventIds) {
+            [self removeEventFromCache:eventId];
+        }
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)batchDeleteRecurringEvents:(NSArray <NSString *> *)eventIds
+                     fromCalendars:(NSArray <NSString *> *)calendarIds
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *))failure {
+
+    NSArray *recurringEvents = [NSMutableArray array];
+
+    [self.calendar batchDeleteEvents:eventIds
+                       fromCalendars:calendarIds
+                             success:^{
+        for(int index=0; index < eventIds.count; index++) {
+            NSString *eventId = eventIds[index];
+            NSString *calendarId = calendarIds[index];
+
+            if ([self.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
+                [self.delegate gcwServiceDidDeleteEvent:eventId forCalendar:calendarId];
+            }
+        }
+        for(NSString *eventId in eventIds) {
+            [self removeEventFromCache:eventId];
         }
         success();
     } failure:^(NSError *error) {

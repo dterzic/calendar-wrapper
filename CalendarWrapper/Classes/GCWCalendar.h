@@ -42,7 +42,8 @@
                                         description:(NSString *_Nullable)description
                                                date:(NSDate *_Nonnull)date
                                            duration:(NSInteger)duration
-                                 notificationPeriod:(NSNumber *_Nonnull)notificationPeriod;
+                                 notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
+                                          important:(BOOL)important;
 
 + (GCWCalendarEvent *_Nonnull)cloneEvent:(GCWCalendarEvent *_Nonnull)event;
 

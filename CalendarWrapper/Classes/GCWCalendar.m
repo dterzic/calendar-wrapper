@@ -62,6 +62,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         } else {
             _userDefaults = [NSUserDefaults standardUserDefaults];
         }
+        _userAccounts = [NSMutableDictionary dictionary];
+
         NSDictionary *entriesArchive = [self.userDefaults objectForKey:kCalendarEntriesKey];
         if (entriesArchive) {
             _calendarEntries = [NSDictionary unarchiveCalendarEntriesFrom:entriesArchive];
@@ -319,7 +321,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                description:(NSString *)description
                                       date:(NSDate *)date
                                   duration:(NSInteger)duration
-                        notificationPeriod:(NSNumber *)notificationPeriod {
+                        notificationPeriod:(NSNumber *)notificationPeriod
+                                 important:(BOOL)important {
     // Make a new event, and show it to the user to edit
     GTLRCalendar_Event *newEvent = [GTLRCalendar_Event object];
 
@@ -370,6 +373,12 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }
     newEvent.attendees = attendees;
 
+    GTLRCalendar_Event_ExtendedProperties *extendedProperties = [[GTLRCalendar_Event_ExtendedProperties alloc] init];
+    GTLRCalendar_Event_ExtendedProperties_Private *privateProperty = [[GTLRCalendar_Event_ExtendedProperties_Private alloc] init];
+    [privateProperty setAdditionalProperty:[NSString stringWithFormat:@"%d", important] forName:@"GCWCalendarEventImportant"];
+    [extendedProperties setPrivateProperty:privateProperty];
+    [newEvent setExtendedProperties:extendedProperties];
+
     return [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:newEvent];
 }
 
@@ -384,6 +393,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     clone.recurrence = [event.recurrence copy];
     clone.attendees = [event.attendees copy];
     clone.reminders = [event.reminders copy];
+    clone.isImportant = event.isImportant;
+    clone.notificationPeriod = event.notificationPeriod;
 
     return clone;
 }
@@ -488,6 +499,14 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     NSMutableDictionary *loadedEvents = [NSMutableDictionary dictionary];
     __block NSUInteger calendarIndex = 0;
     for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
+        if (calendar.hideEvents) {
+            if (calendarIndex == self.calendarEntries.count-1) {
+                success([loadedEvents copy], removedEvents.allValues, filteredEventsCount);
+            } else {
+                calendarIndex++;
+            }
+            continue;
+        }
         GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
         if (!authorization) {
             failure([NSError createErrorWithCode:-10002
@@ -658,10 +677,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                 NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
                                 GCWCalendarEvent *cachedEvent = items[calendar.identifier];
 
-                                // Keep attributes from cached object
-                                if (cachedEvent) {
-                                    event.isImportant = cachedEvent.isImportant;
-                                }
                                 items[calendar.identifier] = event;
 
                                 self.calendarEvents[event.identifier] = items.copy;
@@ -669,10 +684,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                 GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
 
                                 if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
-                                    // Keep attributes from cached object
-                                    if (cachedEvent) {
-                                        event.isImportant = cachedEvent.isImportant;
-                                    }
                                     self.calendarEvents[event.identifier] = event;
                                 } else {
                                     NSMutableDictionary *items = [NSMutableDictionary dictionary];

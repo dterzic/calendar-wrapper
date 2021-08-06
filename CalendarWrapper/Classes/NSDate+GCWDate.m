@@ -15,6 +15,13 @@
     }
 }
 
+- (NSDate *)dateFromNumberOfMonths:(NSInteger)months {
+    return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitMonth
+                                                  value:months
+                                                 toDate:self
+                                                options:0];
+}
+
 - (NSDate *)dateFromNumberOfHours:(NSInteger)hours {
     return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitHour
                                                   value:hours

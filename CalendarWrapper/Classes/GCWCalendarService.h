@@ -5,14 +5,14 @@
 @class GCWCalendarEvent;
 @class GCWLoadEventsListRequest;
 
-@protocol CalendarServiceDelegate <NSObject>
+@protocol GCWServiceDelegate <NSObject>
 
 @optional
 
-- (void)calendarServiceDidCreateEvent:(GCWCalendarEvent *_Nonnull)event;
-- (void)calendarServiceDidUpdateEvent:(GCWCalendarEvent *_Nonnull)event;
-- (void)calendarServiceDidDeleteEvent:(NSString *_Nonnull)eventId forCalendar:(NSString *_Nonnull)calendarId;
-- (void)calendarServiceDidSyncEvent:(GCWCalendarEvent *_Nonnull)event;
+- (void)gcwServiceDidCreateEvent:(GCWCalendarEvent *_Nonnull)event;
+- (void)gcwServiceDidUpdateEvent:(GCWCalendarEvent *_Nonnull)event;
+- (void)gcwServiceDidDeleteEvent:(NSString *_Nonnull)eventId forCalendar:(NSString *_Nonnull)calendarId;
+- (void)gcwServiceDidSyncEvent:(GCWCalendarEvent *_Nonnull)event;
 
 @end
 
@@ -20,6 +20,7 @@
 
 @optional
 
+@property (nonatomic, readonly) BOOL isConnected;
 @property (nonatomic, readonly) BOOL hasSignup;
 @property (nonatomic, readonly) NSDictionary *_Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary *_Nullable accountEntries;
@@ -77,6 +78,7 @@
                                    date:(NSDate *_Nonnull)date
                                duration:(NSInteger)duration
                      notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
+                              important:(BOOL)important
                                 success:(void (^_Nonnull)(GCWCalendarEvent *_Nonnull))success
                                 failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
@@ -89,6 +91,11 @@
        fromCalendar:(NSString *_Nonnull)calendarId
             success:(void (^_Nonnull)(void))success
             failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)deleteRecurringEvent:(NSString *_Nonnull)eventId
+                fromCalendar:(NSString *_Nonnull)calendarId
+                     success:(void (^_Nonnull)(void))success
+                     failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)batchAddEvents:(NSArray <GCWCalendarEvent *> *_Nonnull)events
                success:(void (^_Nonnull)(NSArray<GCWCalendarEvent *> *_Nonnull))success
@@ -137,10 +144,10 @@
 
 @interface GCWCalendarService : NSObject
 
-@property (nonatomic, weak, nullable) id<CalendarServiceDelegate> delegate;
+@property (nonatomic, weak, nullable) id<GCWServiceDelegate> delegate;
 
 - (instancetype _Nonnull)initWithPresentingViewController:(UIViewController *_Nonnull)presentingViewController
-                                        delegate:(id<CalendarServiceDelegate>_Nullable)delegate
+                                        delegate:(id<GCWServiceDelegate>_Nullable)delegate
                                         calendar:(GCWCalendar *_Nullable)calendar;
 
 @end
