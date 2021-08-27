@@ -62,6 +62,13 @@
                    success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
+- (void)loadRecurringEventInstancesFor:(NSString *_Nonnull)recurringEventId
+                              calendar:(NSString *_Nonnull)calendarId
+                                  from:(NSDate *_Nullable)startDate
+                                    to:(NSDate *_Nullable)endDate
+                               success:(void (^_Nullable)(NSArray *_Nonnull))success
+                               failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
 - (GCWLoadEventsListRequest *_Nullable)createEventsListRequest;
 
 - (NSArray *_Nonnull)getFetchedEventsBefore:(NSDate *_Nonnull)startDate andAfter:(NSDate *_Nonnull)endDate;

@@ -583,6 +583,52 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }
 }
 
+- (void)loadRecurringEventInstancesFor:(NSString *)recurringEventId
+                              calendar:(NSString *)calendarId
+                                  from:(NSDate *)startDate
+                                    to:(NSDate *)endDate
+                               success:(void (^)(NSArray *))success
+                               failure:(void (^)(NSError *))failure {
+
+    __block NSMutableArray *eventInstances = [NSMutableArray array];
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.calendarService.authorizer = authorization.fetcherAuthorization;
+
+    GCWCalendarEntry *calendar = self.calendarEntries[calendarId];
+
+    GTLRCalendarQuery_EventsInstances *query = [GTLRCalendarQuery_EventsInstances queryWithCalendarId:calendarId eventId:recurringEventId];
+    query.maxResults = 2500;
+    query.showDeleted = NO;
+    if (startDate != nil) {
+        query.timeMin = [GTLRDateTime dateTimeWithDate:startDate];
+    }
+    if (endDate != nil) {
+        query.timeMax = [GTLRDateTime dateTimeWithDate:endDate];
+    }
+    [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+            return;
+        } else {
+            GTLRCalendar_Events *list = object;
+            [list.items enumerateObjectsUsingBlock:^(GTLRCalendar_Event * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:obj];
+                event.calendarId = calendarId;
+                event.color = [UIColor colorWithHex:calendar.backgroundColor];
+
+                [eventInstances addObject:event];
+            }];
+            success([eventInstances copy]);
+        }
+    }];
+}
+
 - (GCWLoadEventsListRequest *)createEventsListRequest {
     return [[GCWLoadEventsListRequest alloc] initWithCalendarEntries:self.calendarEntries
                                                 authorizationManager:self.authorizationManager

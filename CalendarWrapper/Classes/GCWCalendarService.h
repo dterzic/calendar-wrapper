@@ -87,6 +87,23 @@
             success:(void (^_Nonnull)(void))success
             failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
+- (void)updateFollowingEventsFor:(GCWCalendarEvent *_Nonnull)event
+                     forCalendar:(NSString *_Nonnull)calendarId
+                            from:(NSDate *_Nullable)startDate
+                              to:(NSDate *_Nullable)endDate
+                         success:(void (^_Nonnull)(void))success
+                         failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)updateRecurringEventFor:(GCWCalendarEvent *_Nonnull)event
+                    forCalendar:(NSString *_Nonnull)calendarId
+                        success:(void (^_Nonnull)(GCWCalendarEvent *_Nonnull))success
+                        failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)updateRecurringEventsFor:(NSArray<GCWCalendarEvent *> *_Nonnull)events
+                           delta:(NSTimeInterval)delta
+                         success:(void (^_Nonnull)(void))success
+                         failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
 - (void)deleteEvent:(NSString *_Nonnull)eventId
        fromCalendar:(NSString *_Nonnull)calendarId
             success:(void (^_Nonnull)(void))success
