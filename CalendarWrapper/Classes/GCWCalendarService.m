@@ -415,8 +415,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *))failure {
 
-    __block NSUInteger count = 0;
-    __weak GCWCalendarService *weakSelf = self;
     [self.calendar loadRecurringEventInstancesFor:event.recurringEventId
                                          calendar:calendarId
                                              from:startDate
