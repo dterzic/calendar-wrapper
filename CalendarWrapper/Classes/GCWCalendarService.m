@@ -438,7 +438,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             eventInstance.attendeesEmailAddresses = event.attendeesEmailAddresses;
             eventInstance.location = event.location;
             eventInstance.notificationPeriod = event.notificationPeriod;
-            eventInstance.descriptionProperty = event.description;
+            eventInstance.descriptionProperty = event.descriptionProperty;
             eventInstance.isImportant = event.isImportant;
         }
         [self.calendar batchUpdateEvents:eventInstances
@@ -466,15 +466,16 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
                 [weakSelf.delegate gcwServiceDidDeleteEvent:recurringEvent.identifier forCalendar:calendarId];
             }
-            NSTimeInterval durationInMinutes = [recurringEvent.endDate timeIntervalSinceDate:recurringEvent.startDate] / 60;
+            NSDate *newStartDate = [NSDate addTimeFrom:event.startDate to:recurringEvent.startDate];
+            NSTimeInterval durationInMinutes = [event.endDate timeIntervalSinceDate:event.startDate] / 60;
 
             [self createRecurringEventForCalendar:calendarId
                                         withTitle:event.summary
-                                       recurrence:event.recurrence
+                                       recurrence:recurringEvent.recurrence
                                          location:event.location
                           attendeesEmailAddresses:event.attendeesEmailAddresses
-                                      description:event.description
-                                             date:recurringEvent.startDate
+                                      description:event.descriptionProperty
+                                             date:newStartDate
                                          duration:durationInMinutes
                                notificationPeriod:event.notificationPeriod
                                         important:event.isImportant
@@ -517,7 +518,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                                            recurrence:recurringEvent.recurrence
                                              location:recurringEvent.location
                               attendeesEmailAddresses:recurringEvent.attendeesEmailAddresses
-                                          description:recurringEvent.description
+                                          description:recurringEvent.descriptionProperty
                                                  date:recurringEvent.startDate
                                              duration:durationInMinutes
                                    notificationPeriod:recurringEvent.notificationPeriod

@@ -13,11 +13,13 @@ typedef NS_ENUM(NSInteger, GCWCalendarDayType) {
 @property (nonatomic, readonly) GCWCalendarDayType dayType;
 @property (nonatomic, readonly) BOOL isInCurrentYear;
 
++ (NSDate *)addTimeFrom:(NSDate *)time to:(NSDate *)date;
+
 - (BOOL)inSameDayAsDate:(NSDate *)date;
-- (BOOL) isLaterThanOrEqualTo:(NSDate*)date;
-- (BOOL) isEarlierThanOrEqualTo:(NSDate*)date;
-- (BOOL) isLaterThan:(NSDate*)date;
-- (BOOL) isEarlierThan:(NSDate*)date;
+- (BOOL)isLaterThanOrEqualTo:(NSDate*)date;
+- (BOOL)isEarlierThanOrEqualTo:(NSDate*)date;
+- (BOOL)isLaterThan:(NSDate*)date;
+- (BOOL)isEarlierThan:(NSDate*)date;
 
 - (NSDate *)dateFromNumberOfMonths:(NSInteger)months;
 - (NSDate *)dateFromNumberOfHours:(NSInteger)hours;

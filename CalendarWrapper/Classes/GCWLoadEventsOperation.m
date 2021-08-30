@@ -37,10 +37,9 @@
             dispatch_group_leave(group);
         } failure:^(NSError *error) {
             self.error = error;
-            dispatch_group_leave(group);
         }];
     });
-    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+    dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(30.0 * NSEC_PER_SEC)));
 }
 
 @end

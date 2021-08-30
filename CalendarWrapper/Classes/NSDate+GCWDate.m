@@ -15,6 +15,17 @@
     }
 }
 
++ (NSDate *)addTimeFrom:(NSDate *)time to:(NSDate *)date {
+    NSDateComponents *dateComponents = [[NSCalendar currentCalendar] components:NSCalendarUnitDay | NSCalendarUnitMonth | NSCalendarUnitYear  fromDate:date];
+    NSDateComponents *timeComponents = [[NSCalendar currentCalendar] components:NSCalendarUnitHour | NSCalendarUnitMinute fromDate:time];
+
+    [dateComponents setHour:[timeComponents hour]];
+    [dateComponents setMinute:[timeComponents minute]];
+
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    return [calendar dateFromComponents:dateComponents];
+}
+
 - (NSDate *)dateFromNumberOfMonths:(NSInteger)months {
     return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitMonth
                                                   value:months
