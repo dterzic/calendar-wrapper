@@ -30,16 +30,21 @@
         [self.calendar loadEventsListFrom:self.startDate
                                        to:self.endDate
                                    filter:self.filter
-                                  success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount) {
+                                  success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger filteredEventsCount, NSArray *errors) {
             self.loadedEvents = loadedEvents;
             self.removedEvents = removedEvents;
             self.filteredEventsCount = filteredEventsCount;
+            if (errors.count > 0) {
+                NSError *firstError = (NSError *)errors.firstObject;
+                self.error = [firstError copy];
+            }
             dispatch_group_leave(group);
         } failure:^(NSError *error) {
             self.error = error;
+            dispatch_group_leave(group);
         }];
     });
-    dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(30.0 * NSEC_PER_SEC)));
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 }
 
 @end

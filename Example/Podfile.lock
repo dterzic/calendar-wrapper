@@ -4,7 +4,7 @@ PODS:
     - AppAuth/ExternalUserAgent (= 1.4.0)
   - AppAuth/Core (1.4.0)
   - AppAuth/ExternalUserAgent (1.4.0)
-  - CalendarWrapper (0.5.28):
+  - CalendarWrapper (0.5.29):
     - AppAuth
     - GoogleAPIClientForREST/Calendar (~> 1.3)
     - GTMAppAuth
@@ -57,7 +57,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
-  CalendarWrapper: e15abda72b21e91e945bb39626779fc395639894
+  CalendarWrapper: 72b5fad1c89a9d0835307833fea86dad105660fb
   GoogleAPIClientForREST: 4bb409633efcc2e1b3f945afe7e35039b5a61db2
   GTMAppAuth: 197a8dabfea5d665224aa00d17f164fc2248dab9
   GTMSessionFetcher: b3503b20a988c4e20cc189aa798fd18220133f52

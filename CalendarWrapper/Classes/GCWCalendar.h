@@ -59,7 +59,7 @@
 - (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
                         to:(NSDate *_Nonnull)endDate
                     filter:(NSString *_Nullable)filter
-                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger))success
+                   success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger, NSArray *_Nonnull))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)loadRecurringEventInstancesFor:(NSString *_Nonnull)recurringEventId
@@ -75,7 +75,7 @@
 
 - (void)syncEventsFrom:(NSDate *_Nonnull)startDate
                     to:(NSDate *_Nonnull)endDate
-               success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSArray *_Nonnull))success
+               success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSArray *_Nonnull, NSArray *_Nonnull))success
                failure:(void (^_Nullable)(NSError *_Nonnull))failure
               progress:(void (^_Nullable)(CGFloat))progress;
 
