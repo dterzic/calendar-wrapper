@@ -144,7 +144,7 @@ static NSString * _Nonnull const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps
     [self.calendar loadEventsListFrom:[NSDate date]
                                    to:[NSDate dateWithTimeIntervalSinceNow:7 * 24 * 3600]
                                filter:nil
-                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger fetchedCound) {
+                              success:^(NSDictionary *loadedEvents, NSArray *removedEvents, NSUInteger fetchedCound, NSArray *errors) {
         self.events = loadedEvents;
         [weakSelf.eventsTable reloadData];
     } failure:^(NSError *error) {
