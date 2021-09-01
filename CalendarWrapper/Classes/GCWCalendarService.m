@@ -433,8 +433,8 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
         for (GCWCalendarEvent *eventInstance in eventInstances) {
             eventInstance.summary = event.summary;
             eventInstance.recurrence = event.recurrence;
-            eventInstance.startDate = [eventInstance.startDate dateFromNumberOfSeconds:startDelta];
-            eventInstance.endDate = [eventInstance.endDate dateFromNumberOfSeconds:endDelta];
+            eventInstance.startDate = [eventInstance.startDate dateByAddingSeconds:startDelta];
+            eventInstance.endDate = [eventInstance.endDate dateByAddingSeconds:endDelta];
             eventInstance.attendeesEmailAddresses = event.attendeesEmailAddresses;
             eventInstance.location = event.location;
             eventInstance.notificationPeriod = event.notificationPeriod;
@@ -444,46 +444,6 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
         [self.calendar batchUpdateEvents:eventInstances
                                  success:^{
             success();
-        } failure:^(NSError *error) {
-            failure(error);
-        }];
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
-}
-
-- (void)updateRecurringEventFor:(GCWCalendarEvent *)event
-                    forCalendar:(NSString *)calendarId
-                        success:(void (^)(GCWCalendarEvent *))success
-                        failure:(void (^)(NSError *))failure {
-    [self removeEventFromCache:event.recurringEventId];
-
-    __weak GCWCalendarService *weakSelf = self;
-    [self.calendar loadEventForCalendar:calendarId eventId:event.recurringEventId success:^(GCWCalendarEvent *recurringEvent) {
-        [self.calendar deleteEvent:recurringEvent.identifier
-                      fromCalendar:calendarId
-                           success:^{
-            if ([weakSelf.delegate respondsToSelector:@selector(gcwServiceDidDeleteEvent:forCalendar:)]) {
-                [weakSelf.delegate gcwServiceDidDeleteEvent:recurringEvent.identifier forCalendar:calendarId];
-            }
-            NSDate *newStartDate = [NSDate addTimeFrom:event.startDate to:recurringEvent.startDate];
-            NSTimeInterval durationInMinutes = [event.endDate timeIntervalSinceDate:event.startDate] / 60;
-
-            [self createRecurringEventForCalendar:calendarId
-                                        withTitle:event.summary
-                                       recurrence:recurringEvent.recurrence
-                                         location:event.location
-                          attendeesEmailAddresses:event.attendeesEmailAddresses
-                                      description:event.descriptionProperty
-                                             date:newStartDate
-                                         duration:durationInMinutes
-                               notificationPeriod:event.notificationPeriod
-                                        important:event.isImportant
-                                          success:^(GCWCalendarEvent *newEvent) {
-                success(newEvent);
-            } failure:^(NSError *error) {
-                failure(error);
-            }];
         } failure:^(NSError *error) {
             failure(error);
         }];
@@ -524,6 +484,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
                                    notificationPeriod:recurringEvent.notificationPeriod
                                             important:recurringEvent.isImportant
                                               success:^(GCWCalendarEvent *newEvent) {
+                    success();
                 } failure:^(NSError *error) {
                     failure(error);
                 }];

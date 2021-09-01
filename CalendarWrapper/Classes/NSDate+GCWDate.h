@@ -23,7 +23,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarDayType) {
 
 - (NSDate *)dateFromNumberOfMonths:(NSInteger)months;
 - (NSDate *)dateFromNumberOfHours:(NSInteger)hours;
-- (NSDate *)dateFromNumberOfSeconds:(NSInteger)seconds;
+- (NSDate *)dateByAddingSeconds:(NSInteger)seconds;
 - (NSDate *)dateWithDaylightSavingOffset;
 - (NSInteger)numberOfDaysUntil:(NSDate *)date;
 

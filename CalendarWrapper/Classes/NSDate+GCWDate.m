@@ -40,7 +40,7 @@
                                                 options:0];
 }
 
-- (NSDate *)dateFromNumberOfSeconds:(NSInteger)seconds {
+- (NSDate *)dateByAddingSeconds:(NSInteger)seconds {
     return [NSCalendar.currentCalendar dateByAddingUnit:NSCalendarUnitSecond
                                                   value:seconds
                                                  toDate:self
