@@ -204,12 +204,20 @@
 
 - (void)setAttendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses {
     NSMutableArray *attendees = [NSMutableArray arrayWithArray:self.attendees];
-    for (NSString *email in attendeesEmailAddresses) {
-        if (email.length && ![self hasAttendeeWithEmail:email]) {
-            GTLRCalendar_EventAttendee *attendee = [[GTLRCalendar_EventAttendee alloc] init];
-            attendee.email = email;
-            [attendees addObject:attendee];
+    NSMutableArray *attendeeEmails = [NSMutableArray arrayWithArray:attendeesEmailAddresses];
+    for (GTLRCalendar_EventAttendee *attendee in self.attendees) {
+        if (attendee.email.length) {
+            if ([attendeeEmails containsObject:attendee.email]) {
+                [attendeeEmails removeObject:attendee.email];
+            } else {
+                [attendees removeObject:attendee];
+            }
         }
+    }
+    for (NSString *email in attendeeEmails) {
+        GTLRCalendar_EventAttendee *attendee = [[GTLRCalendar_EventAttendee alloc] init];
+        attendee.email = email;
+        [attendees addObject:attendee];
     }
     self.attendees = attendees;
 }
