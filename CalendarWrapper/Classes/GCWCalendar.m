@@ -8,6 +8,7 @@
 #import "GCWCalendarEvent.h"
 #import "GCWCalendarAuthorizationManager.h"
 #import "GCWCalendarAuthorization.h"
+#import "GCWPerson.h"
 #import "GCWUserAccount.h"
 #import "GCWLoadEventsListRequest.h"
 
@@ -19,9 +20,8 @@
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
-static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l:/oauthredirect";
+static NSString *const kRedirectURI = @"com.googleusercontent.apps.235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s:/oauthredirect";
 static NSString *const kUserIDs = @"googleUserIDsKey";
-static NSString *const kOIDAuthorizationCalendarScope = @"https://www.googleapis.com/auth/calendar";
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTokensKey";
@@ -52,6 +52,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         _calendarService = [[GTLRCalendarService alloc] init];
         _calendarService.shouldFetchNextPages = true;
         _calendarService.retryEnabled = true;
+
+        _peopleService = [[GTLRPeopleServiceService alloc] init];
         if (authorizationManager) {
             _authorizationManager = authorizationManager;
         } else {
@@ -241,7 +243,11 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         OIDAuthorizationRequest *request =
         [[OIDAuthorizationRequest alloc] initWithConfiguration:configuration
                                                       clientId:self.clientId
-                                                        scopes:@[OIDScopeOpenID, OIDScopeProfile, kOIDAuthorizationCalendarScope]
+                                                        scopes:@[OIDScopeOpenID,
+                                                                 OIDScopeProfile,
+                                                                 kGTLRAuthScopeCalendar,
+                                                                 kGTLRAuthScopePeopleServiceContactsReadonly,
+                                                                 kGTLRAuthScopePeopleServiceDirectoryReadonly]
                                                    redirectURL:redirectURI
                                                   responseType:OIDResponseTypeCode
                                           additionalParameters:nil];
@@ -984,6 +990,62 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                              }
                          }];
     }
+}
+
+- (void)getContactsFor:(NSString *)calendarId
+               success:(void (^)(NSArray <GCWPerson *> *))success
+               failure:(void (^)(NSError *))failure {
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.peopleService.authorizer = authorization.fetcherAuthorization;
+
+    GTLRPeopleServiceQuery_PeopleConnectionsList *query = [GTLRPeopleServiceQuery_PeopleConnectionsList queryWithResourceName:@"people/me"];
+    query.pageSize = 1000;
+    query.personFields = @"names,emailAddresses,photos";
+    [self.peopleService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            NSMutableArray *persons = [NSMutableArray array];
+            success([persons copy]);
+        }
+    }];
+}
+
+- (void)getPeopleFor:(NSString *)calendarId
+             success:(void (^)(NSArray <GCWPerson *> *))success
+             failure:(void (^)(NSError *))failure {
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendarId]]);
+        return;
+    }
+    self.peopleService.authorizer = authorization.fetcherAuthorization;
+
+    GTLRPeopleServiceQuery_PeopleListDirectoryPeople *query = [GTLRPeopleServiceQuery_PeopleListDirectoryPeople query];
+    query.pageSize = 1000;
+    query.sources = @[kGTLRPeopleServiceSourcesDirectorySourceTypeDomainContact, kGTLRPeopleServiceSourcesDirectorySourceTypeDomainProfile];
+    query.readMask = @"genders,names,nicknames,emailAddresses,occupations,organizations,phoneNumbers,photos";
+    [self.peopleService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            NSMutableArray *persons = [NSMutableArray array];
+            GTLRPeopleService_ListDirectoryPeopleResponse *response = (GTLRPeopleService_ListDirectoryPeopleResponse *)object;
+            for (GTLRPeopleService_Person *person in response.people) {
+                GCWPerson *gcwPerson = [[GCWPerson alloc] initWithPerson:person];
+                [persons addObject:gcwPerson];
+            }
+            success([persons copy]);
+        }
+    }];
 }
 
 #pragma mark  - OIDAuthStateChangeDelegate

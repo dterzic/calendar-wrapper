@@ -42,4 +42,5 @@ Pod::Spec.new do |s|
   s.dependency 'GTMAppAuth'
   s.dependency 'GTMSessionFetcher'
   s.dependency 'GoogleAPIClientForREST/Calendar', '~> 1.3'
+  s.dependency 'GoogleAPIClientForREST/PeopleService', '~> 1.3'
 end

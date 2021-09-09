@@ -2,9 +2,12 @@
 #import <AppAuth/AppAuth.h>
 #import <GTMAppAuth/GTMAppAuth.h>
 #import <GoogleAPIClientForREST/GTLRCalendar.h>
+#import <GoogleAPIClientForREST/GTLRPeopleService.h>
 
 @class GTLRCalendarService;
+@class GTLRPeopleServiceService;
 @class GCWCalendarEvent;
+@class GCWPerson;
 @class GCWCalendarAuthorization;
 @class GCWLoadEventsListRequest;
 
@@ -13,6 +16,7 @@
 @interface GCWCalendar : NSObject
 
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
+@property (nonatomic) GTLRPeopleServiceService* _Nullable peopleService;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic, strong, nullable) id<CalendarAuthorizationProtocol> authorizationManager;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
@@ -106,5 +110,13 @@
             fromCalendars:(NSArray <NSString *> *_Nonnull)calendarIds
                   success:(void (^_Nullable)(void))success
                   failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)getContactsFor:(NSString *_Nonnull)calendarId
+               success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
+               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)getPeopleFor:(NSString *_Nonnull)calendarId
+             success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
+             failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 @end

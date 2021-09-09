@@ -13,7 +13,7 @@
 #import "UIColor+MNTColor.h"
 
 
-static NSString * const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
+static NSString * const kClientID = @"235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s.apps.googleusercontent.com";
 static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey";
 
 @interface GCWCalendarService () <CalendarServiceProtocol>
@@ -653,6 +653,26 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             return;
         }];
     }
+}
+
+- (void)getContactsFor:(NSString *)calendarId
+               success:(void (^)(NSArray <GCWPerson *> *))success
+               failure:(void (^)(NSError *))failure {
+    [self.calendar getContactsFor:calendarId success:^(NSArray<GCWPerson *> *persons) {
+        success(persons);
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)getPeopleFor:(NSString *)calendarId
+             success:(void (^)(NSArray <GCWPerson *> *))success
+             failure:(void (^)(NSError *))failure {
+    [self.calendar getPeopleFor:calendarId success:^(NSArray<GCWPerson *> *persons) {
+        success(persons);
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
 }
 
 - (void)saveState {

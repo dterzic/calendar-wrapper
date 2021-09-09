@@ -3,6 +3,7 @@
 @class GCWCalendar;
 @class GTLRCalendar_Event;
 @class GCWCalendarEvent;
+@class GCWPerson;
 @class GCWLoadEventsListRequest;
 
 @protocol GCWServiceDelegate <NSObject>
@@ -144,6 +145,14 @@
 - (void)loadRecurringEventsFor:(NSArray <GCWCalendarEvent *> *_Nonnull)events
                        success:(void (^_Nonnull)(NSArray <GCWCalendarEvent *> *_Nullable))success
                        failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)getContactsFor:(NSString *_Nonnull)calendarId
+               success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
+               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)getPeopleFor:(NSString *_Nonnull)calendarId
+             success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
+             failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)saveState;
 
