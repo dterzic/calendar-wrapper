@@ -285,6 +285,78 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }];
 }
 
+- (void)doLogoutOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    NSURL *issuer = [NSURL URLWithString:kIssuerURI];
+    NSURL *redirectURI = [NSURL URLWithString:@"https://google.com"];
+    NSURL *endSessionURL = [issuer URLByAppendingPathComponent:@"connect/endsession"];
+
+    self.userAccounts = [NSMutableDictionary dictionary];
+    NSArray *userIDs = [self.userDefaults arrayForKey:kUserIDs];
+
+    if (!userIDs || userIDs.count == 0) {
+        failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                    code:-10001
+                                userInfo:@{NSLocalizedDescriptionKey:@"No valid authorization"}]);
+        return;
+    }
+    NSURL *url = [issuer URLByAppendingPathComponent:@"connect/endsession"];
+    OIDServiceConfiguration *configuration = [[OIDServiceConfiguration alloc] initWithAuthorizationEndpoint:url tokenEndpoint:url];
+
+    // discovers endpoints
+    [OIDAuthorizationService discoverServiceConfigurationForIssuer:issuer completion:^(OIDServiceConfiguration *_Nullable configuration, NSError *_Nullable error) {
+        if (!configuration) {
+            NSLog(@"CalendarWrapper: Error retrieving discovery document: %@", [self encodedUserInfoFor:error]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+            return;
+        }
+        OIDServiceConfiguration *endpointConf = [[OIDServiceConfiguration alloc] initWithAuthorizationEndpoint:configuration.authorizationEndpoint
+                                                                                            tokenEndpoint:configuration.tokenEndpoint issuer:issuer
+                                                                                     registrationEndpoint:configuration.registrationEndpoint
+                                                                                       endSessionEndpoint:endSessionURL];
+        if (!endpointConf) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                            code:-10007
+                                        userInfo:@{NSLocalizedDescriptionKey:@"No valid end_session_endpoint"}]);
+            });
+            return;
+        }
+        [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull userID, NSUInteger idx, BOOL * _Nonnull stop) {
+            NSString *keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:userID];
+
+            GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
+            authorization.fetcherAuthorization.authState.stateChangeDelegate = self;
+            NSString *lastToken = authorization.fetcherAuthorization.authState.lastTokenResponse.idToken;
+
+            [self.authorizationManager removeAuthorization:authorization
+                                              fromKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
+
+            OIDEndSessionRequest *request = [[OIDEndSessionRequest alloc] initWithConfiguration:endpointConf
+                                                                                    idTokenHint:lastToken
+                                                                          postLogoutRedirectURL:redirectURI
+                                                                           additionalParameters:nil];
+
+            OIDExternalUserAgentIOS *agent = [[OIDExternalUserAgentIOS alloc] initWithPresentingViewController:self.presentingViewController];
+
+            self.currentAuthorizationFlow = [OIDAuthorizationService presentEndSessionRequest:request
+                                                                            externalUserAgent:agent
+                                                                                     callback:^(OIDEndSessionResponse *endSessionResponse,
+                                                                                                NSError *error) {
+                self.userAccounts = [NSMutableDictionary dictionary];
+                [self.userDefaults setValue:@[] forKey:kUserIDs];
+
+                if (error) {
+                    failure(error);
+                } else {
+                    success();
+                }
+            }];
+        }];
+    }];
+}
+
 - (GCWCalendarAuthorization *)getAuthorizationForCalendar:(NSString *)calendarId {
     __block GCWCalendarAuthorization *calendarAuthorization = nil;
     NSString *userId = self.calendarUsers[calendarId];

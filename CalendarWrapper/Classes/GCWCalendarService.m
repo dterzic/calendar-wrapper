@@ -147,6 +147,14 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     }];
 }
 
+- (void)doLogoutOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    [self.calendar doLogoutOnSuccess:^{
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
 - (void)loadCalendarListOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
     [self.calendar loadCalendarListsForRole:kGTLRCalendarMinAccessRoleReader
                                            success:^(NSDictionary *calendars) {
