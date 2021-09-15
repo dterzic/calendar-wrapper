@@ -14,7 +14,8 @@
     [archive enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         NSData *data = (NSData *)obj;
         NSError *error = nil;
-        GCWCalendarEntry *entry = [NSKeyedUnarchiver unarchivedObjectOfClass:GCWCalendarEntry.class fromData:data error:&error];
+        NSSet *classes = [NSSet setWithObjects:GCWCalendarEntry.class, NSString.class, nil];
+        GCWCalendarEntry *entry = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
         if (error) {
             NSLog(@"Unarchive entry failed with error: %@", error);
         } else {

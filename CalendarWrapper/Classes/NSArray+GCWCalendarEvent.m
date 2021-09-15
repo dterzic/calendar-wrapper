@@ -21,7 +21,7 @@ static NSString *const kCalendarEventKey = @"calendarWrapperCalendarEventKey";
         } else {
             [secureDecoder setRequiresSecureCoding:YES];
 
-            NSSet *classes = [NSSet setWithObjects:GCWCalendarEvent.class, UIColor.class, nil];
+            NSSet *classes = [NSSet setWithObjects:GCWCalendarEvent.class, UIColor.class, NSString.class, nil];
             GCWCalendarEvent *event = [secureDecoder decodeObjectOfClasses:classes forKey:kCalendarEventKey];
 
             [events addObject:event];

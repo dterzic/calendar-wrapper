@@ -299,11 +299,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                 userInfo:@{NSLocalizedDescriptionKey:@"No valid authorization"}]);
         return;
     }
-    NSURL *url = [issuer URLByAppendingPathComponent:@"connect/endsession"];
-    OIDServiceConfiguration *configuration = [[OIDServiceConfiguration alloc] initWithAuthorizationEndpoint:url tokenEndpoint:url];
-
     // discovers endpoints
-    [OIDAuthorizationService discoverServiceConfigurationForIssuer:issuer completion:^(OIDServiceConfiguration *_Nullable configuration, NSError *_Nullable error) {
+    [OIDAuthorizationService discoverServiceConfigurationForIssuer:issuer completion:^(OIDServiceConfiguration *configuration, NSError *error) {
         if (!configuration) {
             NSLog(@"CalendarWrapper: Error retrieving discovery document: %@", [self encodedUserInfoFor:error]);
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -312,9 +309,10 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             return;
         }
         OIDServiceConfiguration *endpointConf = [[OIDServiceConfiguration alloc] initWithAuthorizationEndpoint:configuration.authorizationEndpoint
-                                                                                            tokenEndpoint:configuration.tokenEndpoint issuer:issuer
-                                                                                     registrationEndpoint:configuration.registrationEndpoint
-                                                                                       endSessionEndpoint:endSessionURL];
+                                                                                                 tokenEndpoint:configuration.tokenEndpoint
+                                                                                                        issuer:issuer
+                                                                                          registrationEndpoint:configuration.registrationEndpoint
+                                                                                            endSessionEndpoint:endSessionURL];
         if (!endpointConf) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
