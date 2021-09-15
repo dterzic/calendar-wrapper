@@ -6,45 +6,45 @@ PODS:
   - AppAuth/ExternalUserAgent (1.4.0)
   - CalendarWrapper (0.5.33):
     - AppAuth
-    - GoogleAPIClientForREST/Calendar (~> 1.3)
-    - GoogleAPIClientForREST/PeopleService (~> 1.3)
+    - GoogleAPIClientForREST/Calendar
+    - GoogleAPIClientForREST/PeopleService
     - GTMAppAuth
     - GTMSessionFetcher
-  - GoogleAPIClientForREST/Calendar (1.5.1):
+  - GoogleAPIClientForREST/Calendar (1.6.0):
     - GoogleAPIClientForREST/Core
-    - GTMSessionFetcher (>= 1.1.7)
-  - GoogleAPIClientForREST/Core (1.5.1):
-    - GTMSessionFetcher (>= 1.1.7)
-  - GoogleAPIClientForREST/PeopleService (1.5.1):
+    - GTMSessionFetcher (>= 1.6.1)
+  - GoogleAPIClientForREST/Core (1.6.0):
+    - GTMSessionFetcher (>= 1.6.1)
+  - GoogleAPIClientForREST/PeopleService (1.6.0):
     - GoogleAPIClientForREST/Core
-    - GTMSessionFetcher (>= 1.1.7)
-  - GTMAppAuth (1.1.0):
+    - GTMSessionFetcher (>= 1.6.1)
+  - GTMAppAuth (1.2.2):
     - AppAuth/Core (~> 1.4)
-    - GTMSessionFetcher (~> 1.4)
-  - GTMSessionFetcher (1.5.0):
-    - GTMSessionFetcher/Full (= 1.5.0)
-  - GTMSessionFetcher/Core (1.5.0)
-  - GTMSessionFetcher/Full (1.5.0):
-    - GTMSessionFetcher/Core (= 1.5.0)
-  - Nimble (9.0.0)
-  - OHHTTPStubs (9.0.0):
-    - OHHTTPStubs/Default (= 9.0.0)
-  - OHHTTPStubs/Core (9.0.0)
-  - OHHTTPStubs/Default (9.0.0):
+    - GTMSessionFetcher/Core (~> 1.5)
+  - GTMSessionFetcher (1.7.0):
+    - GTMSessionFetcher/Full (= 1.7.0)
+  - GTMSessionFetcher/Core (1.7.0)
+  - GTMSessionFetcher/Full (1.7.0):
+    - GTMSessionFetcher/Core (= 1.7.0)
+  - Nimble (9.2.1)
+  - OHHTTPStubs (9.1.0):
+    - OHHTTPStubs/Default (= 9.1.0)
+  - OHHTTPStubs/Core (9.1.0)
+  - OHHTTPStubs/Default (9.1.0):
     - OHHTTPStubs/Core
     - OHHTTPStubs/JSON
     - OHHTTPStubs/NSURLSession
     - OHHTTPStubs/OHPathHelpers
-  - OHHTTPStubs/JSON (9.0.0):
+  - OHHTTPStubs/JSON (9.1.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/NSURLSession (9.0.0):
+  - OHHTTPStubs/NSURLSession (9.1.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/OHPathHelpers (9.0.0)
+  - OHHTTPStubs/OHPathHelpers (9.1.0)
 
 DEPENDENCIES:
   - CalendarWrapper (from `../`)
-  - Nimble
-  - OHHTTPStubs (~> 9.0.0)
+  - Nimble (~> 9.2.1)
+  - OHHTTPStubs (~> 9.1.0)
 
 SPEC REPOS:
   trunk:
@@ -61,13 +61,13 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
-  CalendarWrapper: 249f56df8cbe82a4dfa1b539034e90cd8c6ccf9e
-  GoogleAPIClientForREST: 4bb409633efcc2e1b3f945afe7e35039b5a61db2
-  GTMAppAuth: 197a8dabfea5d665224aa00d17f164fc2248dab9
-  GTMSessionFetcher: b3503b20a988c4e20cc189aa798fd18220133f52
-  Nimble: 3b4ec3fd40f1dc178058e0981107721c615643d8
-  OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
+  CalendarWrapper: 3b1a61a6a169c799f949402fe95df5eb25c126bb
+  GoogleAPIClientForREST: 5183df28e7bcb7b7b41ebd558e16083cfed60d99
+  GTMAppAuth: ad5c2b70b9a8689e1a04033c9369c4915bfcbe89
+  GTMSessionFetcher: 43748f93435c2aa068b1cbe39655aaf600652e91
+  Nimble: e7e615c0335ee4bf5b0d786685451e62746117d5
+  OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
 
-PODFILE CHECKSUM: 1db7e6314595009c47b32c985434e70f1f4e72c4
+PODFILE CHECKSUM: 7887b10ecc1b9f2904efbd4f927366e9588cceb9
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.11.2
