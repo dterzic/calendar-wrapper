@@ -116,8 +116,13 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
 }
 
-- (NSString *)getCalendarOwner:(NSString *)calendarId {
+- (NSString *)getCalendarOwnerId:(NSString *)calendarId {
     return self.calendarUsers[calendarId];
+}
+
+- (GCWUserAccount *)getCalendarOwner:(NSString *)calendarId {
+    NSString *userId = [self getCalendarOwnerId:calendarId];
+    return self.userAccounts[userId];
 }
 
 - (NSDictionary <NSString *, NSArray<GCWCalendarEntry *> *> *)accountEntries {
@@ -786,7 +791,14 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                             progress(percent + calendarPercent);
                         }
                         if ([event.status isEqualToString:@"cancelled"]) {
-                            [self.calendarEvents removeObjectForKey:event.identifier];
+                            id item = self.calendarEvents[event.identifier];
+                            if ([item isKindOfClass:NSDictionary.class]) {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                                [items removeObjectForKey:event.calendarId];
+                                self.calendarEvents[event.identifier] = items.copy;
+                            } else {
+                                [self.calendarEvents removeObjectForKey:event.identifier];
+                            }
                             removedEvents[event.identifier] = event;
                         } else if (([event.startDate isLaterThanOrEqualTo:startDate] &&
                                     [event.endDate isEarlierThanOrEqualTo:endDate]) ||

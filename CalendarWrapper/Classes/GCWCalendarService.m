@@ -52,7 +52,11 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     [self.calendar.calendarSyncTokens removeObjectForKey:calendarId];
 }
 
-- (NSString *)getCalendarOwner:(NSString *)calendarId {
+- (NSString *)getCalendarOwnerId:(NSString *)calendarId {
+    return [self.calendar getCalendarOwnerId:calendarId];
+}
+
+- (GCWUserAccount *)getCalendarOwner:(NSString *)calendarId {
     return [self.calendar getCalendarOwner:calendarId];
 }
 

@@ -5,6 +5,7 @@
 @class GCWCalendarEvent;
 @class GCWPerson;
 @class GCWLoadEventsListRequest;
+@class GCWUserAccount;
 
 @protocol GCWServiceDelegate <NSObject>
 
@@ -33,7 +34,9 @@
 
 - (void)removeSyncTokenForCalendar:(NSString *_Nonnull)calendarId;
 
-- (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
+- (NSString *_Nullable)getCalendarOwnerId:(NSString *_Nonnull)calendarId;
+
+- (GCWUserAccount *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 
 - (GCWCalendarEvent *_Nullable)getCalendarEventWithId:(NSString *_Nonnull)eventId calendarId:(NSString *_Nullable)calendarId;
 

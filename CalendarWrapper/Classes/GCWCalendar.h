@@ -10,6 +10,7 @@
 @class GCWPerson;
 @class GCWCalendarAuthorization;
 @class GCWLoadEventsListRequest;
+@class GCWUserAccount;
 
 @protocol CalendarAuthorizationProtocol;
 
@@ -32,7 +33,9 @@
                        authorizationManager:(id<CalendarAuthorizationProtocol> _Nullable)authorizationManager
                                userDefaults:(NSUserDefaults *_Nullable)userDefaults;
 
-- (NSString *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
+- (NSString *_Nullable)getCalendarOwnerId:(NSString *_Nonnull)calendarId;
+
+- (GCWUserAccount *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 
 - (void)doLoginOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
