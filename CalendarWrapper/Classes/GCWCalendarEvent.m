@@ -202,6 +202,17 @@
     return attendeeEmails;
 }
 
+- (GTLRCalendar_EventAttendee *)getAttendeeWithEmail:(NSString *)email {
+    GTLRCalendar_EventAttendee *match = nil;
+    for (GTLRCalendar_EventAttendee *attendee in self.attendees) {
+        if ([attendee.email isEqualToString:email]) {
+            match = attendee;
+            break;
+        }
+    }
+    return match;
+}
+
 - (void)setAttendeesEmailAddresses:(NSArray<NSString *> *)attendeesEmailAddresses {
     NSMutableArray *attendees = [NSMutableArray arrayWithArray:self.attendees];
     NSMutableArray *attendeeEmails = [NSMutableArray arrayWithArray:attendeesEmailAddresses];

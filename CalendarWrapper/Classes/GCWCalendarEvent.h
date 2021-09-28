@@ -38,6 +38,7 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic) NSNumber *notificationPeriod;
 
 - (BOOL)hasAttendeeWithEmail:(NSString *)email;
+- (GTLRCalendar_EventAttendee *)getAttendeeWithEmail:(NSString *)email;
 
 @end
 

@@ -452,6 +452,7 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             eventInstance.notificationPeriod = event.notificationPeriod;
             eventInstance.descriptionProperty = event.descriptionProperty;
             eventInstance.isImportant = event.isImportant;
+            eventInstance.selfAsAttendee.responseStatus = event.selfAsAttendee.responseStatus;
         }
         [self.calendar batchUpdateEvents:eventInstances
                                  success:^{
