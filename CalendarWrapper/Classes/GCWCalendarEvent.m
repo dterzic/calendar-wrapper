@@ -181,6 +181,59 @@
     return nil;
 }
 
+- (NSString *)conferenceName {
+    return self.conferenceData.conferenceSolution.name;
+}
+
+- (NSString *)conferenceIconUri {
+    return self.conferenceData.conferenceSolution.iconUri;
+}
+
+- (NSString *)conferenceVideoId {
+    for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+        if ([entryPoint.entryPointType isEqualToString:@"video"]) {
+            return entryPoint.meetingCode;
+        }
+    }
+    return nil;
+}
+
+- (NSString *)conferenceVideoUri {
+    for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+        if ([entryPoint.entryPointType isEqualToString:@"video"]) {
+            return entryPoint.uri;
+        }
+    }
+    return nil;
+}
+
+- (NSString *)conferencePhoneNumber {
+    for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+        if ([entryPoint.entryPointType isEqualToString:@"phone"]) {
+            return entryPoint.uri;
+        }
+    }
+    return nil;
+}
+
+- (NSString *)conferenceFormattedPhoneNumber {
+    for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+        if ([entryPoint.entryPointType isEqualToString:@"phone"]) {
+            return [NSString stringWithFormat:@"%@ %@", entryPoint.regionCode, entryPoint.label];
+        }
+    }
+    return nil;
+}
+
+- (NSString *)conferenceInfoUri {
+    for (GTLRCalendar_EntryPoint *entryPoint in self.conferenceData.entryPoints) {
+        if ([entryPoint.entryPointType isEqualToString:@"more"]) {
+            return entryPoint.uri;
+        }
+    }
+    return nil;
+}
+
 - (BOOL)hasAttendeeWithEmail:(NSString *)email {
     BOOL found = NO;
     for (GTLRCalendar_EventAttendee *attendee in self.attendees) {

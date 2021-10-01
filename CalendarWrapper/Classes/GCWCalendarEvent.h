@@ -32,6 +32,14 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic, readonly) GTLRCalendar_EventAttendee *selfAsAttendee;
 @property (nonatomic, readonly) GCWCalendarEventResponseStatus responseStatus;
 @property (nonatomic, readonly) NSString *videoConferenceURI;
+@property (nonatomic, readonly) NSString *conferenceName;
+@property (nonatomic, readonly) NSString *conferenceIconUri;
+@property (nonatomic, readonly) NSString *conferenceVideoId;
+@property (nonatomic, readonly) NSString *conferenceVideoUri;
+@property (nonatomic, readonly) NSString *conferencePhoneNumber;
+@property (nonatomic, readonly) NSString *conferenceFormattedPhoneNumber;
+@property (nonatomic, readonly) NSString *conferenceInfoUri;
+
 @property (nonatomic) NSArray< NSString *> *attendeesEmailAddresses;
 @property (nonatomic) BOOL isImportant;
 @property (nonatomic, readonly) BOOL isRecurring;
