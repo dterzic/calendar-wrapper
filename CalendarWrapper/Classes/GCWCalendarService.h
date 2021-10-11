@@ -6,6 +6,7 @@
 @class GCWPerson;
 @class GCWLoadEventsListRequest;
 @class GCWUserAccount;
+@class GCWTaskList;
 
 @protocol GCWServiceDelegate <NSObject>
 
@@ -31,6 +32,7 @@
 @property (nonatomic, readonly) NSArray *_Nullable calendarEvents;
 @property (nonatomic, readonly) BOOL calendarsInSync;
 @property (nonatomic) NSNumber *_Nullable notificationPeriod;
+@property (nonatomic, readonly) NSDictionary *_Nullable taskLists;
 
 - (void)removeSyncTokenForCalendar:(NSString *_Nonnull)calendarId;
 
@@ -63,6 +65,12 @@
                                  duration:(NSInteger)duration
                        notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
                                 important:(BOOL)important;
+
+- (GCWCalendarEvent *_Nullable)newTaskForCalendar:(NSString *_Nonnull)calendarId
+                                       taskListId:(NSString *_Nonnull)taskListId
+                                         withTitle:(NSString *_Nullable)title
+                                          details:(NSString *_Nullable)details
+                                              due:(NSDate *_Nonnull)due;
 
 - (void)createEventForCalendar:(NSString *_Nonnull)calendarId
                      withTitle:(NSString *_Nonnull)title
@@ -159,6 +167,26 @@
 - (void)getPeopleFor:(NSString *_Nonnull)calendarId
              success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
              failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)loadTaskListsOnSuccess:(void (^_Nonnull)(void))success
+                       failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)insertTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(void))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)updateTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(void))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)deleteTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(void))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)moveTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+               toTaskList:(NSString *_Nonnull)taskListId
+                  success:(void (^_Nullable)(void))success
+                  failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)saveState;
 

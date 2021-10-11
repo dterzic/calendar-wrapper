@@ -28,14 +28,20 @@
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self.calendar syncEventsFrom:self.startDate to:self.endDate success:^(NSDictionary *syncedEvents, NSArray *removedEvents, NSArray *expiredTokens, NSArray *errors) {
-            self.syncedEvents = syncedEvents;
-            self.removedEvents = removedEvents;
-            self.expiredTokens = expiredTokens;
-            if (errors.count > 0) {
-                NSError *firstError = (NSError *)errors.firstObject;
-                self.error = [firstError copy];
-            }
-            dispatch_group_leave(group);
+
+            [self.calendar syncTasksOnSuccess:^{
+                self.syncedEvents = syncedEvents;
+                self.removedEvents = removedEvents;
+                self.expiredTokens = expiredTokens;
+                if (errors.count > 0) {
+                    NSError *firstError = (NSError *)errors.firstObject;
+                    self.error = [firstError copy];
+                }
+                dispatch_group_leave(group);
+            } failure:^(NSError *error) {
+                self.error = error;
+                dispatch_group_leave(group);
+            }];
         } failure:^(NSError *error) {
             self.error = error;
             dispatch_group_leave(group);

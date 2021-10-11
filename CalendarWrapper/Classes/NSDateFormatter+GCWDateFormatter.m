@@ -35,4 +35,32 @@
     return _weekDayWithDateYearFormatter;
 }
 
++ (NSDateFormatter *)rfc3339X5Formatter {
+    static NSDateFormatter *_rfc3339Formatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _rfc3339Formatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        [_rfc3339Formatter setLocale:enUSPOSIXLocale];
+        [_rfc3339Formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSSSSX5"];
+        [_rfc3339Formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    });
+
+    return _rfc3339Formatter;
+}
+
++ (NSDateFormatter *)rfc3339Formatter {
+    static NSDateFormatter *_rfc3339Formatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _rfc3339Formatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        [_rfc3339Formatter setLocale:enUSPOSIXLocale];
+        [_rfc3339Formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
+        [_rfc3339Formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    });
+
+    return _rfc3339Formatter;
+}
+
 @end

@@ -5,6 +5,14 @@ static NSInteger const kAllDayDuration = 24 * 60;
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSInteger, GCWCalendarEventType) {
+    GCWCalendarEventTypeEvent,
+    GCWCalendarEventTypeTask,
+    GCWCalendarEventTypeReminder,
+    GCWCalendarEventTypeGoal,
+    GCWCalendarEventTypeOutOfOffice
+};
+
 typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
     GCWCalendarEventResponseStatusNeedsAction,
     GCWCalendarEventResponseStatusDeclined,
@@ -13,12 +21,18 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
     GCWCalendarEventResponseStatusUnknown
 };
 
+typedef NS_ENUM(NSInteger, GCWCalendarTaskStatus) {
+    GCWCalendarTaskStatusNeedsAction,
+    GCWCalendarTaskStatusCompleted
+};
+
 @interface GCWCalendarEvent : GTLRCalendar_Event
 
 - (instancetype)initWithGTLCalendarEvent:(GTLRCalendar_Event *)event;
 
 @property (nonatomic) UIColor *color;
 @property (nonatomic) NSString *calendarId;
+@property (nonatomic) GCWCalendarEventType type;
 @property (nonatomic, readonly) NSString *iconName;
 @property (nonatomic, readonly) BOOL isAllDay;
 @property (nonatomic) NSDate *startDate;
@@ -39,11 +53,14 @@ typedef NS_ENUM(NSInteger, GCWCalendarEventResponseStatus) {
 @property (nonatomic, readonly) NSString *conferencePhoneNumber;
 @property (nonatomic, readonly) NSString *conferenceFormattedPhoneNumber;
 @property (nonatomic, readonly) NSString *conferenceInfoUri;
+@property (nonatomic, readonly) BOOL isRecurring;
 
 @property (nonatomic) NSArray< NSString *> *attendeesEmailAddresses;
 @property (nonatomic) BOOL isImportant;
-@property (nonatomic, readonly) BOOL isRecurring;
 @property (nonatomic) NSNumber *notificationPeriod;
+
+@property (nonatomic) NSString *taskListId;
+@property (nonatomic) GCWCalendarTaskStatus taskStatus;
 
 - (BOOL)hasAttendeeWithEmail:(NSString *)email;
 - (GTLRCalendar_EventAttendee *)getAttendeeWithEmail:(NSString *)email;

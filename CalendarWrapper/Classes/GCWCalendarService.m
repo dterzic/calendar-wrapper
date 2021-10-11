@@ -80,6 +80,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     return self.calendar.userAccounts;
 }
 
+- (NSDictionary *)taskLists {
+    return self.calendar.taskLists;
+}
+
 - (BOOL)isConnected {
     return self.calendar.calendarEntries.count > 0;
 }
@@ -286,6 +290,21 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     newEvent.calendarId = calendarId;
 
     return newEvent;
+}
+
+- (GCWCalendarEvent *)newTaskForCalendar:(NSString *)calendarId
+                              taskListId:(NSString *)taskListId
+                                withTitle:(NSString *)title
+                                 details:(NSString *)details
+                                     due:(NSDate *)due {
+
+    GCWCalendarEvent *event = [GCWCalendar createTaskWithCalendar:calendarId
+                                                       taskListId:taskListId
+                                                            title:title
+                                                          details:details
+                                                              due:due
+                                               notificationPeriod:self.notificationPeriod];
+    return event;
 }
 
 - (void)createEventForCalendar:(NSString *)calendarId
@@ -683,6 +702,66 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
              failure:(void (^)(NSError *))failure {
     [self.calendar getPeopleFor:calendarId success:^(NSArray<GCWPerson *> *persons) {
         success(persons);
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)loadTaskListsOnSuccess:(void (^)(void))success
+                       failure:(void (^)(NSError * _Nonnull))failure {
+
+    [self.calendar loadTaskListsOnSuccess:^(NSDictionary *taskList) {
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)insertTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure {
+    [self.calendar insertTaskWithEvent:event success:^(NSString *newTaskId) {
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)updateTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure {
+    [self.calendar updateTaskWithEvent:event success:^{
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)deleteTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure {
+    [self.calendar deleteTaskWithEvent:event success:^{
+        [self removeEventFromCache:event.identifier];
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)moveTaskWithEvent:(GCWCalendarEvent *)event
+               toTaskList:(NSString *)taskListId
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *))failure {
+
+    [self.calendar deleteTaskWithEvent:event success:^{
+        [self removeEventFromCache:event.identifier];
+        event.taskListId = taskListId;
+
+        [self.calendar insertTaskWithEvent:event success:^(NSString *newEventId) {
+            success();
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
     } failure:^(NSError *error) {
         failure(error);
     }];

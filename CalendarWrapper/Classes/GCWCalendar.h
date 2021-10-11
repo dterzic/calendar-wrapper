@@ -2,7 +2,9 @@
 #import <AppAuth/AppAuth.h>
 #import <GTMAppAuth/GTMAppAuth.h>
 #import <GoogleAPIClientForREST/GTLRCalendar.h>
+#import <GoogleAPIClientForREST/GTLRTasks.h>
 #import <GoogleAPIClientForREST/GTLRPeopleService.h>
+#import <GoogleAPIClientForREST/GTLRTasksService.h>
 
 @class GTLRCalendarService;
 @class GTLRPeopleServiceService;
@@ -11,6 +13,7 @@
 @class GCWCalendarAuthorization;
 @class GCWLoadEventsListRequest;
 @class GCWUserAccount;
+@class GCWTaskList;
 
 @protocol CalendarAuthorizationProtocol;
 
@@ -18,6 +21,7 @@
 
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
 @property (nonatomic) GTLRPeopleServiceService* _Nullable peopleService;
+@property (nonatomic) GTLRTasksService* _Nullable tasksService;
 @property (nonatomic, strong, nullable) id<OIDExternalUserAgentSession> currentAuthorizationFlow;
 @property (nonatomic, strong, nullable) id<CalendarAuthorizationProtocol> authorizationManager;
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
@@ -27,6 +31,7 @@
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 @property (nonatomic, readonly) BOOL calendarsInSync;
 @property (nonatomic) NSNumber *_Nonnull notificationPeriod;
+@property (nonatomic) NSDictionary <NSString *, GCWTaskList *> * _Nullable taskLists;
 
 - (instancetype _Nullable )initWithClientId:(NSString *_Nonnull)clientId
                    presentingViewController:(UIViewController *_Nullable)viewController
@@ -53,6 +58,13 @@
                                            duration:(NSInteger)duration
                                  notificationPeriod:(NSNumber *_Nonnull)notificationPeriod
                                           important:(BOOL)important;
+
++ (GCWCalendarEvent *_Nullable)createTaskWithCalendar:(NSString *_Nonnull)calendarId
+                                           taskListId:(NSString *_Nonnull)taskListId
+                                                title:(NSString *_Nullable)title
+                                              details:(NSString *_Nullable)details
+                                                  due:(NSDate *_Nonnull)date
+                                   notificationPeriod:(NSNumber *_Nonnull)notificationPeriod;
 
 + (GCWCalendarEvent *_Nonnull)cloneEvent:(GCWCalendarEvent *_Nonnull)event;
 
@@ -117,11 +129,32 @@
                   failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)getContactsFor:(NSString *_Nonnull)calendarId
-               success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
-               failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+               success:(void (^_Nullable)(NSArray <GCWPerson *> *_Nonnull))success
+               failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)getPeopleFor:(NSString *_Nonnull)calendarId
-             success:(void (^_Nonnull)(NSArray <GCWPerson *> *_Nonnull))success
-             failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+             success:(void (^_Nullable)(NSArray <GCWPerson *> *_Nonnull))success
+             failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)loadTaskListsOnSuccess:(void (^_Nullable)(NSDictionary *_Nullable))success
+                       failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)getTaskForEvent:(GCWCalendarEvent *_Nonnull)event
+                success:(void (^_Nullable)(GCWTaskList *_Nullable, GTLRTasks_Task *_Nullable))success
+                failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)syncTasksOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)insertTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(NSString *_Nonnull))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)updateTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(void))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)deleteTaskWithEvent:(GCWCalendarEvent *_Nonnull)event
+                    success:(void (^_Nullable)(void))success
+                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 @end

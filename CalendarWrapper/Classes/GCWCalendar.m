@@ -10,9 +10,11 @@
 #import "GCWCalendarAuthorization.h"
 #import "GCWPerson.h"
 #import "GCWUserAccount.h"
+#import "GCWTaskList.h"
 #import "GCWLoadEventsListRequest.h"
 
 #import "NSDate+GCWDate.h"
+#import "NSDateFormatter+GCWDateFormatter.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "NSError+GCWCalendar.h"
@@ -54,6 +56,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         _calendarService.retryEnabled = true;
 
         _peopleService = [[GTLRPeopleServiceService alloc] init];
+        _tasksService = [[GTLRTasksService alloc] init];
         if (authorizationManager) {
             _authorizationManager = authorizationManager;
         } else {
@@ -252,7 +255,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                                                  OIDScopeProfile,
                                                                  kGTLRAuthScopeCalendar,
                                                                  kGTLRAuthScopePeopleServiceContactsReadonly,
-                                                                 kGTLRAuthScopePeopleServiceDirectoryReadonly]
+                                                                 kGTLRAuthScopePeopleServiceDirectoryReadonly,
+                                                                 kGTLRAuthScopeTasks]
                                                    redirectURL:redirectURI
                                                   responseType:OIDResponseTypeCode
                                           additionalParameters:nil];
@@ -394,6 +398,49 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         }
         return;
     }];
+}
++ (GCWCalendarEvent *)createTaskWithCalendar:(NSString *)calendarId
+                                  taskListId:(NSString *)taskListId
+                                       title:(NSString *)title
+                                     details:(NSString *)details
+                                         due:(NSDate *)date
+                          notificationPeriod:(NSNumber *)notificationPeriod {
+
+    GCWCalendarEvent *event = [GCWCalendar createEventWithTitle:title
+                                                       location:nil
+                                        attendeesEmailAddresses:nil
+                                                    description:details
+                                                           date:date
+                                                       duration:kAllDayDuration
+                                             notificationPeriod:notificationPeriod
+                                                      important:NO];
+    event.calendarId = calendarId;
+    event.taskListId = taskListId;
+    event.type = GCWCalendarEventTypeTask;
+
+    return event;
+}
+
++ (GCWCalendarEvent *)createTaskWithId:(NSString *)identifier
+                              calendar:(NSString *)calendarId
+                                 title:(NSString *)title
+                              description:(NSString *)description
+                                     date:(NSDate *)date
+                       notificationPeriod:(NSNumber *)notificationPeriod {
+    
+    GCWCalendarEvent *event = [GCWCalendar createEventWithTitle:title
+                                                       location:nil
+                                        attendeesEmailAddresses:nil
+                                                    description:description
+                                                           date:date
+                                                       duration:kAllDayDuration
+                                             notificationPeriod:notificationPeriod
+                                                      important:NO];
+    event.identifier = identifier;
+    event.calendarId = calendarId;
+    event.type = GCWCalendarEventTypeTask;
+
+    return event;
 }
 
 + (GCWCalendarEvent *)createEventWithTitle:(NSString *)title
@@ -746,6 +793,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                success:(void (^)(NSDictionary *, NSArray *, NSArray *, NSArray *))success
                failure:(void (^)(NSError *))failure
               progress:(void (^)(CGFloat))progress {
+
     NSMutableDictionary *removedEvents = [NSMutableDictionary dictionary];
     NSMutableDictionary *syncedEvents = [NSMutableDictionary dictionary];
     NSMutableArray *expiredTokens = [NSMutableArray array];
@@ -1126,6 +1174,234 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                 [persons addObject:gcwPerson];
             }
             success([persons copy]);
+        }
+    }];
+}
+
+- (void)loadTaskListsOnSuccess:(void (^)(NSDictionary *))success
+                       failure:(void (^)(NSError *))failure {
+
+    __block NSMutableDictionary *taskListsDictionary = [NSMutableDictionary dictionary];
+
+    GCWCalendarEntry *calendar = self.calendarEntries.allValues.firstObject;
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+        return;
+    }
+    self.tasksService.authorizer = authorization.fetcherAuthorization;
+
+    GTLRTasksQuery_TasklistsList *query = [GTLRTasksQuery_TasklistsList query];
+    query.maxResults = 100;
+    [self.tasksService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            GTLRTasks_TaskLists *taskLists = (GTLRTasks_TaskLists *)object;
+            for (GTLRTasks_TaskList *taskList in taskLists.items) {
+                GCWTaskList *gcwTaskList = [[GCWTaskList alloc] initWithTaskList:taskList calendar:calendar.identifier];
+                [taskListsDictionary setValue:gcwTaskList forKey:taskList.identifier];
+            }
+            self.taskLists = [taskListsDictionary copy];
+            success([taskListsDictionary copy]);
+        }
+    }];
+}
+
+- (void)syncTasksOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+
+    __block NSUInteger listIndex = 0;
+    NSMutableArray *errors = [NSMutableArray array];
+
+    for (GCWTaskList *taskList in self.taskLists.allValues) {
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:taskList.calendarId];
+        if (!authorization) {
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat:@"Missing authorization for calendar %@", taskList.calendarId]]);
+            return;
+        }
+        GCWCalendarEntry *calendar = self.calendarEntries[taskList.calendarId];
+
+        self.tasksService.authorizer = authorization.fetcherAuthorization;
+
+        GTLRTasksQuery_TasksList *tasksQuery = [GTLRTasksQuery_TasksList queryWithTasklist:taskList.identifier];
+        tasksQuery.showCompleted = YES;
+        tasksQuery.showHidden = YES;
+        tasksQuery.showDeleted = YES;
+        [self.tasksService executeQuery:tasksQuery completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+            if (callbackError) {
+                [errors addObject:callbackError];
+            } else {
+                GTLRTasks_Tasks *tasks = (GTLRTasks_Tasks *)object;
+                for (GTLRTasks_Task *task in tasks.items) {
+                    if (task.due) {
+                        if (task.deleted) {
+                            [self.calendarEvents removeObjectForKey:task.identifier];
+                        } else {
+                            NSDate *dueDate = [[NSDateFormatter rfc3339X5Formatter] dateFromString:task.due];
+                            GCWCalendarEvent *event = [GCWCalendar createTaskWithId:task.identifier
+                                                                           calendar:calendar.identifier
+                                                                              title:task.title
+                                                                           description:task.notes
+                                                                                  date:dueDate
+                                                                    notificationPeriod:self.notificationPeriod];
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
+                            event.taskListId = taskList.identifier;
+                            event.taskStatus = [task.status isEqualToString:@"completed"] ? GCWCalendarTaskStatusCompleted : GCWCalendarTaskStatusNeedsAction;
+                            self.calendarEvents[event.identifier] = event;
+                        }
+                    }
+                }
+            }
+            if (listIndex == self.taskLists.count-1) {
+                if (errors.count > 0) {
+                    failure(errors.firstObject);
+                } else {
+                    success();
+                }
+            }
+            listIndex++;
+        }];
+    }
+}
+
+- (void)getTaskForEvent:(GCWCalendarEvent *)event
+                success:(void (^)(GCWTaskList *, GTLRTasks_Task *))success
+                failure:(void (^)(NSError *))failure {
+
+    __block NSUInteger listIndex = 0;
+    __block NSMutableArray *errors = [NSMutableArray array];
+    __block GCWTaskList *eventTaskList;
+    __block GTLRTasks_Task *eventTask;
+
+    for (GCWTaskList *taskList in self.taskLists.allValues) {
+        GTLRTasksQuery_TasksList *tasksQuery = [GTLRTasksQuery_TasksList queryWithTasklist:taskList.identifier];
+        tasksQuery.showCompleted = YES;
+        tasksQuery.showHidden = YES;
+        [self.tasksService executeQuery:tasksQuery completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+            if (callbackError) {
+                [errors addObject:callbackError];
+            } else {
+                GTLRTasks_Tasks *tasks = (GTLRTasks_Tasks *)object;
+                for (GTLRTasks_Task *task in tasks.items) {
+                    if ([task.identifier isEqualToString:event.identifier]) {
+                        eventTaskList = taskList;
+                        eventTask = task;
+                        success(eventTaskList, eventTask);
+                        return;
+                    }
+                }
+            }
+            if (listIndex == self.taskLists.count-1) {
+                if (errors.count > 0) {
+                    failure(errors.firstObject);
+                } else {
+                    failure([NSError createErrorWithCode:-10006
+                                             description:[NSString stringWithFormat: @"Task not found for id %@", event.identifier]]);
+                }
+            }
+            listIndex++;
+        }];
+    }
+}
+
+- (void)insertTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(NSString *))success
+                    failure:(void (^)(NSError *))failure {
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:event.calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat:@"Missing authorization for calendar %@", event.calendarId]]);
+        return;
+    }
+    GCWCalendarEntry *calendar = self.calendarEntries[event.calendarId];
+
+    self.tasksService.authorizer = authorization.fetcherAuthorization;
+
+    GTLRTasks_Task *task = [[GTLRTasks_Task alloc] init];
+    task.title = event.summary;
+    task.notes = event.descriptionProperty;
+    task.due = [[NSDateFormatter rfc3339Formatter] stringFromDate:event.startDate];
+
+    GTLRTasksQuery_TasksInsert *query = [GTLRTasksQuery_TasksInsert queryWithObject:task tasklist:event.taskListId];
+    [self.tasksService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            GTLRTasks_Task *newTask = (GTLRTasks_Task *)object;
+            NSDate *dueDate = [[NSDateFormatter rfc3339X5Formatter] dateFromString:task.due];
+            GCWCalendarEvent *newEvent = [GCWCalendar createTaskWithId:newTask.identifier
+                                                           calendar:calendar.identifier
+                                                              title:newTask.title
+                                                           description:newTask.notes
+                                                                  date:dueDate
+                                                    notificationPeriod:self.notificationPeriod];
+            newEvent.color = [UIColor colorWithHex:calendar.backgroundColor];
+            newEvent.taskListId = event.taskListId;
+            newEvent.taskStatus = [newTask.status isEqualToString:@"completed"] ? GCWCalendarTaskStatusCompleted : GCWCalendarTaskStatusNeedsAction;
+            self.calendarEvents[newTask.identifier] = newEvent;
+            success(newTask.identifier);
+        }
+    }];
+}
+
+- (void)updateTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure {
+
+    [self getTaskForEvent:event success:^(GCWTaskList *taskList, GTLRTasks_Task *task) {
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:event.calendarId];
+        if (!authorization) {
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat:@"Missing authorization for calendar %@", event.calendarId]]);
+            return;
+        }
+        self.tasksService.authorizer = authorization.fetcherAuthorization;
+
+        task.title = event.summary;
+        task.notes = event.descriptionProperty;
+        task.due = [NSDateFormatter.rfc3339Formatter stringFromDate:event.startDate];
+        switch (event.taskStatus) {
+            case GCWCalendarTaskStatusNeedsAction:
+                task.status = @"needsAction";
+                break;
+            case GCWCalendarTaskStatusCompleted:
+                task.status = @"completed";
+                break;
+        }
+        GTLRTasksQuery_TasksUpdate *query = [GTLRTasksQuery_TasksUpdate queryWithObject:task tasklist:taskList.identifier task:task.identifier];
+        [self.tasksService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+            if (callbackError) {
+                failure(callbackError);
+            } else {
+                success();
+            }
+        }];
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)deleteTaskWithEvent:(GCWCalendarEvent *)event
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure {
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:event.calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat:@"Missing authorization for calendar %@", event.calendarId]]);
+        return;
+    }
+    self.tasksService.authorizer = authorization.fetcherAuthorization;
+
+    GTLRTasksQuery_TasksDelete *query = [GTLRTasksQuery_TasksDelete queryWithTasklist:event.taskListId task:event.identifier];
+    [self.tasksService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
+        if (callbackError) {
+            failure(callbackError);
+        } else {
+            success();
         }
     }];
 }
