@@ -1165,6 +1165,14 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     query.readMask = @"genders,names,nicknames,emailAddresses,occupations,organizations,phoneNumbers,photos";
     [self.peopleService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
         if (callbackError) {
+            if (callbackError.code == 403) {
+                GTLRErrorObject *error = callbackError.userInfo[kGTLRStructuredErrorKey];
+                if ([error.status isEqualToString:@"PERMISSION_DENIED"]) {
+                    failure([NSError createErrorWithCode:-10009
+                                             description:[NSString stringWithFormat: @"People list permission denied for %@", calendarId]]);
+                    return;
+                }
+            }
             failure(callbackError);
         } else {
             NSMutableArray *persons = [NSMutableArray array];
@@ -1196,6 +1204,14 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     query.maxResults = 100;
     [self.tasksService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
         if (callbackError) {
+            if (callbackError.code == 403) {
+                GTLRErrorObject *error = callbackError.userInfo[kGTLRStructuredErrorKey];
+                if ([error.status isEqualToString:@"PERMISSION_DENIED"]) {
+                    failure([NSError createErrorWithCode:-10008
+                                             description:[NSString stringWithFormat: @"Task lists permission denied for %@", calendar.identifier]]);
+                    return;
+                }
+            }
             failure(callbackError);
         } else {
             GTLRTasks_TaskLists *taskLists = (GTLRTasks_TaskLists *)object;
@@ -1224,6 +1240,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         GCWCalendarEntry *calendar = self.calendarEntries[taskList.calendarId];
 
         self.tasksService.authorizer = authorization.fetcherAuthorization;
+        self.tasksService.shouldFetchNextPages = YES;
 
         GTLRTasksQuery_TasksList *tasksQuery = [GTLRTasksQuery_TasksList queryWithTasklist:taskList.identifier];
         tasksQuery.showCompleted = YES;
@@ -1274,6 +1291,15 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     __block NSMutableArray *errors = [NSMutableArray array];
     __block GCWTaskList *eventTaskList;
     __block GTLRTasks_Task *eventTask;
+
+    GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:event.calendarId];
+    if (!authorization) {
+        failure([NSError createErrorWithCode:-10002
+                                 description:[NSString stringWithFormat:@"Missing authorization for calendar %@", event.calendarId]]);
+        return;
+    }
+    self.tasksService.authorizer = authorization.fetcherAuthorization;
+    self.tasksService.shouldFetchNextPages = YES;
 
     for (GCWTaskList *taskList in self.taskLists.allValues) {
         GTLRTasksQuery_TasksList *tasksQuery = [GTLRTasksQuery_TasksList queryWithTasklist:taskList.identifier];
