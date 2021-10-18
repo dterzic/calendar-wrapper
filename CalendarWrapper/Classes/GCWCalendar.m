@@ -159,6 +159,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     if (scope == GCWAuthorizationScopeTasks) {
         return authorized;
     }
+    return NO;
 }
 
 - (BOOL)checkAuthorizationForScope:(NSString *)scope {
