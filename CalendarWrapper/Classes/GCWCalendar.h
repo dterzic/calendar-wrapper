@@ -17,6 +17,13 @@
 
 @protocol CalendarAuthorizationProtocol;
 
+typedef NS_ENUM(NSUInteger, GCWAuthorizationScope) {
+    GCWAuthorizationScopeOpenId = 0,
+    GCWAuthorizationScopeCalendar,
+    GCWAuthorizationScopePeople,
+    GCWAuthorizationScopeTasks
+};
+
 @interface GCWCalendar : NSObject
 
 @property (nonatomic) GTLRCalendarService * _Nullable calendarService;
@@ -42,11 +49,19 @@
 
 - (GCWUserAccount *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 
-- (void)doLoginOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope;
 
-- (void)doLogoutOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (void)doLoginOnSuccess:(void (^_Nonnull)(void))success
+                 failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
-- (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+- (void)doLogoutOnSuccess:(void (^_Nonnull)(void))success
+                  failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)doAuthorizationOnSuccess:(void (^_Nonnull)(void))success
+                         failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)loadAuthorizationsOnSuccess:(void (^_Nonnull)(void))success
+                            failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)saveState;
 

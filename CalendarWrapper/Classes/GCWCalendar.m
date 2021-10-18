@@ -31,6 +31,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
 @interface GCWCalendar () <OIDAuthStateChangeDelegate>
 
+@property (nonatomic) NSArray *authorizationScopes;
 @property (nonatomic) NSString *clientId;
 @property (nonatomic) UIViewController *presentingViewController;
 @property (nonatomic) NSMutableDictionary *calendarUsers;
@@ -50,6 +51,13 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 
     if (self) {
         self.eventsQueue = dispatch_queue_create("com.moment.gcwcalendar.eventsqueue", DISPATCH_QUEUE_SERIAL);
+
+        _authorizationScopes = @[OIDScopeOpenID,
+                                 OIDScopeProfile,
+                                 kGTLRAuthScopeCalendar,
+                                 kGTLRAuthScopePeopleServiceContactsReadonly,
+                                 kGTLRAuthScopePeopleServiceDirectoryReadonly,
+                                 kGTLRAuthScopeTasks];
 
         _calendarService = [[GTLRCalendarService alloc] init];
         _calendarService.shouldFetchNextPages = true;
@@ -126,6 +134,52 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 - (GCWUserAccount *)getCalendarOwner:(NSString *)calendarId {
     NSString *userId = [self getCalendarOwnerId:calendarId];
     return self.userAccounts[userId];
+}
+
+- (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope {
+    BOOL authorized = NO;
+
+    authorized = [self checkAuthorizationForScope:OIDScopeOpenID] && [self checkAuthorizationForScope:OIDScopeProfile];
+    if (scope == GCWAuthorizationScopeOpenId) {
+        return authorized;
+    }
+    authorized = [self checkAuthorizationForScope:kGTLRAuthScopeCalendar];
+
+    if (scope == GCWAuthorizationScopeCalendar) {
+        return authorized;
+    }
+    authorized = [self checkAuthorizationForScope:kGTLRAuthScopePeopleServiceContacts] &&
+                 [self checkAuthorizationForScope:kGTLRAuthScopePeopleServiceDirectoryReadonly];
+
+    if (scope == GCWAuthorizationScopePeople) {
+        return authorized;
+    }
+    authorized = [self checkAuthorizationForScope:kGTLRAuthScopeTasks];
+
+    if (scope == GCWAuthorizationScopeTasks) {
+        return authorized;
+    }
+}
+
+- (BOOL)checkAuthorizationForScope:(NSString *)scope {
+    NSArray *userIDs = [self.userDefaults arrayForKey:kUserIDs];
+
+    if (!userIDs || userIDs.count == 0) {
+        return NO;
+    }
+    __block BOOL authorized = YES;
+    [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull userID, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:userID];
+
+        if ([self.authorizationManager canAuthorizeWithAuthorizationFromKeychain:keychainKey]) {
+            GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
+            if (![authorization.fetcherAuthorization.authState.scope containsString:scope]) {
+                authorized = NO;
+                *stop = YES;
+            }
+        }
+    }];
+    return authorized;
 }
 
 - (NSDictionary <NSString *, NSArray<GCWCalendarEntry *> *> *)accountEntries {
@@ -251,12 +305,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         OIDAuthorizationRequest *request =
         [[OIDAuthorizationRequest alloc] initWithConfiguration:configuration
                                                       clientId:self.clientId
-                                                        scopes:@[OIDScopeOpenID,
-                                                                 OIDScopeProfile,
-                                                                 kGTLRAuthScopeCalendar,
-                                                                 kGTLRAuthScopePeopleServiceContactsReadonly,
-                                                                 kGTLRAuthScopePeopleServiceDirectoryReadonly,
-                                                                 kGTLRAuthScopeTasks]
+                                                        scopes:self.authorizationScopes
                                                    redirectURL:redirectURI
                                                   responseType:OIDResponseTypeCode
                                           additionalParameters:nil];
@@ -364,6 +413,73 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }];
 }
 
+- (void)doAuthorizationOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    NSURL *issuer = [NSURL URLWithString:kIssuerURI];
+    NSURL *redirectURI = [NSURL URLWithString:kRedirectURI];
+
+    NSLog(@"CalendarWrapper: Fetching configuration for issuer: %@", issuer);
+
+    // discovers endpoints
+    [OIDAuthorizationService discoverServiceConfigurationForIssuer:issuer completion:^(OIDServiceConfiguration *_Nullable configuration, NSError *_Nullable error) {
+        if (!configuration) {
+            NSLog(@"CalendarWrapper: Error retrieving discovery document: %@", [self encodedUserInfoFor:error]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+            return;
+        }
+
+        // builds authentication request
+        OIDAuthorizationRequest *request =
+        [[OIDAuthorizationRequest alloc] initWithConfiguration:configuration
+                                                      clientId:self.clientId
+                                                        scopes:self.authorizationScopes
+                                                   redirectURL:redirectURI
+                                                  responseType:OIDResponseTypeCode
+                                          additionalParameters:nil];
+        // performs authentication request
+        self.currentAuthorizationFlow =
+        [OIDAuthState authStateByPresentingAuthorizationRequest:request
+                                       presentingViewController:self.presentingViewController
+                                                       callback:^(OIDAuthState *_Nullable authState, NSError *_Nullable error) {
+            if (authState) {
+                NSLog(@"%@", authState.scope);
+                GTMAppAuthFetcherAuthorization *fetcherAuthorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
+                fetcherAuthorization.authState.stateChangeDelegate = self;
+
+                GCWCalendarAuthorization *authorization = [[GCWCalendarAuthorization alloc] initWithFetcherAuthorization:fetcherAuthorization];
+                [self.authorizationManager saveAuthorization:authorization
+                                                  toKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
+                [authState setNeedsTokenRefresh];
+                [authState performActionWithFreshTokens:^(NSString * _Nullable accessToken, NSString * _Nullable idToken, NSError * _Nullable error) {
+                    if (error) {
+                        failure(error);
+                    } else {
+                        GCWCalendarAuthorization *freshAuthorization = [self.authorizationManager getAuthorizationFromKeychain:[GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:authorization]];
+
+                        [self loadUserInfoForAuthorization:freshAuthorization success:^(NSDictionary *userInfo) {
+                            NSString *userName = [userInfo valueForKey:@"name"];
+                            if (userName && ![self.userAccounts valueForKey:freshAuthorization.userID]) {
+                                GCWUserAccount *account = [[GCWUserAccount alloc] initWithUserInfo:userInfo];
+                                [self.userAccounts setValue:account forKey:freshAuthorization.userID];
+                            }
+                            [self saveState];
+
+                            dispatch_async(dispatch_get_main_queue(), success);
+                        } failure:^(NSError *error) {
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                failure(error);
+                            });
+                        }];
+                    }
+                }];
+            } else {
+                failure(error);
+            }
+        }];
+    }];
+}
+
 - (GCWCalendarAuthorization *)getAuthorizationForCalendar:(NSString *)calendarId {
     __block GCWCalendarAuthorization *calendarAuthorization = nil;
     NSString *userId = self.calendarUsers[calendarId];
@@ -399,6 +515,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         return;
     }];
 }
+
 + (GCWCalendarEvent *)createTaskWithCalendar:(NSString *)calendarId
                                   taskListId:(NSString *)taskListId
                                        title:(NSString *)title

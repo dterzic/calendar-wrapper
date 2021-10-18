@@ -60,6 +60,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     return [self.calendar getCalendarOwner:calendarId];
 }
 
+- (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope {
+    return [self.calendar isAuthorizedFor:scope];
+}
+
 - (NSArray *)calendarEvents {
     return self.calendar.calendarEvents.allValues.eventsFlatMap;
 }
@@ -157,6 +161,14 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 - (void)doLogoutOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
     [self.calendar doLogoutOnSuccess:^{
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)doAuthorizationOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    [self.calendar doAuthorizationOnSuccess:^{
         success();
     } failure:^(NSError *error) {
         failure(error);

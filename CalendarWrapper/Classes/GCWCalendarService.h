@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import "GCWCalendar.h"
 
 @class GCWCalendar;
 @class GTLRCalendar_Event;
@@ -42,6 +43,8 @@
 
 - (GCWCalendarEvent *_Nullable)getCalendarEventWithId:(NSString *_Nonnull)eventId calendarId:(NSString *_Nullable)calendarId;
 
+- (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope;
+
 - (void)setVisibility:(BOOL)visible forCalendar:(NSString *_Nonnull)calendarId;
 
 - (BOOL)resumeAuthorizationFlowWithURL:(NSURL *_Nonnull)url;
@@ -53,6 +56,9 @@
 
 - (void)doLogoutOnSuccess:(void (^_Nonnull)(void))success
                   failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)doAuthorizationOnSuccess:(void (^_Nonnull)(void))success
+                         failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
 - (void)loadCalendarListOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
 
