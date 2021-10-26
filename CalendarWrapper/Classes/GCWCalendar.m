@@ -444,7 +444,6 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                                        presentingViewController:self.presentingViewController
                                                        callback:^(OIDAuthState *_Nullable authState, NSError *_Nullable error) {
             if (authState) {
-                NSLog(@"%@", authState.scope);
                 GTMAppAuthFetcherAuthorization *fetcherAuthorization = [[GTMAppAuthFetcherAuthorization alloc] initWithAuthState:authState];
                 fetcherAuthorization.authState.stateChangeDelegate = self;
 

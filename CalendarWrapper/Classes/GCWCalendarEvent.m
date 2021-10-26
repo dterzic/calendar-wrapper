@@ -306,7 +306,7 @@
             return minutes;
         }
     }
-    return 0;
+    return nil;
 }
 
 - (void)setNotificationPeriod:(NSNumber *)notificationPeriod {
