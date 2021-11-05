@@ -113,7 +113,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
 }
 
 - (BOOL)calendarsInSync {
-    __block BOOL status = YES;
+    __block BOOL status = self.calendarEntries.count > 0;
     [self.calendarEntries enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         GCWCalendarEntry *calendar = (GCWCalendarEntry *)obj;
         NSString *syncToken = self.calendarSyncTokens[calendar.identifier];
