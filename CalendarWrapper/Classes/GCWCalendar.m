@@ -212,10 +212,21 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }
 
     __block NSUInteger count = userIDs.count;
-    void (^validationCompleted)(void) = ^{
+    __block BOOL allAuthorizationsValidated = YES;
+
+    void (^validationCompleted)(BOOL success) = ^(BOOL validatedSuccessfuly){
         count--;
+        if (!validatedSuccessfuly) {
+            allAuthorizationsValidated = NO;
+        }
         if (count == 0) {
-            success();
+            if (allAuthorizationsValidated) {
+                success();
+            } else {
+                failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                            code:-10010
+                                        userInfo:@{NSLocalizedDescriptionKey:@"Invalid authorizations!"}]);
+            }
         }
     };
 
@@ -233,7 +244,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     [self.userAccounts setValue:account forKey:userID];
                 }
                 [self.authorizationManager saveAuthorization:authorization toKeychain:keychainKey];
-                validationCompleted();
+                validationCompleted(YES);
 
             } failure:^(NSError *error) {
                 // OIDOAuthTokenErrorDomain indicates an issue with the authorization.
@@ -246,12 +257,12 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
                     NSLog(@"CalendarWrapper: Transient error during token refresh. %@", [self encodedUserInfoFor:error]);
                     [self.authorizationManager saveAuthorization:authorization toKeychain:keychainKey];
                 }
-                validationCompleted();
+                validationCompleted(NO);
             }];
         } else {
             GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
             [self.authorizationManager removeAuthorization:authorization fromKeychain:keychainKey];
-            validationCompleted();
+            validationCompleted(NO);
         }
     }];
 }
@@ -677,7 +688,16 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     query.minAccessRole = accessRole;
     [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
         if (callbackError) {
+            // OpenID error code for expired authorization
+            if (callbackError.code == -10) {
+                NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:authorization.userID];
+                [self.authorizationManager removeAuthorization:authorization fromKeychain:keychainKey];
+                failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                            code:-10011
+                                        userInfo:@{NSLocalizedDescriptionKey:@"Invalid authorization!"}]);
+            }
             failure(callbackError);
+            return;
         } else {
             NSMutableDictionary *calendars = [NSMutableDictionary dictionary];
             GTLRCalendar_CalendarList *list = object;
