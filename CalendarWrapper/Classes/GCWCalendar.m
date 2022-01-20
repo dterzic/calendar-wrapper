@@ -20,9 +20,12 @@
 #import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
+// OAuth2 {redirect uri}:/oauthredirect - (reverse client id from Google credentials)
+// Reminder: search by {sender id} = 235185111239
+static NSString *const kRedirectURI = @"com.googleusercontent.apps.235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s:/oauthredirect";
+
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
-static NSString *const kRedirectURI = @"com.googleusercontent.apps.235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s:/oauthredirect";
 static NSString *const kUserIDs = @"googleUserIDsKey";
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
@@ -688,15 +691,16 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     query.minAccessRole = accessRole;
     [self.calendarService executeQuery:query completionHandler:^(GTLRServiceTicket * _Nonnull callbackTicket, id  _Nullable object, NSError * _Nullable callbackError) {
         if (callbackError) {
-            // OpenID error code for expired authorization
+            // OpenID error code -10 (expired authorization)
             if (callbackError.code == -10) {
                 NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:authorization.userID];
                 [self.authorizationManager removeAuthorization:authorization fromKeychain:keychainKey];
                 failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
                                             code:-10011
                                         userInfo:@{NSLocalizedDescriptionKey:@"Invalid authorization!"}]);
+            } else {
+                failure(callbackError);
             }
-            failure(callbackError);
             return;
         } else {
             NSMutableDictionary *calendars = [NSMutableDictionary dictionary];

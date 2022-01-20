@@ -12,8 +12,9 @@
 #import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
-
+// OAuth2 client id (Google credentials)
 static NSString * const kClientID = @"235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s.apps.googleusercontent.com";
+
 static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey";
 
 @interface GCWCalendarService () <CalendarServiceProtocol>
