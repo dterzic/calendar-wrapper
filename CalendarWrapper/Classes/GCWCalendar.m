@@ -22,6 +22,7 @@
 
 // OAuth2 {redirect uri}:/oauthredirect - (reverse client id from Google credentials)
 // Reminder: search by {sender id} = 350629588452
+// IMPORTANT: Client ID and API Key created by Firebase (in GoogleService-Info) are different although have the same Sender ID!
 static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l:/oauthredirect";
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
