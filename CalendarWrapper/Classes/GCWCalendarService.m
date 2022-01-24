@@ -13,7 +13,7 @@
 #import "UIColor+MNTColor.h"
 
 // OAuth2 client id (Google credentials)
-static NSString * const kClientID = @"235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s.apps.googleusercontent.com";
+static NSString * const kClientID = @"350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l.apps.googleusercontent.com";
 
 static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey";
 

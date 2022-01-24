@@ -21,8 +21,8 @@
 #import "UIColor+MNTColor.h"
 
 // OAuth2 {redirect uri}:/oauthredirect - (reverse client id from Google credentials)
-// Reminder: search by {sender id} = 235185111239
-static NSString *const kRedirectURI = @"com.googleusercontent.apps.235185111239-ubk6agijf4d4vq8s4fseradhn2g66r5s:/oauthredirect";
+// Reminder: search by {sender id} = 350629588452
+static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-bcbi20qrl4tsvmtia4ps4q16d8i9sc4l:/oauthredirect";
 
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
@@ -1100,6 +1100,11 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     }
     self.calendarService.authorizer = authorization.fetcherAuthorization;
 
+    // When creating the recurring events, Google API turns both default and override reminders on.
+    // In order to prevent api error on update, ensure that default reminder is off when the overrides exist.
+    if (event.reminders.overrides.count > 0) {
+        event.reminders.useDefault = @NO;
+    }
     GTLRCalendarQuery_EventsUpdate *query = [GTLRCalendarQuery_EventsUpdate queryWithObject:event calendarId:calendarId eventId:event.identifier];
     [self.calendarService executeQuery:query
                      completionHandler:^(GTLRServiceTicket *callbackTicket,
