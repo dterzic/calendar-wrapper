@@ -17,6 +17,7 @@
 #import "NSDateFormatter+GCWDateFormatter.h"
 #import "NSDictionary+GCWCalendar.h"
 #import "NSDictionary+GCWCalendarEvent.h"
+#import "NSDictionary+GCWUserAccount.h"
 #import "NSError+GCWCalendar.h"
 #import "UIColor+MNTColor.h"
 
@@ -28,6 +29,8 @@ static NSString *const kRedirectURI = @"com.googleusercontent.apps.350629588452-
 static NSString *const kIssuerURI = @"https://accounts.google.com";
 static NSString *const kUserInfoURI = @"https://www.googleapis.com/oauth2/v3/userinfo";
 static NSString *const kUserIDs = @"googleUserIDsKey";
+static NSString *const kCalendarUsersKey = @"calendarWrapperCalendarUsersKey";
+static NSString *const kCalendarUserAccountsKey = @"calendarWrapperCalendarUserAccountKey";
 static NSString *const kCalendarEventsKey = @"calendarWrapperCalendarEventsKey";
 static NSString *const kCalendarEntriesKey = @"calendarWrapperCalendarEntriesKey";
 static NSString *const kCalendarSyncTokensKey = @"calendarWrapperCalendarSyncTokensKey";
@@ -80,7 +83,16 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             _userDefaults = [NSUserDefaults standardUserDefaults];
         }
         _userAccounts = [NSMutableDictionary dictionary];
-
+        NSArray *userIDs = [self.userDefaults arrayForKey:kUserIDs];
+        _calendarUsers = [NSMutableDictionary dictionary];
+        NSDictionary *calendarUsersArchive = [self.userDefaults objectForKey:kCalendarUsersKey];
+        if (calendarUsersArchive) {
+            _calendarUsers = calendarUsersArchive;
+        }
+        NSDictionary *userAccountArchive = [self.userDefaults objectForKey:kCalendarUserAccountsKey];
+        if (userAccountArchive) {
+            _userAccounts = [NSDictionary unarchiveUserAccountsFrom:userAccountArchive];
+        }
         NSDictionary *entriesArchive = [self.userDefaults objectForKey:kCalendarEntriesKey];
         if (entriesArchive) {
             _calendarEntries = [NSDictionary unarchiveCalendarEntriesFrom:entriesArchive];
@@ -293,6 +305,8 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     [archive writeToFile:filePath atomically:YES];
 
     [self.userDefaults setObject:userIDs forKey:kUserIDs];
+    [self.userDefaults setObject:self.calendarUsers forKey:kCalendarUsersKey];
+    [self.userDefaults setObject:[self.userAccounts archiveUserAccounts] forKey:kCalendarUserAccountsKey];
     [self.userDefaults setObject:self.calendarSyncTokens forKey:kCalendarSyncTokensKey];
     [self.userDefaults setObject:[self.calendarEntries archiveCalendarEntries] forKey:kCalendarEntriesKey];
     [self.userDefaults setObject:self.notificationPeriod forKey:kCalendarEventsNotificationPeriodKey];
