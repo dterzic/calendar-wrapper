@@ -32,6 +32,7 @@
 @property (nonatomic, readonly) NSDictionary *_Nullable calendarSyncTokens;
 @property (nonatomic, readonly) NSArray *_Nullable calendarEvents;
 @property (nonatomic, readonly) BOOL calendarsInSync;
+@property (nonatomic, readonly) BOOL isFetchingPages;
 @property (nonatomic) NSNumber *_Nullable notificationPeriod;
 @property (nonatomic, readonly) NSDictionary *_Nullable taskLists;
 
@@ -142,6 +143,19 @@
             fromCalendars:(NSArray <NSString *> *_Nonnull)calendarIds
                   success:(void (^_Nonnull)(void))success
                   failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
+- (void)fetchEvents:(NSDate *_Nonnull)startDate
+             filter:(NSString *_Nullable)filter
+            success:(void (^_Nonnull)(BOOL))success
+            failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)fetchNext:(NSDate *_Nonnull)startDate
+          success:(void (^_Nullable)(BOOL))success
+          failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)fetchPrevious:(NSDate *_Nonnull)startDate
+              success:(void (^_Nullable)(BOOL))success
+              failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
 - (void)loadEventsListFrom:(NSDate *_Nonnull)startDate
                         to:(NSDate *_Nonnull)endDate

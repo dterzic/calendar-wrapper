@@ -112,7 +112,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         }
         // Used for testing sync token expiration (error code 410)
         //self.calendarSyncTokens[@"amywei@envoy.com"] = [NSString stringWithFormat:@"1%@", self.calendarSyncTokens[@"amywei@envoy.com"]];
-        
+
         NSNumber *notificationPeriod = [self.userDefaults objectForKey:kCalendarEventsNotificationPeriodKey];
         if (notificationPeriod) {
             self.notificationPeriod = notificationPeriod;
@@ -863,6 +863,251 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
             }
             calendarIndex++;
         }];
+    }
+}
+
+- (void)fetchFrom:(NSDate *)startDate
+        ascending:(BOOL)ascending
+           filter:(NSString *)filter
+          success:(void (^)(NSArray *_Nonnull, NSDictionary *_Nonnull))success
+          failure:(void (^)(NSError * _Nonnull))failure {
+
+    NSMutableArray *errors = [NSMutableArray array];
+
+    NSMutableDictionary *fetchPageTokens = [NSMutableDictionary dictionary];
+
+    NSDateFormatter *formatter = [NSDateFormatter rfc3339Formatter];
+    NSMutableCharacterSet *urlChars = NSCharacterSet.URLQueryAllowedCharacterSet.mutableCopy;
+    NSString *startDateString = [[formatter stringFromDate:startDate] stringByAddingPercentEncodingWithAllowedCharacters:urlChars];
+
+    NSString *order = ascending ? @"ascending": @"descending";
+
+    NSString *start;
+    if (ascending) {
+        start = [NSString stringWithFormat:@"&timeMin=%@", startDateString];
+    } else {
+        start = [NSString stringWithFormat:@"&timeMax=%@", startDateString];
+    }
+
+    __block NSUInteger calendarIndex = 0;
+    for (GCWCalendarEntry *calendar in self.calendarEntries.allValues) {
+        NSLog(@"==%@==", calendar.identifier);
+        if (calendar.hideEvents) {
+            if (calendarIndex == self.calendarEntries.count-1) {
+                success([errors copy], @{});
+            } else {
+                calendarIndex++;
+            }
+            continue;
+        }
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+        if (!authorization) {
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            return;
+        }
+        NSString *lastToken = authorization.fetcherAuthorization.authState.lastTokenResponse.accessToken;
+        NSString *auth = [NSString stringWithFormat:@"Bearer %@", lastToken];
+        NSString *apiUrl = [NSString stringWithFormat:@"https://www.googleapis.com/calendar/v3/calendars/%@/events?orderBy=startTime&singleEvents=true&maxResults=100&sortorder=%@%@",
+                            calendar.identifier, order, start];
+        NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:apiUrl]];
+        [urlRequest setHTTPMethod:@"GET"];
+        [urlRequest setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        [urlRequest setValue:auth forHTTPHeaderField:@"Authorization"];
+
+        NSURLSession *session = [NSURLSession sharedSession];
+
+        NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
+                                                    completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            if (error) {
+                [errors addObject:error];
+                calendarIndex++;
+            } else {
+                NSError *parseError = nil;
+                NSDictionary *responseDictionary = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
+
+                if (parseError) {
+                    [errors addObject:parseError];
+                    calendarIndex++;
+                } else {
+                    NSArray *items = [responseDictionary valueForKey:@"items"];
+                    NSString *nextPageToken = responseDictionary[@"nextPageToken"];
+                    if (nextPageToken != nil) {
+                        [fetchPageTokens setValue:nextPageToken forKey:calendar.identifier];
+                    }
+                    [items enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        NSDictionary *item = (NSDictionary *)obj;
+                        GTLRCalendar_Event *gcwEvent = [GTLRCalendar_Event objectWithJSON:item];
+                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:gcwEvent];
+                        event.calendarId = calendar.identifier;
+                        if (ascending) {
+                            NSLog(@">>%@", event.startDate);
+                        } else {
+                            NSLog(@"<<%@", event.startDate);
+                        }
+
+                        if ([event.status isEqualToString:@"cancelled"]) {
+                            [self.calendarEvents removeObjectForKey:event.identifier];
+                        } else if (labs([event.startDate numberOfDaysUntil:event.endDate]) == 1) {
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
+
+                            id item = self.calendarEvents[event.identifier];
+
+                            if ([item isKindOfClass:NSDictionary.class]) {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                                GCWCalendarEvent *cachedEvent = items[calendar.identifier];
+
+                                // Keep attributes from cached object
+                                if (cachedEvent) {
+                                    event.isImportant = cachedEvent.isImportant;
+                                }
+                                items[calendar.identifier] = event;
+
+                                self.calendarEvents[event.identifier] = items.copy;
+                            } else {
+                                GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+
+                                if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                                    // Keep attributes from cached object
+                                    if (cachedEvent) {
+                                        event.isImportant = cachedEvent.isImportant;
+                                    }
+                                    self.calendarEvents[event.identifier] = event;
+                                } else {
+                                    NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                                    items[event.calendarId] = event;
+                                    items[cachedEvent.calendarId] = cachedEvent;
+
+                                    self.calendarEvents[event.identifier] = items.copy;
+                                }
+                            }
+                        }
+                    }];
+                }
+            }
+            if (calendarIndex == self.calendarEntries.count-1) {
+                success([errors copy], [fetchPageTokens copy]);
+            }
+            calendarIndex++;
+        }];
+        [dataTask resume];
+    }
+}
+
+- (void)fetchTokens:(NSDictionary *)fetchTokens
+          startDate:(NSDate *)startDate
+          ascending:(BOOL)ascending
+            success:(void (^)(NSArray * _Nonnull, NSDictionary * _Nonnull))success
+            failure:(void (^)(NSError * _Nonnull))failure {
+
+    NSMutableDictionary *nextFetchTokens = [NSMutableDictionary dictionary];
+    NSMutableArray *errors = [NSMutableArray array];
+
+    NSDateFormatter *formatter = [NSDateFormatter rfc3339Formatter];
+    NSMutableCharacterSet *urlChars = NSCharacterSet.URLQueryAllowedCharacterSet.mutableCopy;
+    NSString *startDateString = [[formatter stringFromDate:startDate] stringByAddingPercentEncodingWithAllowedCharacters:urlChars];
+
+    NSString *order = ascending ? @"ascending": @"descending";
+
+    NSString *start;
+    if (ascending) {
+        start = [NSString stringWithFormat:@"&timeMin=%@", startDateString];
+    } else {
+        start = [NSString stringWithFormat:@"&timeMax=%@", startDateString];
+    }
+    __block NSUInteger calendarIndex = fetchTokens.count - 1;
+    for (NSString *calendarId in fetchTokens.allKeys) {
+        GCWCalendarEntry *calendar = self.calendarEntries[calendarId];
+        NSLog(@"==%@==", calendar.identifier);
+
+        GCWCalendarAuthorization *authorization = [self getAuthorizationForCalendar:calendar.identifier];
+        if (!authorization) {
+            failure([NSError createErrorWithCode:-10002
+                                     description:[NSString stringWithFormat: @"Missing authorization for calendar %@", calendar.identifier]]);
+            return;
+        }
+
+        NSString *lastToken = authorization.fetcherAuthorization.authState.lastTokenResponse.accessToken;
+        NSString *pageToken = fetchTokens[calendarId];
+        NSString *auth = [NSString stringWithFormat:@"Bearer %@", lastToken];
+        NSString *apiUrl = [NSString stringWithFormat:@"https://www.googleapis.com/calendar/v3/calendars/%@/events?orderBy=startTime&singleEvents=true&maxResults=100&sortorder=%@&pageToken=%@", calendar.identifier, order, pageToken];
+        NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:apiUrl]];
+        [urlRequest setHTTPMethod:@"GET"];
+        [urlRequest setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        [urlRequest setValue:auth forHTTPHeaderField:@"Authorization"];
+
+        NSURLSession *session = [NSURLSession sharedSession];
+
+        NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
+                                                    completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            if (error) {
+                [errors addObject:error];
+                calendarIndex--;
+            } else {
+                NSError *parseError = nil;
+                NSDictionary *responseDictionary = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
+
+                if (parseError) {
+                    [errors addObject:parseError];
+                    calendarIndex--;
+                } else {
+                    NSArray *items = [responseDictionary valueForKey:@"items"];
+                    NSString *nextPageToken = responseDictionary[@"nextPageToken"];
+                    if (nextPageToken != nil) {
+                        [nextFetchTokens setValue:nextPageToken forKey:calendar.identifier];
+                    }
+                    [items enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        NSDictionary *item = (NSDictionary *)obj;
+                        GTLRCalendar_Event *gcwEvent = [GTLRCalendar_Event objectWithJSON:item];
+                        GCWCalendarEvent *event = [[GCWCalendarEvent alloc] initWithGTLCalendarEvent:gcwEvent];
+                        event.calendarId = calendar.identifier;
+                        NSLog(@"%@", event.startDate);
+
+                        if ([event.status isEqualToString:@"cancelled"]) {
+                            [self.calendarEvents removeObjectForKey:event.identifier];
+                        } else if (labs([event.startDate numberOfDaysUntil:event.endDate]) == 1) {
+                            event.color = [UIColor colorWithHex:calendar.backgroundColor];
+
+                            id item = self.calendarEvents[event.identifier];
+
+                            if ([item isKindOfClass:NSDictionary.class]) {
+                                NSMutableDictionary *items = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)item];
+                                GCWCalendarEvent *cachedEvent = items[calendar.identifier];
+
+                                // Keep attributes from cached object
+                                if (cachedEvent) {
+                                    event.isImportant = cachedEvent.isImportant;
+                                }
+                                items[calendar.identifier] = event;
+
+                                self.calendarEvents[event.identifier] = items.copy;
+                            } else {
+                                GCWCalendarEvent *cachedEvent = self.calendarEvents[event.identifier];
+
+                                if (cachedEvent == nil || [cachedEvent.calendarId isEqualToString:event.calendarId]) {
+                                    // Keep attributes from cached object
+                                    if (cachedEvent) {
+                                        event.isImportant = cachedEvent.isImportant;
+                                    }
+                                    self.calendarEvents[event.identifier] = event;
+                                } else {
+                                    NSMutableDictionary *items = [NSMutableDictionary dictionary];
+                                    items[event.calendarId] = event;
+                                    items[cachedEvent.calendarId] = cachedEvent;
+
+                                    self.calendarEvents[event.identifier] = items.copy;
+                                }
+                            }
+                        }
+                    }];
+                }
+            }
+            if (calendarIndex == 0) {
+                success([errors copy], [nextFetchTokens copy]);
+            }
+            calendarIndex--;
+        }];
+        [dataTask resume];
     }
 }
 

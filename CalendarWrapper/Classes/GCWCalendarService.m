@@ -3,6 +3,7 @@
 #import "GCWCalendarEvent.h"
 #import "GCWLoadEventsListRequest.h"
 #import "GCWLoadEventsOperation.h"
+#import "GCWFetchEventsOperation.h"
 #import "GCWSyncEventsOperation.h"
 
 #import "NSDictionary+GCWCalendarEvent.h"
@@ -21,6 +22,9 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 @property (nonatomic) GCWCalendar *calendar;
 @property (nonatomic) NSOperationQueue *eventsOperationQueue;
+@property (nonatomic) NSDictionary * _Nullable fetchAPageTokens;
+@property (nonatomic) NSDictionary * _Nullable fetchBPageTokens;
+@property (nonatomic) NSError * _Nullable fetchError;
 
 @end
 
@@ -103,6 +107,10 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 
 - (BOOL)calendarsInSync {
     return self.calendar.calendarsInSync;
+}
+
+- (BOOL)isFetchingPages {
+    return self.fetchAPageTokens != nil && self.fetchBPageTokens != nil;
 }
 
 - (NSNumber *)notificationPeriod {
@@ -218,6 +226,115 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
             dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
         }
     });
+}
+
+- (void)fetchEvents:(NSDate *)startDate
+             filter:(NSString *)filter
+            success:(void (^)(BOOL))success
+            failure:(void (^)(NSError *error))failure {
+
+    self.fetchAPageTokens = nil;
+    self.fetchBPageTokens = nil;
+    self.fetchError = nil;
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @synchronized (self) {
+            dispatch_group_t group = dispatch_group_create();
+            dispatch_group_enter(group);
+
+            GCWFetchEventsOperation *fetchAheadOperation = [[GCWFetchEventsOperation alloc] initWithCalendar:self.calendar
+                                                                                                   startDate:startDate
+                                                                                                   ascending:YES
+                                                                                                      filter:filter];
+
+            GCWFetchEventsOperation *fetchBeforeOperation = [[GCWFetchEventsOperation alloc] initWithCalendar:self.calendar
+                                                                                                    startDate:startDate
+                                                                                                    ascending:NO
+                                                                                                       filter:filter];
+            __weak GCWFetchEventsOperation *weakAheadOperation = fetchAheadOperation;
+            fetchAheadOperation.completionBlock = ^{
+                if (weakAheadOperation.error != nil) {
+                    if (self.fetchError == nil) {
+                        self.fetchError = weakAheadOperation.error;
+                    }
+                    if (self.fetchBPageTokens != nil) {
+                        failure(weakAheadOperation.error);
+                        dispatch_group_leave(group);
+                        return;
+                    } else {
+                        return;
+                    }
+                }
+                self.fetchAPageTokens = weakAheadOperation.fetchPageTokens;
+
+                if (self.fetchBPageTokens != nil) {
+                    success(self.fetchAPageTokens.count == 0 && self.fetchBPageTokens == 0);
+                    dispatch_group_leave(group);
+                }
+            };
+            __weak GCWFetchEventsOperation *weakBeforeOperation = fetchBeforeOperation;
+            fetchBeforeOperation.completionBlock = ^{
+                if (weakBeforeOperation.error != nil) {
+                    if (self.fetchError == nil) {
+                        self.fetchError = weakBeforeOperation.error;
+                    }
+                    if (self.fetchAPageTokens != nil) {
+                        failure(weakBeforeOperation.error);
+                        dispatch_group_leave(group);
+                        return;
+                    } else {
+                        return;
+                    }
+                }
+                self.fetchBPageTokens = weakBeforeOperation.fetchPageTokens;
+
+                if (self.fetchAPageTokens != nil) {
+                    success(self.fetchAPageTokens.count == 0 && self.fetchBPageTokens.count == 0);
+                    dispatch_group_leave(group);
+                }
+            };
+            [self.eventsOperationQueue addOperations:@[fetchAheadOperation, fetchBeforeOperation] waitUntilFinished:YES];
+            dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+        }
+    });
+}
+
+- (void)fetchNext:(NSDate *)startDate
+          success:(void (^)(BOOL))success
+          failure:(void (^)(NSError * _Nonnull))failure {
+
+    [self.calendar fetchTokens:self.fetchAPageTokens
+                     startDate:startDate
+                     ascending:YES
+                       success:^(NSArray *errors, NSDictionary *fetchPageTokens) {
+        if (errors.count > 0) {
+            failure(errors.firstObject);
+        } else {
+            self.fetchAPageTokens = fetchPageTokens;
+            success(fetchPageTokens.count == 0);
+        }
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)fetchPrevious:(NSDate *)startDate
+              success:(void (^)(BOOL))success
+              failure:(void (^)(NSError * _Nonnull))failure {
+
+    [self.calendar fetchTokens:self.fetchBPageTokens
+                     startDate:startDate
+                     ascending:NO
+                       success:^(NSArray *errors, NSDictionary *fetchPageTokens) {
+        if (errors.count > 0) {
+            failure(errors.firstObject);
+        } else {
+            self.fetchBPageTokens = fetchPageTokens;
+            success(fetchPageTokens.count == 0);
+        }
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
 }
 
 - (GCWLoadEventsListRequest *)createEventsListRequest {

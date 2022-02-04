@@ -98,6 +98,18 @@ typedef NS_ENUM(NSUInteger, GCWAuthorizationScope) {
                    success:(void (^_Nullable)(NSDictionary *_Nonnull, NSArray *_Nonnull, NSUInteger, NSArray *_Nonnull))success
                    failure:(void (^_Nullable)(NSError *_Nonnull))failure;
 
+- (void)fetchFrom:(NSDate *_Nonnull)startDate
+          ascending:(BOOL)ascending
+             filter:(NSString *_Nullable)filter
+            success:(void (^_Nullable)(NSArray *_Nonnull, NSDictionary *_Nonnull))success
+            failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
+- (void)fetchTokens:(NSDictionary *_Nonnull)fetchTokens
+          startDate:(NSDate *_Nonnull)startDate
+          ascending:(BOOL)ascending
+            success:(void (^_Nullable)(NSArray *_Nonnull, NSDictionary *_Nonnull))success
+            failure:(void (^_Nullable)(NSError *_Nonnull))failure;
+
 - (void)loadRecurringEventInstancesFor:(NSString *_Nonnull)recurringEventId
                               calendar:(NSString *_Nonnull)calendarId
                                   from:(NSDate *_Nullable)startDate
