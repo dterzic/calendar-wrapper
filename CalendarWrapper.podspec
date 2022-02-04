@@ -38,7 +38,7 @@ Pod::Spec.new do |s|
   s.frameworks = 'UIKit', 'Foundation', 'CoreGraphics'
   s.static_framework = true
 
-  s.dependency 'AppAuth'
+  s.dependency 'AppAuth', '~> 1.2.0'
   s.dependency 'GTMAppAuth'
   s.dependency 'GTMSessionFetcher'
   s.dependency 'GoogleAPIClientForREST/Calendar'
