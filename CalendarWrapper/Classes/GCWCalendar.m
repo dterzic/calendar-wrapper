@@ -90,7 +90,7 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
         }
         NSDictionary *userAccountArchive = [self.userDefaults objectForKey:kCalendarUserAccountsKey];
         if (userAccountArchive) {
-            _userAccounts = [NSDictionary unarchiveUserAccountsFrom:userAccountArchive];
+            _userAccounts = [NSMutableDictionary dictionaryWithDictionary:[NSDictionary unarchiveUserAccountsFrom:userAccountArchive]];
         }
         NSDictionary *entriesArchive = [self.userDefaults objectForKey:kCalendarEntriesKey];
         if (entriesArchive) {

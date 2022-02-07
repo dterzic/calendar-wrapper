@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, GCWAuthorizationScope) {
 @property (nonatomic) NSDictionary * _Nullable calendarEntries;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarSyncTokens;
 @property (nonatomic) NSMutableDictionary * _Nullable calendarEvents;
-@property (nonatomic) NSDictionary * _Nullable userAccounts;
+@property (nonatomic) NSMutableDictionary * _Nullable userAccounts;
 @property (nonatomic, readonly) NSDictionary * _Nullable accountEntries;
 @property (nonatomic, readonly) BOOL calendarsInSync;
 @property (nonatomic) NSNumber *_Nonnull notificationPeriod;
