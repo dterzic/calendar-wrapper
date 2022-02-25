@@ -61,6 +61,16 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
     return [self.calendar getCalendarOwner:calendarId];
 }
 
+- (void)refreshAllTokensOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    @synchronized (self) {
+        [self.calendar refreshAllTokensOnSuccess:^{
+            success();
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+    }
+}
+
 - (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope {
     return [self.calendar isAuthorizedFor:scope];
 }

@@ -39,6 +39,18 @@ static NSString *const kCalendarWrapperAuthorizerKey = @"googleOAuthCodingKeyFor
 
 - (void)saveAuthorization:(GCWCalendarAuthorization *)authorization toKeychain:(NSString *)keychainKey {
     [GTMAppAuthFetcherAuthorization saveAuthorization:authorization.fetcherAuthorization toKeychainForName:keychainKey];
+
+    __block GCWCalendarAuthorization *existingAuthorization;
+    [_authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization *storedAuthorization, NSUInteger idx, BOOL *stop) {
+        NSString *existingKey = [GCWCalendarAuthorizationManager getKeychainKeyForAuthorization:storedAuthorization];
+        if ([existingKey isEqualToString:keychainKey]) {
+            existingAuthorization = storedAuthorization;
+            *stop = YES;
+        }
+    }];
+    if (existingAuthorization) {
+        [_authorizations removeObject:existingAuthorization];
+    }
     [_authorizations addObject:authorization];
 }
 

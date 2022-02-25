@@ -43,6 +43,8 @@
 
 - (GCWCalendarEvent *_Nullable)getCalendarEventWithId:(NSString *_Nonnull)eventId calendarId:(NSString *_Nullable)calendarId;
 
+- (void)refreshAllTokensOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
 - (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope;
 
 - (void)setVisibility:(BOOL)visible forCalendar:(NSString *_Nonnull)calendarId;

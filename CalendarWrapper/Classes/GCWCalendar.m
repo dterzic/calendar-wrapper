@@ -151,6 +151,43 @@ static NSString *const kCalendarEventsNotificationPeriodKey = @"calendarWrapperC
     return self.userAccounts[userId];
 }
 
+- (void)refreshAllTokensOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
+    NSArray *userIDs = [self.userDefaults arrayForKey:kUserIDs];
+
+    if (!userIDs || userIDs.count == 0) {
+        failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                    code:-10013
+                                userInfo:@{NSLocalizedDescriptionKey:@"No signup"}]);
+        return;
+    }
+    NSMutableArray *authorizations = [NSMutableArray array];
+    [userIDs enumerateObjectsUsingBlock:^(id  _Nonnull userID, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:userID];
+        GCWCalendarAuthorization* authorization = [self.authorizationManager getAuthorizationFromKeychain:keychainKey];
+        if (authorization) {
+            [authorizations addObject:authorization];
+        }
+    }];
+    __block NSUInteger authorizationsCount = authorizations.count;
+    [authorizations enumerateObjectsUsingBlock:^(GCWCalendarAuthorization *authorization, NSUInteger idx, BOOL * _Nonnull stop) {
+        [authorization.fetcherAuthorization.authState performActionWithFreshTokens:^(NSString *accessToken, NSString * idToken, NSError * error) {
+            if (error) {
+                *stop = YES;
+                failure([NSError errorWithDomain:@"CalendarWrapperErrorDomain"
+                                            code:-10014
+                                        userInfo:@{NSLocalizedDescriptionKey:[error.localizedDescription copy]}]);
+            } else {
+                NSString * keychainKey = [GCWCalendarAuthorizationManager getKeychainKeyForUser:authorization.userID];
+                [self.authorizationManager saveAuthorization:authorization toKeychain:keychainKey];
+
+                if (--authorizationsCount == 0) {
+                    success();
+                }
+            }
+        }];
+    }];
+}
+
 - (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope {
     BOOL authorized = NO;
 

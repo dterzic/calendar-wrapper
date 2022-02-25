@@ -49,6 +49,8 @@ typedef NS_ENUM(NSUInteger, GCWAuthorizationScope) {
 
 - (GCWUserAccount *_Nullable)getCalendarOwner:(NSString *_Nonnull)calendarId;
 
+- (void)refreshAllTokensOnSuccess:(void (^_Nonnull)(void))success failure:(void (^_Nonnull)(NSError *_Nonnull))failure;
+
 - (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope;
 
 - (void)doLoginOnSuccess:(void (^_Nonnull)(void))success
