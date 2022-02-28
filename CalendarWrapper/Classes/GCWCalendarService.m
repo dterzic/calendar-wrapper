@@ -4,6 +4,7 @@
 #import "GCWLoadEventsListRequest.h"
 #import "GCWLoadEventsOperation.h"
 #import "GCWSyncEventsOperation.h"
+#import "GCWRefreshTokenOperation.h"
 
 #import "NSDictionary+GCWCalendarEvent.h"
 #import "NSArray+GCWEventsSorting.h"
@@ -62,13 +63,27 @@ static NSString * const kCalendarFilterKey = @"calendarWrapperCalendarFilterKey"
 }
 
 - (void)refreshAllTokensOnSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure {
-    @synchronized (self) {
-        [self.calendar refreshAllTokensOnSuccess:^{
-            success();
-        } failure:^(NSError *error) {
-            failure(error);
-        }];
-    }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @synchronized (self) {
+            dispatch_group_t group = dispatch_group_create();
+            dispatch_group_enter(group);
+
+            GCWRefreshTokenOperation *refreshTokenOperation = [[GCWRefreshTokenOperation alloc] initWithCalendar:self.calendar];
+
+            __weak GCWRefreshTokenOperation *weakOperation = refreshTokenOperation;
+            refreshTokenOperation.completionBlock = ^{
+                if (weakOperation.error != nil) {
+                    failure(weakOperation.error);
+                    dispatch_group_leave(group);
+                    return;
+                }
+                success();
+                dispatch_group_leave(group);
+            };
+            [self.eventsOperationQueue addOperations:@[refreshTokenOperation] waitUntilFinished:YES];
+            dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+        }
+    });
 }
 
 - (BOOL)isAuthorizedFor:(GCWAuthorizationScope)scope {
